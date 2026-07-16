@@ -1,6 +1,6 @@
 # Loop State — AI-Native Platform
 
-Last run: 2026-07-16T16:20:01Z
+Last run: 2026-07-16T16:22:18Z
 Loop status: `active_l1`
 Pause: `false`
 Window end: 2026-07-16T21:02:28Z
@@ -14,7 +14,7 @@ Window end: 2026-07-16T21:02:28Z
 
 ## Current Finding
 
-The machine-readable pattern registry declares L1 MCP scope, connector denial, documentation-only shared-worktree use, and the L2 isolated-worktree requirement. Re-running `npx @cobusgreyling/loop-audit . --suggest` produced 89/100, level L1; `validate-state.py .claw` passed. `ADR-005` records a Node 24 LTS + TypeScript/ESM + MCP SDK proposal from official Node and MCP documentation; it is not accepted and does not authorize dependency or source changes. `FEAT-020` now adds CC-01 to CC-09 as the required L2 evidence matrix, all explicitly `not_started_l1`. Outstanding loop findings are independent-verifier guidance and Codex triage/budget/constraint skill wiring.
+The machine-readable pattern registry declares L1 MCP scope, connector denial, documentation-only shared-worktree use, and the L2 isolated-worktree requirement. Re-running `npx @cobusgreyling/loop-audit . --suggest` produced 89/100, level L1; `validate-state.py .claw` passed. A Node read-only integrity check parsed all 8 JSONL run records, proved monotonic run IDs, proved L1 `source_actions` total is 0, and confirmed the duration-evidence correction record. `ADR-005` records a Node 24 LTS + TypeScript/ESM + MCP SDK proposal from official Node and MCP documentation; it is not accepted and does not authorize dependency or source changes. `FEAT-020` now adds CC-01 to CC-09 as the required L2 evidence matrix, all explicitly `not_started_l1`. Outstanding loop findings are independent-verifier guidance and Codex triage/budget/constraint skill wiring.
 
 ## Watch List
 

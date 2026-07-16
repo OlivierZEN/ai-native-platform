@@ -1,7 +1,7 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-16T16:20:01Z
+updated_at: 2026-07-16T16:22:18Z
 updated_by: ai
 phase: loop_l1_bootstrap
 active_task: "TASK-021 - Establish Phase 0 Loop Engineering controls"
@@ -41,6 +41,7 @@ read_next:
 - 依据 Node 与 MCP 官方文档创建 `ADR-005` 运行时提案；尚未接受，未修改依赖或代码
 - 创建 `patterns/registry.yaml`，声明 L1 MCP 禁用、主工作树文档范围和 L2 隔离工作树要求；复审 `89/100`、`L1`
 - 为 `FEAT-020` 增加 CC-01 至 CC-09 的 L2 证据矩阵；所有实现和测试条目仍为 `not_started_l1`
+- 验证 8 条 Loop JSONL 记录格式、时间顺序与 L1 零源码动作；治理状态校验通过
 
 ### 进行中
 
@@ -63,7 +64,7 @@ read_next:
 ## 已验证事实
 
 - Build: `not_run`（L1 期间禁止创建或修改应用构建配置）
-- Tests: `passed`（2026-07-16T16:20:01Z 的项目状态校验；应用测试尚无可运行目标）
+- Tests: `passed`（2026-07-16T16:22:18Z 的项目状态与 Loop 运行日志完整性校验；应用测试尚无可运行目标）
 - Lint: `not_run`
 - 依赖变更: `none`
 

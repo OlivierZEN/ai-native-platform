@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-16T16:20:01Z
+updated_at: 2026-07-16T16:22:18Z
 updated_by: ai
-last_run_at: 2026-07-16T16:20:01Z
+last_run_at: 2026-07-16T16:22:18Z
 last_run_status: passed
 ---
 
@@ -16,10 +16,11 @@ last_run_status: passed
 ## 最新运行摘要
 
 - 状态：`passed`
-- 范围：`agentic-project-guidelines` 状态文件与 Loop Engineering L1 控制面
+- 范围：`agentic-project-guidelines` 状态文件与 Loop Engineering L1 控制面及运行日志完整性
 - 命令：`python3 /Users/owenmacbook/.agents/skills/y-agentic-project-guidelines/scripts/validate-state.py .claw`
 - 环境：`local workspace`
 - 附加证据：`npx @cobusgreyling/loop-audit . --suggest`，结果为 `89/100`、`L1`；安全策略、停滞升级、MCP 范围与工作树策略已被审计识别
+- 运行日志校验：Node 解析 8 条 JSONL 记录；run ID 单调递增、`source_actions` 总数为 0、时长校正记录存在
 
 ## 结果汇总
 
@@ -29,7 +30,8 @@ last_run_status: passed
 | 集成测试 | 0 | 0 | 0 | 0 | 0% |
 | E2E 测试 | 0 | 0 | 0 | 0 | - |
 | 治理状态校验 | 1 | 1 | 0 | 0 | - |
-| 总计 | 1 | 1 | 0 | 0 | - |
+| Loop 运行日志完整性 | 1 | 1 | 0 | 0 | - |
+| 总计 | 2 | 2 | 0 | 0 | - |
 
 ## 失败项
 
