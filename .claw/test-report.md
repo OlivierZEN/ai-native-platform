@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-16T16:39:06Z
+updated_at: 2026-07-16T16:42:27Z
 updated_by: ai
-last_run_at: 2026-07-16T16:39:06Z
+last_run_at: 2026-07-16T16:42:27Z
 last_run_status: passed
 ---
 
@@ -22,6 +22,7 @@ last_run_status: passed
 - 附加证据：`npx @cobusgreyling/loop-audit . --suggest`，结果为 `89/100`、`L1`；安全策略、停滞升级、MCP 范围与工作树策略已被审计识别
 - 运行日志校验：Node 解析 8 条 JSONL 记录；run ID 单调递增、`source_actions` 总数为 0、时长校正记录存在
 - 最新 Loop 审计：`npx @cobusgreyling/loop-audit .` 返回 `89/100`、`L1`；Node 解析 9 条 JSONL 记录且 `source_actions` 总数为 0
+- 运行时可用性检查：本机为 Node `v26.0.0`，未发现 Node 24 或版本管理器；这是一项 L2 前置条件缺口，不是已验证的构建环境
 
 ## 结果汇总
 

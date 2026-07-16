@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T16:38:26Z
+updated_at: 2026-07-16T16:41:48Z
 updated_by: ai
 board_status: active
 ---
@@ -110,7 +110,7 @@ board_status: active
 
 #### Handoff Note
 
-- 不把尚未验证的技术选型写成已接受决策。
+- 不把尚未验证的技术选型写成已接受决策。当前本机只有 Node 26；L2 的 Node 24 LTS 构建/测试环境仍需被实际提供和验证。
 
 ### TASK-011 - Build the tenant control-plane contract
 

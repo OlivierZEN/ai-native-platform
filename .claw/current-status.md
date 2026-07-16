@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-16T16:38:26Z
+updated_at: 2026-07-16T16:41:48Z
 updated_by: ai
 phase: loop_l1_bootstrap
 active_task: "TASK-021 - Establish Phase 0 Loop Engineering controls"
-next_action: "Keep TASK-009 in review until its architecture decisions are explicitly approved; do not advance ADR-005 or L2"
+next_action: "Keep TASK-009 in review; L2 must provision Node 24 LTS before ADR-005 can be accepted"
 read_next:
   goals: true
   decisions: false
@@ -45,6 +45,7 @@ read_next:
 - 自动化在 00:32 追加第 9 条 L1 记录；00:34 人工接续复审维持 `89/100`、`L1`，状态和日志校验通过且工作树无漂移
 - 只读审阅官方 Codex triage/verifier/约束/预算模板；确认它们需要新的 `.codex` 配置，且 verifier 与当前禁用子智能体规则冲突
 - 审阅 FEAT-009：纯 Agent、无前端和三入口约束一致；但 spec 为 `draft` 且 Phase 0 决策未完成，不能自动批准 TASK-009
+- 只读检查本机运行时：Node 为 `v26.0.0`，未发现 Node 24 或版本管理器；Node 24 LTS 是未来 L2 的环境前置条件
 
 ### 进行中
 
@@ -52,7 +53,7 @@ read_next:
 
 ### 下一步
 
-- 保持 `TASK-009` 为架构评审；审批前不得接受 `ADR-005` 或进入 L2
+- 保持 `TASK-009` 为架构评审；审批前不得接受 `ADR-005` 或进入 L2，且 L2 必须先提供 Node 24 LTS
 - 保持 `ADR-005` 为待批准提案；不得在 `TASK-009` 审批和 L2 授权前创建应用实现
 - 在五小时 L1 窗口结束后交接 L2 实施计划，等待人工批准
 
@@ -67,7 +68,7 @@ read_next:
 ## 已验证事实
 
 - Build: `not_run`（L1 期间禁止创建或修改应用构建配置）
-- Tests: `passed`（2026-07-16T16:39:06Z 的项目状态校验；最近 Loop 审计与运行日志完整性校验仍通过；应用测试尚无可运行目标）
+- Tests: `passed`（2026-07-16T16:42:27Z 的项目状态校验；最近 Loop 审计与运行日志完整性校验仍通过；应用测试尚无可运行目标）
 - Lint: `not_run`
 - 依赖变更: `none`
 
