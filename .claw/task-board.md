@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T16:15:30Z
+updated_at: 2026-07-16T16:34:01Z
 updated_by: ai
 board_status: active
 ---
@@ -51,7 +51,7 @@ board_status: active
 
 #### Next Action
 
-- At the next scheduled L1 run, verify scope has not drifted and record only new evidence or an escalation.
+- At the next scheduled L1 run, use a different read-only evidence source for verifier/skill blockers; record a no-progress occurrence only if it yields no new evidence.
 
 #### Handoff Note
 

@@ -1,6 +1,6 @@
 # Loop State — AI-Native Platform
 
-Last run: 2026-07-16T16:22:18Z
+Last run: 2026-07-16T16:34:00Z
 Loop status: `active_l1`
 Pause: `false`
 Window end: 2026-07-16T21:02:28Z
@@ -14,11 +14,11 @@ Window end: 2026-07-16T21:02:28Z
 
 ## Current Finding
 
-The machine-readable pattern registry declares L1 MCP scope, connector denial, documentation-only shared-worktree use, and the L2 isolated-worktree requirement. Re-running `npx @cobusgreyling/loop-audit . --suggest` produced 89/100, level L1; `validate-state.py .claw` passed. A Node read-only integrity check parsed all 8 JSONL run records, proved monotonic run IDs, proved L1 `source_actions` total is 0, and confirmed the duration-evidence correction record. `ADR-005` records a Node 24 LTS + TypeScript/ESM + MCP SDK proposal from official Node and MCP documentation; it is not accepted and does not authorize dependency or source changes. `FEAT-020` now adds CC-01 to CC-09 as the required L2 evidence matrix, all explicitly `not_started_l1`. Outstanding loop findings are independent-verifier guidance and Codex triage/budget/constraint skill wiring.
+The control plane remains L1-only and has no scope drift. The 2026-07-16T16:32:45Z automation run passed `validate-state.py .claw` and reconciled the then-persisted 9 JSONL records. The 2026-07-16T16:34:00Z measured manual audit remained 89/100, level L1; it passed state validation and verified 9 monotonic records with `source_actions` total 0 and a clean worktree. `ADR-005` remains proposed, so `TASK-010` has no approved build/test baseline. `FEAT-020` retains nine `not_started_l1` evidence rows (CC-01..CC-09); `TASK-020` remains implementation-blocked. No frontend is in scope; API, MCP, and non-interactive CLI parity remains mandatory.
 
 ## Watch List
 
-- At the next scheduled L1 run, verify there was no scope drift, record the current L2 blockers, and avoid duplicate no-progress edits.
+- At the next scheduled L1 run, use a different read-only evidence source for verifier/skill blockers; if it yields no new evidence, record the first no-progress occurrence under `docs/safety.md`.
 - Keep ADR-005 as a proposal until TASK-009 is approved and the user explicitly authorizes the L2 allowlist.
 - Historical `duration_s` values are not end-to-end measurements; future runs use `null` unless a complete timer is captured.
 - Do not interpret the user-authorized five-hour window as approval to skip the L1 observation period.
