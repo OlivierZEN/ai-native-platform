@@ -25,4 +25,4 @@
 
 ## Cost Observation
 
-The environment does not expose a reliable per-run model-token meter. The loop therefore limits cadence, items, attempts, and subagent count mechanically, and records only observable command duration and outcomes. It must not fabricate token or currency usage.
+The environment does not expose a reliable per-run model-token meter or an end-to-end run timer. The loop therefore limits cadence, items, attempts, and subagent count mechanically. `duration_s` is `null` unless a complete run duration was measured; command outcomes remain the source of truth. It must not fabricate token, currency, or elapsed-time usage.
