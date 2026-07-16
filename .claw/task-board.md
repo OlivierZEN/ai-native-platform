@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T15:59:39Z
+updated_at: 2026-07-16T16:09:07Z
 updated_by: ai
 board_status: active
 ---
@@ -27,6 +27,35 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-021 - Establish the Phase 0 Loop Engineering controls
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `project-manager`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `LOOP.md, STATE.md, loop-constraints.md, loop-budget.md, loop-run-log.md, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- L1 loop state, budget, constraints and append-only run log are present and internally consistent
+- Five-hour local automation is active with no remote-write or source-edit permission
+- Initial readiness audit and project-state validation have real recorded results
+- Five-hour handoff identifies the L2 promotion gate and next verified action
+
+#### Next Action
+
+- Document the first L1 audit finding (dedicated safety policy and stall escalation) without changing application code.
+
+#### Handoff Note
+
+- This is a new Loop Engineering pattern. It remains L1 report-only; do not write application source code until the L2 gate in `LOOP.md` is satisfied.
 
 ### TASK-009 - Review the greenfield architecture baseline
 

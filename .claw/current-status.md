@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-16T15:59:39Z
+updated_at: 2026-07-16T16:09:07Z
 updated_by: ai
-phase: architecture_review
-active_task: "TASK-009 - Review the greenfield architecture baseline"
-next_action: "Review the approved pure-Agent capability contract, then create the technical-stack and repository ADR for Phase 0"
+phase: loop_l1_bootstrap
+active_task: "TASK-021 - Establish Phase 0 Loop Engineering controls"
+next_action: "Address the first L1 audit finding in documentation, then prepare ADR-005 without changing application code"
 read_next:
   goals: true
   decisions: false
@@ -21,10 +21,10 @@ read_next:
 
 ## 快照
 
-- 会话目标：完成 AI 原生多租户 CRM + PaaS 平台的绿地项目治理初始化
-- 当前关注点：架构基线 `FEAT-009` 的评审与 Phase 0 验证计划
-- 活跃任务：`TASK-009`
-- 阻塞状态：无；后续实现以 `TASK-009` 的评审结论为前置条件
+- 会话目标：在五小时窗口内按 Loop Engineering 的 L1 规则建立 Phase 0 循环控制系统
+- 当前关注点：Loop 状态、约束、预算、运行日志和 Capability Contract PoC 的实施前证据
+- 活跃任务：`TASK-021`
+- 阻塞状态：代码实现被 L1 观察期与 L2 人工升级门禁主动限制
 
 ## 本次会话进展
 
@@ -35,16 +35,18 @@ read_next:
 - 创建 Phase 0 任务队列、目标基线和 ADR 索引
 - 初始化 Git 仓库并创建首个项目基线提交，远端为 `OlivierZEN/ai-native-platform`
 - 确认平台为无前端的纯 Agent 平台；所有已发布原子能力必须具备 API、MCP 和非交互式 CLI 三个等价入口
+- 创建持续五小时的本地 Loop Engineering 自动化；每 30 分钟执行一次 L1 报告循环
+- 执行首轮 Loop Readiness Audit：`74/100`、`L1`；`.claw` 状态校验通过
 
 ### 进行中
 
-- `TASK-009`：架构基线待完成总体评审；纯 Agent 能力契约已确认
+- `TASK-021`：Loop Engineering L1 控制面正在建立；不执行应用代码修改
 
 ### 下一步
 
-- 审阅 `FEAT-020`，确认能力契约可作为后续实现基线
-- 为 `TASK-010` 创建技术栈与仓库 ADR；结论落入 `decisions.md`
-- 在每个非平凡 Phase 0 实施任务开始前，创建对应 feature spec
+- 每轮只处理一个 L1 文档化缺口；首先补充安全策略与停滞升级规则
+- 收集 Node LTS 与 MCP SDK 证据，为 `TASK-010` 写入 ADR-005 提案
+- 在五小时 L1 窗口结束后交接 L2 实施计划，等待人工批准
 
 ## 修改文件
 
@@ -52,22 +54,23 @@ read_next:
 - `.claw/` - 持久状态与 Phase 0 任务队列
 - `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md` - 架构基线
 - `docs/specs/FEAT-020-pure-agent-capability-contract.md` - API/MCP/CLI 三入口契约
+- `LOOP.md` / `STATE.md` / `loop-*.md` - Loop Engineering 的持久控制面
 
 ## 已验证事实
 
-- Build: `not_run`（尚无应用代码或构建配置）
-- Tests: `passed`（技能状态校验；应用测试尚无可运行目标）
+- Build: `not_run`（L1 期间禁止创建或修改应用构建配置）
+- Tests: `passed`（2026-07-16T16:09:07Z 的项目状态校验；应用测试尚无可运行目标）
 - Lint: `not_run`
 - 依赖变更: `none`
 
 ## 待确认
 
-- `FEAT-009` 是否获架构评审批准
-- Phase 0 的技术栈、部署与关键组件选型
+- `TASK-010` 的 Node 24 LTS + TypeScript/MCP PoC 提案是否获批准
+- L1 观察期结束后是否允许进入 L2 受控实现
 
 ## 相关状态文件
 
-- `task-board.md` - `TASK-009` 的评审与后续 Phase 0 依赖
+- `task-board.md` - `TASK-021` 的 L1 控制面与后续 Phase 0 依赖
 - `goals.md` - 已确认范围、成功标准和阶段目标
 - `decisions.md` - `ADR-003` 及待定技术决策
 - `test-report.md` - 状态校验的真实结果
@@ -76,6 +79,7 @@ read_next:
 
 - `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md` - 当前架构与交付基线
 - `docs/specs/FEAT-020-pure-agent-capability-contract.md` - 已确认的纯 Agent 入口约束
+- `docs/superpowers/plans/2026-07-17-phase0-loop-engineering.md` - 五小时 L1 与后续 L2 实施计划
 
 ## 维护规则
 
