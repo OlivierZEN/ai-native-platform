@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T16:36:55Z
+updated_at: 2026-07-16T16:38:26Z
 updated_by: ai
 board_status: active
 ---
@@ -83,7 +83,7 @@ board_status: active
 
 #### Handoff Note
 
-- 本项目已完成治理初始化。实现前先读 `FEAT-009` 第 21、22、24、27 节；不要跳过 Phase 0 直接建设完整 CRM。
+- 本项目已完成治理初始化。L1 审阅确认纯 Agent/无前端/三入口约束一致，但 FEAT-009 仍为 `draft` 且第 24 节决策未完成；不要跳过 Phase 0 或自动批准该任务。
 
 ### TASK-010 - Define the technology stack and repository baseline
 

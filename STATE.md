@@ -1,6 +1,6 @@
 # Loop State — AI-Native Platform
 
-Last run: 2026-07-16T16:36:55Z
+Last run: 2026-07-16T16:38:26Z
 Loop status: `active_l1`
 Pause: `false`
 Window end: 2026-07-16T21:02:28Z
@@ -14,15 +14,16 @@ Window end: 2026-07-16T21:02:28Z
 
 ## Current Finding
 
-The control plane remains L1-only and has no scope drift. The 2026-07-16T16:32:45Z automation run passed `validate-state.py .claw` and reconciled the then-persisted 9 JSONL records. The 2026-07-16T16:34:00Z measured manual audit remained 89/100, level L1; it passed state validation and verified 9 monotonic records with `source_actions` total 0 and a clean worktree. A read-only inspection of Loop Engineering's Codex templates confirms that triage/constraint/budget skills require new `.codex` behavior wiring, while the verifier template is an independent checker agent; neither may be enabled in the current L1 rule set. `ADR-005` remains proposed, so `TASK-010` has no approved build/test baseline. `FEAT-020` retains nine `not_started_l1` evidence rows (CC-01..CC-09); `TASK-020` remains implementation-blocked. No frontend is in scope; API, MCP, and non-interactive CLI parity remains mandatory.
+The control plane remains L1-only and has no scope drift. The 2026-07-16T16:32:45Z automation run passed `validate-state.py .claw` and reconciled the then-persisted 9 JSONL records. The 2026-07-16T16:34:00Z measured manual audit remained 89/100, level L1; it passed state validation and verified 9 monotonic records with `source_actions` total 0 and a clean worktree. A read-only inspection of Loop Engineering's Codex templates confirms that triage/constraint/budget skills require new `.codex` behavior wiring, while the verifier template is an independent checker agent; neither may be enabled in the current L1 rule set. A FEAT-009 review found no contradiction with the pure-Agent, no-frontend, API/MCP/non-interactive-CLI invariant, but its status is still `draft`, `ADR-003`/`ADR-005` are `proposed`, and its Phase 0 decision list remains unresolved. `TASK-010` therefore has no approved build/test baseline and `TASK-020` remains implementation-blocked.
 
 ## Watch List
 
 - Keep Codex triage/constraint/budget wiring and the verifier agent out of L1; a future L2 approval must explicitly resolve whether their enablement is permitted.
+- Keep `TASK-009` in review; it needs an explicit architecture decision before `ADR-005` can be accepted.
 - Keep ADR-005 as a proposal until TASK-009 is approved and the user explicitly authorizes the L2 allowlist.
 - Historical `duration_s` values are not end-to-end measurements; future runs use `null` unless a complete timer is captured.
 - Do not interpret the user-authorized five-hour window as approval to skip the L1 observation period.
 
 ## Escalations
 
-- None.
+- `TASK-009` cannot advance from review automatically: FEAT-009 is still `draft` and its Phase 0 architecture decisions, including the Capability Contract toolchain, require explicit approval.
