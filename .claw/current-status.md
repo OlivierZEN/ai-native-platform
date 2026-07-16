@@ -1,7 +1,7 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-16T16:15:30Z
+updated_at: 2026-07-16T16:17:56Z
 updated_by: ai
 phase: loop_l1_bootstrap
 active_task: "TASK-021 - Establish Phase 0 Loop Engineering controls"
@@ -49,7 +49,7 @@ read_next:
 ### 下一步
 
 - 等待下一次 30 分钟 L1 周期；仅记录新的事实证据或升级项
-- 收集 Node LTS 与 MCP SDK 证据，为 `TASK-010` 写入 ADR-005 提案
+- 保持 `ADR-005` 为待批准提案；不得在 `TASK-009` 审批和 L2 授权前创建应用实现
 - 在五小时 L1 窗口结束后交接 L2 实施计划，等待人工批准
 
 ## 修改文件
@@ -63,7 +63,7 @@ read_next:
 ## 已验证事实
 
 - Build: `not_run`（L1 期间禁止创建或修改应用构建配置）
-- Tests: `passed`（2026-07-16T16:15:30Z 的项目状态校验；应用测试尚无可运行目标）
+- Tests: `passed`（2026-07-16T16:17:56Z 的项目状态校验；应用测试尚无可运行目标）
 - Lint: `not_run`
 - 依赖变更: `none`
 

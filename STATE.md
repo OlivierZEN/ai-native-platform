@@ -1,6 +1,6 @@
 # Loop State — AI-Native Platform
 
-Last run: 2026-07-16T16:15:30Z
+Last run: 2026-07-16T16:17:36Z
 Loop status: `active_l1`
 Pause: `false`
 Window end: 2026-07-16T21:02:28Z
@@ -19,7 +19,7 @@ The machine-readable pattern registry declares L1 MCP scope, connector denial, d
 ## Watch List
 
 - At the next scheduled L1 run, verify there was no scope drift, record the current L2 blockers, and avoid duplicate no-progress edits.
-- Record a Node 24 LTS + TypeScript/MCP recommendation as a proposal, not an implemented system.
+- Keep ADR-005 as a proposal until TASK-009 is approved and the user explicitly authorizes the L2 allowlist.
 - Do not interpret the user-authorized five-hour window as approval to skip the L1 observation period.
 
 ## Escalations
