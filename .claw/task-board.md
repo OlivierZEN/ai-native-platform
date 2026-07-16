@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T16:34:01Z
+updated_at: 2026-07-16T16:36:55Z
 updated_by: ai
 board_status: active
 ---
@@ -51,7 +51,7 @@ board_status: active
 
 #### Next Action
 
-- At the next scheduled L1 run, use a different read-only evidence source for verifier/skill blockers; record a no-progress occurrence only if it yields no new evidence.
+- Keep Codex triage/constraint/budget skill wiring and the verifier agent out of L1; resolve their L2 enablement only through an explicit approval.
 
 #### Handoff Note
 
