@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T16:41:48Z
+updated_at: 2026-07-16T17:03:46Z
 updated_by: ai
 board_status: active
 ---
@@ -56,6 +56,7 @@ board_status: active
 #### Handoff Note
 
 - This is a new Loop Engineering pattern. It remains L1 report-only; do not write application source code until the L2 gate in `LOOP.md` is satisfied.
+- Local L1 evidence is ahead of `origin/main` and deliberately unpushed; publishing remains a human-approved action.
 
 ### TASK-009 - Review the greenfield architecture baseline
 

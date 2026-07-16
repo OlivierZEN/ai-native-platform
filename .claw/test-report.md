@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-16T16:42:27Z
+updated_at: 2026-07-16T17:03:46Z
 updated_by: ai
-last_run_at: 2026-07-16T16:42:27Z
+last_run_at: 2026-07-16T17:03:46Z
 last_run_status: passed
 ---
 
@@ -23,6 +23,7 @@ last_run_status: passed
 - 运行日志校验：Node 解析 8 条 JSONL 记录；run ID 单调递增、`source_actions` 总数为 0、时长校正记录存在
 - 最新 Loop 审计：`npx @cobusgreyling/loop-audit .` 返回 `89/100`、`L1`；Node 解析 9 条 JSONL 记录且 `source_actions` 总数为 0
 - 运行时可用性检查：本机为 Node `v26.0.0`，未发现 Node 24 或版本管理器；这是一项 L2 前置条件缺口，不是已验证的构建环境
+- 远端只读核对：GitHub `main` 与 `origin/main` 均为 `3c8c961`；本地证据提交保持未推送
 
 ## 结果汇总
 
