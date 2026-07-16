@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T16:09:07Z
+updated_at: 2026-07-16T16:15:30Z
 updated_by: ai
 board_status: active
 ---
@@ -51,7 +51,7 @@ board_status: active
 
 #### Next Action
 
-- Document the first L1 audit finding (dedicated safety policy and stall escalation) without changing application code.
+- At the next scheduled L1 run, verify scope has not drifted and record only new evidence or an escalation.
 
 #### Handoff Note
 

@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-16T16:09:07Z
+updated_at: 2026-07-16T16:15:30Z
 updated_by: ai
-last_run_at: 2026-07-16T16:09:07Z
+last_run_at: 2026-07-16T16:15:30Z
 last_run_status: passed
 ---
 
@@ -19,7 +19,7 @@ last_run_status: passed
 - 范围：`agentic-project-guidelines` 状态文件与 Loop Engineering L1 控制面
 - 命令：`python3 /Users/owenmacbook/.agents/skills/y-agentic-project-guidelines/scripts/validate-state.py .claw`
 - 环境：`local workspace`
-- 附加证据：`npx @cobusgreyling/loop-audit . --suggest`，结果为 `74/100`、`L1`
+- 附加证据：`npx @cobusgreyling/loop-audit . --suggest`，结果为 `89/100`、`L1`；安全策略、停滞升级、MCP 范围与工作树策略已被审计识别
 
 ## 结果汇总
 

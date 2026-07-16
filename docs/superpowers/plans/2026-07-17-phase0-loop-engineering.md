@@ -45,19 +45,19 @@
 - Consumes: `.claw/current-status.md`, `.claw/task-board.md`, `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`, and `docs/specs/FEAT-020-pure-agent-capability-contract.md`.
 - Produces: a durable loop state read before each automation run, a scoped allowlist, a fixed five-hour stop condition, and an append-only run record.
 
-- [ ] **Step 1: Create the L1 loop documents.**
+- [x] **Step 1: Create the L1 loop documents.**
 
   Define the loop purpose as Phase 0 capability-contract delivery, explicitly exclude pushes, merges, secrets, infrastructure, and unrelated refactors, and list `src/`, `tests/`, `package.json`, `tsconfig.json`, `.claw/`, and `docs/` as the only L2-eligible paths.
 
-- [ ] **Step 2: Configure budget and stop behavior.**
+- [x] **Step 2: Configure budget and stop behavior.**
 
   Set a five-hour window, a maximum of one active item per run, three failed attempts per item, and report-only behavior when the budget reaches 80 percent or the pause flag is active.
 
-- [ ] **Step 3: Record the initial run.**
+- [x] **Step 3: Record the initial run.**
 
   Append a JSON Lines entry with a real start timestamp, `pattern` set to `phase0-capability-contract`, zero source actions, and `outcome` set to `started`.
 
-- [ ] **Step 4: Validate governance state.**
+- [x] **Step 4: Validate governance state.**
 
   Run: `python3 /Users/owenmacbook/.agents/skills/y-agentic-project-guidelines/scripts/validate-state.py .claw`
 
@@ -74,11 +74,11 @@
 - Consumes: Node.js release policy, MCP TypeScript server guidance, and FEAT-020's three-entry-point contract.
 - Produces: ADR-005 declaring Node.js 24 LTS + TypeScript/ESM as the isolated Phase 0 capability-contract PoC runtime.
 
-- [ ] **Step 1: Record decision evidence.**
+- [x] **Step 1: Record decision evidence.**
 
   Record that Node.js projects should use Active or Maintenance LTS for production, that Node 24 is LTS, and that the MCP SDK's TypeScript guide supports Node, ESM, Zod-backed tool schemas, and STDIO transport.
 
-- [ ] **Step 2: Write ADR-005.**
+- [x] **Step 2: Write ADR-005.**
 
   Define Node 24 LTS + TypeScript/ESM as the Phase 0 PoC runtime only; explicitly leave the final multi-service CRM runtime subject to later capacity and operations evidence.
 

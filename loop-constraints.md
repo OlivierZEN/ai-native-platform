@@ -10,7 +10,7 @@ These rules are binding for every Loop Engineering run.
 ## L1 Scope
 
 - Until the L2 promotion gate in `LOOP.md` is satisfied, do not edit `src/`, `tests/`, `package.json`, lockfiles, CI workflows, build configuration, deployment files, or dependencies.
-- L1 may edit only `LOOP.md`, `STATE.md`, `loop-constraints.md`, `loop-budget.md`, `loop-run-log.md`, `.claw/`, and directly relevant planning or ADR documents.
+- L1 may edit only `LOOP.md`, `STATE.md`, `loop-constraints.md`, `loop-budget.md`, `loop-run-log.md`, `docs/safety.md`, `patterns/registry.yaml`, `.claw/`, and directly relevant planning or ADR documents.
 - One triaged item per run; no more than three evidence-gathering attempts for the same failed command before escalation.
 
 ## Product Invariants

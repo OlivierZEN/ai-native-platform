@@ -11,12 +11,13 @@ Run a bounded Phase 0 Loop Engineering program that makes project state, safety 
 - Window: 2026-07-17 00:02–05:02 Asia/Shanghai
 - Cadence: every 30 minutes, plus this initial run
 - State: `STATE.md`, `.claw/current-status.md`, `.claw/task-board.md`, and `loop-run-log.md`
+- Machine-readable registry: `patterns/registry.yaml`
 - Primary work: `TASK-021`; watched delivery tasks: `TASK-009`, `TASK-010`, and `TASK-020`
 
 ## Run Procedure
 
 1. Stop immediately if `STATE.md` has `pause: true` or the end time has passed.
-2. Read `loop-constraints.md`, `loop-budget.md`, `STATE.md`, `.claw/current-status.md`, `.claw/task-board.md`, `FEAT-009`, and `FEAT-020`.
+2. Read `loop-constraints.md`, `loop-budget.md`, `docs/safety.md`, `STATE.md`, `.claw/current-status.md`, `.claw/task-board.md`, `FEAT-009`, and `FEAT-020`.
 3. Triage only one smallest verifiable Phase 0 item.
 4. In this L1 window, do not change application source code, package manifests, dependencies, CI, infrastructure, secrets, or remote Git state.
 5. Run read-only evidence commands only. Record each result in `STATE.md` and append one JSON object to `loop-run-log.md`.
@@ -37,6 +38,8 @@ The loop remains L1 until all conditions are true:
 - No subagents in this project loop.
 - A run changes only durable state, budget, log, planning, or ADR documents that are directly in scope.
 - Never claim test, elapsed-time, cost, or implementation results without command evidence.
+- Follow `docs/safety.md`; repeated no-progress outcomes must escalate and pause rather than loop indefinitely.
+- This L1 pattern has no MCP connector access. It uses the shared main worktree only for documentation; L2 source work requires an isolated worktree, as declared in `patterns/registry.yaml`.
 
 ## Completion
 

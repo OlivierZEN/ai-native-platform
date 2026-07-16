@@ -1,6 +1,6 @@
 # Loop State — AI-Native Platform
 
-Last run: 2026-07-16T16:09:07Z
+Last run: 2026-07-16T16:15:30Z
 Loop status: `active_l1`
 Pause: `false`
 Window end: 2026-07-16T21:02:28Z
@@ -14,11 +14,11 @@ Window end: 2026-07-16T21:02:28Z
 
 ## Current Finding
 
-The initial L1 audit completed with `npx @cobusgreyling/loop-audit . --suggest`: 74/100, level L1. `validate-state.py .claw` passed. The loop control plane is present, but the audit still identifies missing independent-verifier guidance, a dedicated safety document, a machine-readable pattern registry, and explicit stall detection. No application runtime, package manifest, or test suite exists; no application code has been changed.
+The machine-readable pattern registry declares L1 MCP scope, connector denial, documentation-only shared-worktree use, and the L2 isolated-worktree requirement. Re-running `npx @cobusgreyling/loop-audit . --suggest` produced 89/100, level L1; `validate-state.py .claw` passed. `ADR-005` records a Node 24 LTS + TypeScript/ESM + MCP SDK proposal from official Node and MCP documentation; it is not accepted and does not authorize dependency or source changes. `FEAT-020` now adds CC-01 to CC-09 as the required L2 evidence matrix, all explicitly `not_started_l1`. Outstanding loop findings are independent-verifier guidance and Codex triage/budget/constraint skill wiring.
 
 ## Watch List
 
-- Address one L1 documentation-only audit gap per run, beginning with the dedicated safety policy.
+- At the next scheduled L1 run, verify there was no scope drift, record the current L2 blockers, and avoid duplicate no-progress edits.
 - Record a Node 24 LTS + TypeScript/MCP recommendation as a proposal, not an implemented system.
 - Do not interpret the user-authorized five-hour window as approval to skip the L1 observation period.
 

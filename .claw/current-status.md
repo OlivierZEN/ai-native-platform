@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-16T16:09:07Z
+updated_at: 2026-07-16T16:15:30Z
 updated_by: ai
 phase: loop_l1_bootstrap
 active_task: "TASK-021 - Establish Phase 0 Loop Engineering controls"
-next_action: "Address the first L1 audit finding in documentation, then prepare ADR-005 without changing application code"
+next_action: "At the next scheduled L1 run, verify scope has not drifted and record only new evidence"
 read_next:
   goals: true
   decisions: false
@@ -37,6 +37,10 @@ read_next:
 - 确认平台为无前端的纯 Agent 平台；所有已发布原子能力必须具备 API、MCP 和非交互式 CLI 三个等价入口
 - 创建持续五小时的本地 Loop Engineering 自动化；每 30 分钟执行一次 L1 报告循环
 - 执行首轮 Loop Readiness Audit：`74/100`、`L1`；`.claw` 状态校验通过
+- 新增专用安全策略与停滞断路器；复审提升至 `81/100`、`L1`
+- 依据 Node 与 MCP 官方文档创建 `ADR-005` 运行时提案；尚未接受，未修改依赖或代码
+- 创建 `patterns/registry.yaml`，声明 L1 MCP 禁用、主工作树文档范围和 L2 隔离工作树要求；复审 `89/100`、`L1`
+- 为 `FEAT-020` 增加 CC-01 至 CC-09 的 L2 证据矩阵；所有实现和测试条目仍为 `not_started_l1`
 
 ### 进行中
 
@@ -44,7 +48,7 @@ read_next:
 
 ### 下一步
 
-- 每轮只处理一个 L1 文档化缺口；首先补充安全策略与停滞升级规则
+- 等待下一次 30 分钟 L1 周期；仅记录新的事实证据或升级项
 - 收集 Node LTS 与 MCP SDK 证据，为 `TASK-010` 写入 ADR-005 提案
 - 在五小时 L1 窗口结束后交接 L2 实施计划，等待人工批准
 
@@ -59,7 +63,7 @@ read_next:
 ## 已验证事实
 
 - Build: `not_run`（L1 期间禁止创建或修改应用构建配置）
-- Tests: `passed`（2026-07-16T16:09:07Z 的项目状态校验；应用测试尚无可运行目标）
+- Tests: `passed`（2026-07-16T16:15:30Z 的项目状态校验；应用测试尚无可运行目标）
 - Lint: `not_run`
 - 依赖变更: `none`
 
