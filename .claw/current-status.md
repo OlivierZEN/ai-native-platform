@@ -33,7 +33,7 @@ read_next:
 - 创建 `.claw/` 状态目录和 `docs/specs/` 交付文档目录
 - 将绿地架构设计登记为 `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
 - 创建 Phase 0 任务队列、目标基线和 ADR 索引
-- 初始化 Git 仓库并创建首个提交 `51a44ea`，远端为 `OlivierZEN/ai-native-platform`
+- 初始化 Git 仓库并创建首个项目基线提交，远端为 `OlivierZEN/ai-native-platform`
 
 ### 进行中
 

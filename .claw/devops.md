@@ -14,7 +14,7 @@ verification_status: pending
 
 - 远端仓库：`https://github.com/OlivierZEN/ai-native-platform.git`
 - 默认分支：`main`
-- 首个架构与治理基线提交：`51a44ea`
+- 架构与治理基线已提交至默认分支
 
 ## 构建
 
