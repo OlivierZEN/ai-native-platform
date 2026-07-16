@@ -1,7 +1,7 @@
 ---
 kind: goals
 version: 3
-updated_at: 2026-07-16T15:34:20Z
+updated_at: 2026-07-16T15:59:39Z
 updated_by: ai
 lifecycle: active
 ---
@@ -12,7 +12,7 @@ lifecycle: active
 
 ## 项目愿景
 
-构建面向中大型企业的 AI 原生多租户 CRM + 低代码 PaaS 平台。人工管理员与 Agent 共享同一套元数据、权限、Changeset、审计和回滚协议，在不牺牲租户隔离与稳定性的前提下，加快业务配置与交付。
+构建面向中大型企业的纯 AI Native 多租户 CRM + 低代码 PaaS 平台。平台不提供前端页面，所有业务、配置与运维均由 Agent 通过等价的 API、MCP 和非交互式 CLI 操作，并共享同一套元数据、权限、Changeset、审计和回滚协议。
 
 ## 当前范围
 
@@ -21,12 +21,14 @@ lifecycle: active
 - Phase 0 的架构验证、工程基线和技术选型 ADR
 - 多 PostgreSQL 分片下的租户控制面、128 bucket、RLS 与连接池上下文 PoC
 - 元数据、Changeset、`object_record + typed index`、outbox 和受控 Agent 工具的验证
+- 原子能力契约、MCP 服务与面向 Agent 的非交互式 CLI PoC
 
 ### Out Of Scope Now
 
 - 旧系统、旧数据库、旧 API、旧前端和旧插件的迁移或兼容
 - 允许租户执行任意数据库触发器、JVM 类、原生插件或不受控网络访问
 - 在 PostgreSQL OLTP 主库执行全文搜索、复杂报表或跨租户运营分析
+- Web、移动端、BFF、人工交互式管理页面和带菜单/提示的 CLI
 
 ## 里程碑
 
@@ -40,6 +42,7 @@ lifecycle: active
 - [ ] 新租户开户不执行租户专属 DDL，目标 2 分钟内可用
 - [ ] 自定义对象与普通字段无需变更业务表 DDL，并可安全 CRUD
 - [ ] 所有元数据写操作均经过可预检、审批、审计和回滚的 Changeset
+- [ ] 每个发布的原子能力均提供行为等价的 API、MCP Tool 和非交互式 CLI
 
 ### Later
 
@@ -56,11 +59,13 @@ lifecycle: active
 | 性能 | 普通记录写入 P95 | 500 ms 内 |
 | 业务 | 租户开户 | 不执行建库、建 schema 或建分区 DDL；目标 2 分钟内可用 |
 | 扩展 | 平台规模 | 通过多分片支持十亿至百亿级记录，不依赖单实例承载 |
+| Agent 原生 | 能力入口一致性 | 每个已发布原子能力均通过 API、MCP 与 CLI 契约测试 |
 
 ## 约束
 
 - 时间约束：Phase 0 计划 4–6 周；其余阶段以 `FEAT-009` 为路线基线
 - 技术约束：逻辑 OneDatabase、物理多 PostgreSQL 分片；记录与索引分离；事务、搜索与分析分离
+- 交互约束：无前端页面；CLI 仅接受结构化输入并输出 JSON/JSON Lines，不提供人类交互菜单
 - 合规约束：默认拒绝；身份、授权、审计、敏感数据最小化与数据驻留需求需在 Phase 0 明确
 - 资源约束：单分片初始目标为 16 vCPU / 64 GB；最终容量阈值必须由实测校准
 
@@ -69,6 +74,7 @@ lifecycle: active
 | 日期 | 变更内容 | 原因 |
 |------|----------|------|
 | 2026-07-16 | 根据 FEAT-009 初始化项目目标与阶段基线 | 建立绿地项目的可执行治理状态 |
+| 2026-07-16 | 确认纯 Agent 平台与 API/MCP/CLI 三入口约束 | 保证所有能力可被 Agent 发现、调用和编排 |
 
 ## 维护规则
 

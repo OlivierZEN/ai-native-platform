@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-16T15:47:00Z
+updated_at: 2026-07-16T15:59:39Z
 updated_by: ai
 phase: architecture_review
 active_task: "TASK-009 - Review the greenfield architecture baseline"
-next_action: "Approve or amend FEAT-009, then create the technical-stack and repository ADR for Phase 0"
+next_action: "Review the approved pure-Agent capability contract, then create the technical-stack and repository ADR for Phase 0"
 read_next:
   goals: true
   decisions: false
@@ -34,14 +34,15 @@ read_next:
 - 将绿地架构设计登记为 `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
 - 创建 Phase 0 任务队列、目标基线和 ADR 索引
 - 初始化 Git 仓库并创建首个项目基线提交，远端为 `OlivierZEN/ai-native-platform`
+- 确认平台为无前端的纯 Agent 平台；所有已发布原子能力必须具备 API、MCP 和非交互式 CLI 三个等价入口
 
 ### 进行中
 
-- `TASK-009`：架构基线等待评审
+- `TASK-009`：架构基线待完成总体评审；纯 Agent 能力契约已确认
 
 ### 下一步
 
-- 评审并批准或修订 `FEAT-009`
+- 审阅 `FEAT-020`，确认能力契约可作为后续实现基线
 - 为 `TASK-010` 创建技术栈与仓库 ADR；结论落入 `decisions.md`
 - 在每个非平凡 Phase 0 实施任务开始前，创建对应 feature spec
 
@@ -50,6 +51,7 @@ read_next:
 - `README.md` / `AGENTS.md` - 项目级 AI 协作声明
 - `.claw/` - 持久状态与 Phase 0 任务队列
 - `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md` - 架构基线
+- `docs/specs/FEAT-020-pure-agent-capability-contract.md` - API/MCP/CLI 三入口契约
 
 ## 已验证事实
 
@@ -73,6 +75,7 @@ read_next:
 ## 相关设计文档
 
 - `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md` - 当前架构与交付基线
+- `docs/specs/FEAT-020-pure-agent-capability-contract.md` - 已确认的纯 Agent 入口约束
 
 ## 维护规则
 

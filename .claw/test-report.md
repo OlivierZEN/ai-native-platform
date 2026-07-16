@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-16T15:38:28Z
+updated_at: 2026-07-16T15:59:39Z
 updated_by: ai
-last_run_at: 2026-07-16T15:38:28Z
+last_run_at: 2026-07-16T15:59:39Z
 last_run_status: passed
 ---
 
@@ -16,7 +16,7 @@ last_run_status: passed
 ## 最新运行摘要
 
 - 状态：`passed`
-- 范围：`agentic-project-guidelines` 状态文件、项目协作声明与引用的规格文档
+- 范围：`agentic-project-guidelines` 状态文件、项目协作声明与纯 Agent 规格更新
 - 命令：`python3 /Users/owenmacbook/.agents/skills/y-agentic-project-guidelines/scripts/validate-state.py .claw`
 - 环境：`local workspace`
 

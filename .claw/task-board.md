@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T15:34:20Z
+updated_at: 2026-07-16T15:59:39Z
 updated_by: ai
 board_status: active
 ---
@@ -72,7 +72,7 @@ board_status: active
 
 #### Done When
 
-- 后端、前端、部署、CI/CD 和安全门禁的关键选型形成 ADR
+- 后端、MCP/CLI、部署、CI/CD 和安全门禁的关键选型形成 ADR
 - 仓库结构、编码规范与本地开发基线可执行
 
 #### Next Action
@@ -185,7 +185,7 @@ board_status: active
 
 #### Handoff Note
 
-- 人工 UI 与 Agent 工具必须生成等价的 Changeset。
+- API、MCP Tool 与 CLI 必须生成等价的 Changeset。
 
 ### TASK-015 - Benchmark object records and typed indexes
 
@@ -316,6 +316,34 @@ board_status: active
 #### Handoff Note
 
 - 测试结果必须记录在 `test-report.md`，不能以设计结论替代实测。
+
+### TASK-020 - Implement the pure-Agent capability contract
+
+- status: `todo`
+- priority: `critical`
+- owner_role: `shared`
+- claimed_by: ``
+- spec_path: `docs/specs/FEAT-020-pure-agent-capability-contract.md`
+- depends_on: `TASK-010`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `capability registry, API gateway, MCP server, non-interactive CLI, contract tests`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 每个已发布原子能力从统一 Capability Contract 派生 API、MCP Tool 与 CLI
+- CLI 仅支持结构化输入和 JSON/JSON Lines 输出，无菜单、提示或终端状态依赖
+- 三入口通过等价性、权限、幂等、审计和错误码契约测试
+
+#### Next Action
+
+- 在 TASK-010 的技术基线确定后，为第一批能力实现 Capability Contract PoC。
+
+#### Handoff Note
+
+- 不得为任一入口复制业务逻辑；仅传输适配层可以不同。
 
 ## Completed Tasks
 

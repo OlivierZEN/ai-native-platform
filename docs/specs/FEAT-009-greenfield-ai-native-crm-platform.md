@@ -4,10 +4,10 @@ feature_id: FEAT-009
 title: Greenfield AI-native multi-tenant CRM and PaaS platform
 status: draft
 owner_role: shared
-task_ids: TASK-009, TASK-010, TASK-011, TASK-012, TASK-013, TASK-014, TASK-015, TASK-016, TASK-017, TASK-018, TASK-019
-related_decisions: ADR-003
+task_ids: TASK-009, TASK-010, TASK-011, TASK-012, TASK-013, TASK-014, TASK-015, TASK-016, TASK-017, TASK-018, TASK-019, TASK-020
+related_decisions: ADR-003, ADR-004
 related_issues: none
-updated_at: 2026-07-16T15:34:20Z
+updated_at: 2026-07-16T15:59:39Z
 updated_by: ai
 ---
 
@@ -25,7 +25,7 @@ updated_by: ai
 2. 自定义对象依赖预制表和预制字段，扩展数量受物理表结构限制。
 3. 大量宽表、无差别索引和混合负载导致查询、写入和变更性能不稳定。
 4. 开放式触发器和类代码可以直接影响事务与数据库，破坏平台稳定性。
-5. 元数据主要面向人工页面操作，缺少 Agent 可理解、可执行、可控制的原生协议。
+5. 元数据和平台能力必须可被 Agent 发现、执行、控制和审计，而不能依赖人工页面或彼此漂移的多套工具实现。
 
 ### 0.2 绿地前提
 
@@ -47,12 +47,9 @@ updated_by: ai
 
 ### 1.1 产品定位
 
-目标产品是一套面向中大型企业的多租户 CRM + 低代码 PaaS 平台，同时具备两个原生入口：
+目标产品是一套面向中大型企业的纯 AI Native 多租户 CRM + 低代码 PaaS 平台。平台不提供 Web、移动端、BFF 或人工交互式控制台；所有业务、配置和运维均由 Agent 通过三种等价入口执行：功能 API、MCP 服务和非交互式 CLI。
 
-- 人工入口：Web、移动端和开放 API，用于日常业务与系统配置。
-- Agent 入口：受策略控制的结构化工具和 Changeset，用于理解、规划、执行和治理元数据配置。
-
-AI 不是附加聊天窗口。Agent 与人工管理员共享同一套元数据模型、权限模型、校验器、发布器、审计和回滚机制。
+AI 不是附加聊天窗口，而是唯一操作主体。每个已发布原子能力必须从统一 Capability Contract 派生 API、MCP Tool 和 CLI，三者共享元数据模型、权限模型、校验器、发布器、审计、回滚、幂等和错误语义。
 
 ### 1.2 业务能力范围
 
@@ -64,10 +61,10 @@ AI 不是附加聊天窗口。Agent 与人工管理员共享同一套元数据�
 | 服务管理 | 服务请求、工单、队列、SLA、知识库、服务过程 |
 | 协作 | 任务、日程、评论、通知、关注、文件和记录动态 |
 | 数据管理 | 导入、导出、批量更新、查重、归档、回收站、审计 |
-| 低代码配置 | 对象、字段、关系、布局、视图、公式、验证规则、流程、审批 |
+| 低代码配置 | 对象、字段、关系、查询模板、公式、验证规则、流程、审批 |
 | 权限与共享 | 用户、角色、组织树、权限集、字段权限、记录共享、团队、区域 |
-| 查询与分析 | 列表、搜索、报表、仪表板、聚合、订阅与导出 |
-| 集成开放 | REST API、批量 API、Webhook、连接器、事件订阅、OAuth/OIDC |
+| 查询与分析 | 查询结果集、搜索、报表数据集、聚合、订阅与导出 |
+| Agent 操作接口 | 功能 API、MCP 服务、非交互式 CLI、批量 API、Webhook、连接器、事件订阅、OAuth/OIDC |
 | 平台运营 | 租户开户、套餐配额、路由、容量、计费计量、审计和运维 |
 | AI 原生能力 | 元数据问答、配置规划、影响分析、受控发布、业务 Agent 工具 |
 
@@ -77,6 +74,7 @@ AI 不是附加聊天窗口。Agent 与人工管理员共享同一套元数据�
 - V1 不把全文搜索、复杂报表和跨租户运营分析放在 PostgreSQL OLTP 主库执行。
 - V1 不追求把所有领域拆成独立微服务；优先保证事务边界清晰和模块可演进。
 - 不依赖单个超大数据库实例解决平台增长问题。
+- V1 不提供 Web、移动端、BFF、人工交互式管理页面或带菜单/提示的 CLI。
 
 ### 1.4 成功标准
 
@@ -90,12 +88,13 @@ AI 不是附加聊天窗口。Agent 与人工管理员共享同一套元数据�
 | 扩容 | 单分片达到容量水位后可增加新物理实例，业务 API 与租户使用方式不变 |
 | 数据规模 | 平台通过多分片支撑十亿至百亿级记录，不以单表单实例承载全部数据 |
 | 可观测性 | 请求、事件、自动化和 Agent 操作可按租户、分片、版本和执行者追踪 |
+| 三入口一致性 | 每个已发布原子能力都可经 API、MCP Tool 和非交互式 CLI 等价执行，并通过契约测试 |
 
 ## 2. 核心架构原则
 
 1. **逻辑 OneDatabase，物理多分片**：产品模型统一，存储实例可横向增加。
 2. **租户路由显式化**：`tenant_id -> shard_id + tenant_bucket` 是控制面唯一事实源。
-3. **元数据即产品协议**：页面、API、校验、权限、流程和 Agent 都消费同一元数据。
+3. **元数据与能力契约即产品协议**：API、MCP、CLI、校验、权限、流程和 Agent 都消费同一版本化定义。
 4. **记录与索引分离**：JSONB 保存权威记录，类型化索引只为可查询字段服务。
 5. **事务与分析分离**：OLTP、搜索、分析、审计和文件按负载选择存储。
 6. **配置即版本**：任何元数据变更都有草稿、差异、校验、发布和回滚。
@@ -103,17 +102,20 @@ AI 不是附加聊天窗口。Agent 与人工管理员共享同一套元数据�
 8. **默认拒绝**：无租户上下文、无权限、无声明能力或无资源预算的操作直接失败。
 9. **异步优先但边界明确**：核心记录事务强一致，搜索、分析、通知和外部集成最终一致。
 10. **先模块化再服务化**：按领域边界组织代码，仅在隔离、伸缩或发布独立性有收益时拆服务。
+11. **三入口同源**：任何已发布原子能力都必须以统一契约提供 API、MCP Tool 和非交互式 CLI；适配层不得复制业务语义。
 
 ## 3. 总体架构
 
 ```mermaid
 flowchart TB
-    U["Web / Mobile / Open API"] --> G["API Gateway & BFF"]
-    A["Tenant Agent / Platform Agent"] --> AT["Agent Tool Gateway"]
+    A["Tenant / Platform / System Agent"] --> G["Capability API Gateway"]
+    A --> AT["MCP Service"]
+    A --> CLI["Non-interactive CLI"]
     G --> IAM["Identity & Access"]
     G --> RT["CRM Runtime Service"]
     G --> META["Metadata Control Service"]
     AT --> AIC["AI Control Plane"]
+    CLI --> G
     AIC --> META
     META --> CHG["Changeset / Policy / Approval / Publisher"]
     CHG --> MC[("Metadata Store")]
@@ -139,7 +141,7 @@ flowchart TB
 | 平面 | 主要职责 | 核心状态 |
 |---|---|---|
 | Tenant & Shard Control Plane | 租户生命周期、分片注册、放置、路由、配额 | 控制面 PostgreSQL |
-| Metadata Control Plane | 对象、字段、布局、权限、规则、版本、发布 | 元数据 PostgreSQL + 缓存 |
+| Metadata Control Plane | 对象、字段、查询模板、权限、规则、版本、发布 | 元数据 PostgreSQL + 缓存 |
 | Runtime Data Plane | CRM 记录、关系、共享、事务查询 | 分片 PostgreSQL |
 | AI Control Plane | 意图解释、配置计划、影响分析、Agent 工具治理 | 计划、策略、审计、知识图谱 |
 | Automation & Extension Plane | 规则、流程、审批、调度、沙箱函数 | 执行定义、任务和日志 |
@@ -154,7 +156,7 @@ flowchart TB
 
 | 部署单元 | 包含模块 | 拆分理由 |
 |---|---|---|
-| `edge-gateway` | 网关、限流、BFF、API 版本 | 统一入口与安全边界 |
+| `capability-gateway` | 功能 API、限流、版本与契约执行 | 统一 Agent 入口与安全边界 |
 | `identity-service` | 登录、OIDC、会话、用户与服务身份 | 安全和可用性独立 |
 | `tenant-control-service` | 开户、套餐、配额、分片和路由 | 控制面独立于租户数据面 |
 | `metadata-service` | 元数据、Changeset、编译、发布、依赖图 | 配置生命周期一致 |
@@ -165,6 +167,8 @@ flowchart TB
 | `analytics-service` | 报表语义、查询编排、导出 | 与 OLAP 负载隔离 |
 | `file-service` | 文件元数据、上传、下载、预览、病毒扫描 | 大文件和对象存储隔离 |
 | `ai-control-service` | Agent 工具、规划、影响分析、策略协调 | AI 预算和风险独立治理 |
+| `mcp-service` | MCP Tool 发现、schema 投影与调用适配 | 以 Capability Contract 暴露 Agent 工具 |
+| `agent-cli` | 非交互式 CLI、JSON/JSON Lines 适配 | 本地 Agent、自动化和离线运维调用 |
 
 不建议在首个版本把每个 CRM 对象拆成一个微服务。对象、字段、权限和记录写入高度依赖同一事务语义，过早拆分会把内部一致性问题放大为分布式事务问题。
 
@@ -361,7 +365,7 @@ sequenceDiagram
 元数据不仅描述数据库字段，还应完整描述业务语义和运行行为：
 
 - 对象、字段、关系、枚举和记录类型。
-- 页面布局、列表视图、搜索布局、动作和导航。
+- 查询模板、搜索模板、动作和机器可读操作描述。
 - 公式、验证规则、默认值、自动编号和派生字段。
 - 对象权限、字段权限、共享策略和审批权限。
 - 流程、审批、定时任务、通知和集成映射。
@@ -376,8 +380,8 @@ sequenceDiagram
 | `field_def` | field_id, object_id, type, semantic | 字段定义 |
 | `relation_def` | relation_id, source, target, cardinality | 查找、主从、多对多 |
 | `record_type_def` | record_type_id, object_id, process | 记录类型与过程 |
-| `layout_def` | layout_id, object_id, audience, schema | 页面布局 |
-| `view_def` | view_id, query, columns, sort | 列表视图 |
+| `query_template_def` | template_id, object_id, query, columns, sort | 供 Agent 调用的已保存查询模板 |
+| `capability_def` | capability_id, action, input_schema, output_schema, policy | API/MCP/CLI 的原子能力契约 |
 | `validation_rule_def` | expression, error_path, severity | 验证规则 |
 | `formula_def` | expression, return_type, dependencies | 公式字段 |
 | `permission_def` | principal, resource, actions, effect | 权限声明 |
@@ -445,7 +449,7 @@ draft
   "changesetId": "019...",
   "tenantId": "019...",
   "baseVersion": "019...",
-  "intent": "为商机增加预计回款日期并显示在销售布局",
+  "intent": "为商机增加预计回款日期，并允许 Agent 在查询结果中取得该字段",
   "operations": [
     {
       "op": "metadata.field.create",
@@ -456,12 +460,6 @@ draft
         "dataType": "date",
         "queryPolicy": "indexed"
       }
-    },
-    {
-      "op": "metadata.layout.addField",
-      "layout": "Opportunity.sales",
-      "field": "Opportunity.expectedPaymentDate",
-      "section": "payment"
     }
   ],
   "riskLevel": "medium",
@@ -482,7 +480,7 @@ Changeset 必须具备：基础版本、结构化操作、前置条件、幂等�
 - 校验和公式执行计划。
 - 权限决策计划。
 - 查询字段映射与索引策略。
-- 页面 schema 和动作清单。
+- Capability Contract、API 路由、MCP Tool 描述和 CLI 命令 schema。
 - 自动化触发索引。
 - Agent 工具描述和 JSON Schema。
 
@@ -672,7 +670,7 @@ Agent 只能通过平台公开的结构化工具读取和修改配置，不能�
 
 - `metadata.object.get/list/create/update/deprecate`
 - `metadata.field.create/update/index/deprecate`
-- `metadata.layout.update`
+- `metadata.query_template.create/update/deprecate`
 - `metadata.permission.grant/revoke`
 - `metadata.automation.create/update/activate`
 - `changeset.create/validate/simulate/submit/publish/rollback`
@@ -681,6 +679,20 @@ Agent 只能通过平台公开的结构化工具读取和修改配置，不能�
 - `report.run`
 
 所有写工具默认生成 Changeset；只有发布器能把 Changeset 变成有效元数据版本。
+
+### 8.3.1 Capability Contract、API、MCP 与 CLI
+
+每个已发布原子能力以版本化 `capability_def` 作为唯一行为契约，至少定义：稳定能力 ID 与动作、输入/输出 JSON Schema、同步或异步语义、权限与风险策略、幂等要求、稳定错误码、审计事件及版本兼容规则。
+
+该契约生成或校验三种等价入口：
+
+| 入口 | 用途 | 强制约束 |
+|---|---|---|
+| 功能 API | 远程 Agent 编排和服务间调用 | 版本化端点、JSON payload、认证、幂等与稳定错误码 |
+| MCP Service | Agent 的工具发现与结构化调用 | 每项能力有可发现 Tool、同一 input/output schema 与策略检查 |
+| `agent-cli` | 本地 Agent、自动化和离线运维 | 无菜单、无提示、无交互状态；参数或 stdin JSON 输入，JSON/JSON Lines 输出 |
+
+三入口在进入运行时前都标准化为同一个 capability invocation；运行时只执行一次权限、配额、风险、Changeset、审计和业务逻辑。异步能力返回统一的 `operation_id`，并通过 API、MCP 和 CLI 以同一状态模型查询。仅限内部实现细节可不暴露；任何对 Agent 发布的原子能力缺少其中任一入口即不得发布。
 
 ### 8.4 Agent 执行流程
 
@@ -716,7 +728,7 @@ Agent token 必须包含租户、能力 scope、资源范围、有效期、预�
 | 等级 | 示例 | 默认策略 |
 |---|---|---|
 | 低 | 新建未使用视图、修改帮助文本 | 可按租户策略自动发布 |
-| 中 | 新建字段、修改布局、启用通知 | 预检后单人审批 |
+| 中 | 新建字段、修改查询模板、启用通知 | 预检后单人审批 |
 | 高 | 删除字段、修改权限、启用自动化、外发数据 | 双人审批 + 观察窗口 |
 | 禁止 | 直接 SQL、关闭审计、跨租户读写、提升自身权限 | 平台拒绝 |
 
@@ -922,6 +934,8 @@ with check (
 | Bulk API | 异步任务、分片上传、错误明细、断点和结果保留 |
 | Event API | 订阅、过滤、重放窗口、签名和投递日志 |
 | Agent Tool API | 能力描述、范围、预算、风险和审计 |
+| MCP API | Tool 发现与调用；从 Capability Contract 投影，不拥有独立业务语义 |
+| Agent CLI | 非交互式 JSON/JSON Lines 调用；从 Capability Contract 投影，不拥有独立业务语义 |
 
 示例端点：
 
@@ -939,6 +953,15 @@ POST   /v1/changesets/{id}/submit
 POST   /v1/changesets/{id}/publish
 POST   /v1/changesets/{id}/rollback
 ```
+
+CLI 示例（仅供 Agent 或自动化调用）：
+
+```text
+printf '%s' '{"object":"Opportunity","recordId":"..."}' | agent-cli runtime.record.get --input - --output json
+agent-cli changeset.validate --changeset-id 019... --output json
+```
+
+CLI 在成功和失败时都输出机器可读结果；不得显示确认提示、菜单或需要人类解释的自由文本。
 
 ### 11.4 集成连接器
 
@@ -965,7 +988,7 @@ OpenSearch/Elasticsearch 类引擎负责：
 ClickHouse、Doris 或 StarRocks 作为候选，最终通过团队能力和压测选型。分析平面负责：
 
 - 多对象关联、复杂聚合、趋势、漏斗和同比环比。
-- 仪表板、订阅报表和大批量导出。
+- 报表数据集、订阅结果和大批量导出。
 - 平台容量、成本和运营分析。
 
 数据通过事件或 CDC 进入 OLAP，使用语义模型把对象、字段、维度、指标和关系映射为稳定查询协议。
@@ -976,11 +999,11 @@ ClickHouse、Doris 或 StarRocks 作为候选，最终通过团队能力和压�
 |---|---|---|
 | 记录详情和事务列表 | PostgreSQL | 提交后立即可见 |
 | 全文搜索 | Search | P95 10 秒内 |
-| 普通仪表板 | OLAP | P95 2 分钟内 |
+| 普通报表数据集 | OLAP | P95 2 分钟内 |
 | 大型离线报表 | OLAP | 按任务 SLA |
 | 合规审计 | Audit Store | 事件提交后可追踪 |
 
-页面应显示数据更新时间，不把最终一致结果伪装为强一致。
+API、MCP 和 CLI 结果必须返回数据新鲜度，不把最终一致结果伪装为强一致。
 
 ## 13. 配置包、环境与发布
 
@@ -1010,7 +1033,7 @@ ClickHouse、Doris 或 StarRocks 作为候选，最终通过团队能力和压�
 
 - 元数据版本写入和租户当前版本指针切换在控制面事务内完成。
 - 索引构建、数据回填等长任务作为发布前置任务；未完成时不能激活依赖它的配置。
-- 自动化实例固定定义版本；页面请求固定元数据版本。
+- 自动化实例和每次 capability invocation 固定元数据版本。
 - 发布后观察错误率、规则失败、查询成本和 Agent 反馈，超过阈值自动阻止继续推广。
 
 ## 14. 配额、限流与成本治理
@@ -1122,8 +1145,8 @@ operation_type
 
 - 一个租户的自动化失败不能阻塞其他租户队列。
 - 一个分片故障只影响该分片租户，不传播到控制面和其他分片。
-- 搜索或 OLAP 不可用时，记录事务仍可运行；相关页面明确降级。
-- AI 控制面不可用时，人工配置和业务运行不受影响。
+- 搜索或 OLAP 不可用时，记录事务仍可运行；API、MCP 和 CLI 返回明确降级状态。
+- AI 控制面不可用时，运行时业务 API 仍可运行；受控配置调用返回可重试状态。
 - 外部连接器故障通过熔断和死信隔离，不占满核心工作线程。
 
 ## 17. 安全架构
@@ -1139,7 +1162,7 @@ operation_type
 
 - 密钥、数据库密码、OAuth secret 和加密密钥进入 KMS/Vault 类系统。
 - 普通配置采用版本化配置服务，敏感引用与非敏感值分离。
-- 前端只获得公开配置，不包含服务凭据、AI key 或数据库信息。
+- API、MCP 与 CLI 调用方只获得其权限范围内的公开配置，不包含服务凭据、AI key 或数据库信息。
 - 密钥支持轮换、使用审计和紧急吊销。
 
 ### 17.3 安全开发门禁
@@ -1190,10 +1213,10 @@ operation_type
 ### 19.2 列表与详情
 
 - 详情请求按 `tenant + object + record` 主键定位并加载元数据版本。
-- 列表视图由 `view_def` 编译为查询 AST 和显示 schema。
-- 视图保存前检查字段权限、索引可用性和成本预算。
+- 查询模板由 `query_template_def` 编译为查询 AST 和结果 schema。
+- 查询模板保存前检查字段权限、索引可用性和成本预算。
 - 关联字段批量解析，禁止逐行 N+1 查询。
-- 用户个性化只保存差异，不复制完整布局。
+- Agent 查询偏好只保存可审计的差异参数，不复制完整查询模板。
 
 ### 19.3 导入导出
 
@@ -1203,7 +1226,7 @@ operation_type
 - 导出执行字段权限、脱敏、水印、审批和下载有效期策略。
 - 大任务按租户公平调度，不能占满 OLTP 连接池。
 
-### 19.4 报表和仪表板
+### 19.4 报表与 Agent 消费的数据集
 
 - 报表通过语义模型选择对象、关系、维度、指标和过滤器。
 - 简单实时聚合可在 PostgreSQL 受限执行；复杂查询进入 OLAP。
@@ -1218,7 +1241,7 @@ operation_type
 |---|---|
 | 单元测试 | 元数据编译、表达式、权限谓词、路由、查询 AST、幂等 |
 | 组件测试 | PostgreSQL RLS、分区裁剪、类型索引、outbox、沙箱 |
-| 契约测试 | API、事件 schema、Agent 工具、连接器 |
+| 契约测试 | API、MCP Tool、CLI、事件 schema、连接器；三入口行为等价性 |
 | 集成测试 | 开户、发布、记录写入、自动化、搜索和报表同步 |
 | E2E | CRM 核心流程、配置发布、审批、导入导出和故障降级 |
 | 性能测试 | 单分片容量、热点租户、复杂视图、自动化风暴、恢复时间 |
@@ -1231,7 +1254,7 @@ operation_type
 - 连接池复用后继承前一个租户 session setting。
 - Worker 消息缺少或篡改租户上下文。
 - 搜索和 OLAP 过滤缺少 tenant 条件。
-- 管理员和 Agent 试图提升自身权限或绕过审批。
+- 任一 Agent 或服务身份试图提升自身权限或绕过审批。
 - 导出、Webhook、日志和 AI 上下文泄露敏感字段。
 
 ### 20.3 元数据属性测试
@@ -1240,7 +1263,9 @@ operation_type
 - 元数据版本回滚后运行行为恢复到已知状态。
 - 依赖图不会出现未检测的悬空引用和危险环。
 - 字段类型、查询操作符和索引类型保持一致。
-- 人工 UI 与 Agent 工具产生相同 Changeset 时执行结果一致。
+- API、MCP Tool 与 CLI 产生相同 Changeset 时执行结果一致。
+- 同一 Capability Contract 经 API、MCP 与 CLI 调用时，输入校验、授权、幂等、输出、错误码与审计事件一致。
+- CLI 在无 TTY、仅有结构化输入的环境下可完成全部已发布原子能力；不得出现交互菜单或确认提示。
 
 ### 20.4 性能验收场景
 
@@ -1263,6 +1288,7 @@ operation_type
 - `object_record + typed index` 基准测试。
 - Changeset、元数据编译和版本快照 PoC。
 - 沙箱运行时和 outbox PoC。
+- Capability Contract、MCP Service 与非交互式 CLI PoC，并完成第一批三入口契约测试。
 
 退出条件：关键架构假设有真实压测和故障测试证据；无法达到目标的设计已调整。
 
@@ -1271,9 +1297,9 @@ operation_type
 交付：
 
 - Identity、Tenant Control、Shard Router、Metadata、Runtime 基础服务。
-- 新租户开户、基础包安装、对象/字段/布局、记录 CRUD 和查询 DSL。
+- 新租户开户、基础包安装、对象/字段/查询模板、记录 CRUD 和查询 DSL。
 - 对象/字段权限、RLS、审计、幂等和乐观锁。
-- Agent 只读元数据工具与低风险 Changeset 闭环。
+- Agent 通过 API、MCP 和 CLI 调用的只读元数据工具与低风险 Changeset 闭环。
 
 退出条件：新租户无需 DDL 开户；自定义对象和字段可配置并安全 CRUD；跨租户测试全部通过。
 
@@ -1293,7 +1319,7 @@ operation_type
 交付：
 
 - 流程 DAG、审批、调度、沙箱函数和执行治理。
-- 搜索平面、报表语义、OLAP 同步和仪表板。
+- 搜索平面、报表语义、OLAP 同步和 Agent 消费的数据集。
 - Webhook、连接器、Bulk API 和事件订阅。
 - 完整配额、计量和公平调度。
 
@@ -1308,7 +1334,7 @@ operation_type
 - 中高风险审批、观察窗口、异常阻断和完整 Agent 审计。
 - 自然语言到 Changeset 的评测集和安全红队测试。
 
-退出条件：Agent 不接触底层表也能完成受控配置；人工和 Agent 变更遵循同一治理协议。
+退出条件：Agent 不接触底层表也能完成受控配置；API、MCP 与 CLI 调用遵循同一治理协议。
 
 ### Phase 5 - 规模化与行业化（持续）
 
@@ -1330,8 +1356,8 @@ operation_type
 | 6 | 记录存储 PoC | object_record、类型索引、关系和查询 | backend-agent |
 | 7 | 权限 PoC | 对象、字段、记录共享和权限快照 | backend-agent |
 | 8 | Outbox 与 Worker | 事件、幂等、重试、死信 | integration-agent |
-| 9 | Agent Tool Gateway | 工具 schema、身份、预算和审计 | backend-agent |
-| 10 | 基准与隔离测试 | 容量、热点、跨租户、故障恢复 | qa-agent |
+| 9 | Agent Tool Gateway、MCP 与 CLI | Capability Contract、工具 schema、身份、预算、审计和三入口适配 | backend-agent |
+| 10 | 基准、隔离与三入口契约测试 | 容量、热点、跨租户、故障恢复和 API/MCP/CLI 等价性 | qa-agent |
 
 每个任务应创建独立 feature spec，并把真实验证结果写入 `.claw/test-report.md`。
 
@@ -1360,7 +1386,7 @@ operation_type
 3. Event Bus 选择 Kafka、Pulsar 或其他实现。
 4. Search 与 OLAP 的最终产品选型。
 5. WebAssembly 运行时、表达式语言和流程编排引擎选型。
-6. 前端框架、页面 schema 渲染协议和移动端策略。
+6. Capability Contract 的 schema 工具链、MCP Server 实现和非交互式 CLI 打包策略。
 7. 多区域数据驻留、跨区域 RPO/RTO 和合规基线。
 8. 计费维度、套餐上限和 dedicated shard 商业策略。
 
@@ -1373,12 +1399,14 @@ operation_type
 - 元数据、记录、索引、关系、权限、自动化、事件和 AI 控制面有明确模型。
 - 数据库、搜索、OLAP、文件、缓存和消息各自负载边界清晰。
 - API、事务、一致性、安全、可观测、容灾、测试和实施阶段可执行。
+- 明确无前端页面，且每个已发布原子能力由统一契约提供 API、MCP Tool 与非交互式 CLI。
 
 ### 25.2 Phase 1 产品验收
 
 - 新建租户不执行任何租户专属 DDL。
 - 同一分片至少运行多个租户，跨租户读写测试全部失败并留下安全审计。
-- 可通过 UI 和 Agent 工具创建自定义对象、字段和布局，两者生成等价 Changeset。
+- 可通过 API、MCP Tool 和 CLI 创建自定义对象、字段和查询模板，三者生成等价 Changeset。
+- 每个已发布原子能力均可通过 API、MCP Tool 和无交互 CLI 调用，并通过等价性测试。
 - 普通字段创建无需修改 `object_record` 表结构。
 - 记录写入同步维护必要类型索引并产生 outbox 事件。
 - 元数据变更可预检、审批、发布和回滚。
