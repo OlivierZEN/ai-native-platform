@@ -1,26 +1,18 @@
-# Loop Constraints — AI-Native Platform
+# L2 Loop Constraints — Go Capability Contract PoC
 
-These rules are binding for every Loop Engineering run.
+## Allowed paths
 
-## Push and External State
+- `go.mod`, `go.sum`
+- `cmd/ai-native-platform/**`
+- `internal/capability/**`, `internal/api/**`, `internal/cli/**`, `internal/mcp/**`
+- `schemas/**`, `docs/**`, `.claw/**`
+- `LOOP.md`, `STATE.md`, `loop-constraints.md`, `loop-budget.md`, `loop-run-log.md`
 
-- Do not push, merge, create a pull request, publish a package, send external messages, or change remote Git state without explicit user approval.
-- Do not create or alter cloud resources, infrastructure configuration, credentials, secrets, or environment files.
+## Denylist and human gates
 
-## L1 Scope
-
-- Until the L2 promotion gate in `LOOP.md` is satisfied, do not edit `src/`, `tests/`, `package.json`, lockfiles, CI workflows, build configuration, deployment files, or dependencies.
-- L1 may edit only `LOOP.md`, `STATE.md`, `loop-constraints.md`, `loop-budget.md`, `loop-run-log.md`, `docs/safety.md`, `patterns/registry.yaml`, `.claw/`, and directly relevant planning or ADR documents.
-- One triaged item per run; no more than three evidence-gathering attempts for the same failed command before escalation.
-
-## Product Invariants
-
-- The product has no Web, mobile, BFF, graphical page, or interactive CLI.
-- Every published atomic capability must expose equivalent API, MCP Tool, and non-interactive CLI access from one Capability Contract.
-- Do not invent validation, build, benchmark, security, cost, or elapsed-time results.
-
-## Communication
-
-- State what will be done before a material change.
-- Record only a concise state delta and append a machine-readable run record after each run.
-- Escalate ambiguous product or security decisions instead of guessing.
+- Never edit `.env`, `.env.*`, `**/secrets/**`, `**/credentials/**`, `**/*_key*`, `**/*_secret*`, `auth/**`, `payments/**`, `billing/**`, `k8s/**`, `.terraform/**`, `Dockerfile*`, `docker-compose*`, `.github/**`, `**/migrations/**`, or any production configuration.
+- Never access or write a production database; this loop does not create PostgreSQL schema, migrations, containers, volumes, HA, backup, or recovery artifacts.
+- Never push, merge, open a PR, publish a module/binary/image, send external messages, install system packages, or store credentials.
+- A dependency may enter `go.mod` only after recording its exact version, direct/transitive license review, checksum behavior and reason for use in the active task handoff.
+- At most three failed attempts per work item. Do not disable tests, inflate timeouts, or replace a protocol dependency with an incompatible custom protocol merely to pass a test.
+- Stop and escalate on scope ambiguity, a denylist path, a non-allowlisted license, any credential/PII exposure, public module resolution required for CI/release, or a missing independent verifier.

@@ -1,6 +1,6 @@
 # AI Native Platform
 
-Greenfield AI-native multi-tenant CRM and PaaS platform. The architecture and delivery baseline is maintained in `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`.
+Greenfield AI-native multi-tenant business data and runtime platform. The architecture baseline is maintained in `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`; the approved extension of the existing Agent CC operations client into a product-neutral unified tenant control plane is defined in `docs/specs/FEAT-011-unified-tenant-operations-control-plane.md` and ADR-009 in `.claw/decisions.md`.
 
 <!-- agentic-project-guidelines:begin -->
 ## AI Development Protocol

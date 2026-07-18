@@ -1,46 +1,37 @@
-# LOOP.md — AI-Native Platform
+# Loop Engineering 状态
 
-## Purpose
+## 活跃 L2 循环
 
-Run a bounded Phase 0 Loop Engineering program that makes project state, safety constraints, evidence, and handoff decisions durable. The current loop is not an implementation loop: it establishes and observes the control system needed before the Capability Contract PoC can enter an assisted L2 implementation phase.
+- Pattern: `phase0-go-capability-contract-l2`
+- Level: `L2 — assisted implementation`
+- Window: 2026-07-18 00:03:53–05:03:53 Asia/Shanghai
+- Goal: 一个低风险能力从同一 Go Capability Contract 投影为 API、MCP 与无交互 CLI，并具备可复现的 parity 证据。
+- Authorization: 用户于 2026-07-18 明确授权 L2 原码工作。该授权仅覆盖本 PoC，不批准生产部署、数据库迁移、HA/备份、远端发布或 FEAT-009 的其余未决组件。
+- State: `STATE.md`、`.claw/current-status.md`、`.claw/task-board.md`、`loop-budget.md`、`loop-constraints.md` 与 `loop-run-log.md`。
+- Outcome: 2026-07-18 00:46:51 Asia/Shanghai 独立验证完成单个低风险 `system.capability.list` PoC；循环已停止源码修改，后续范围需要新的 L2 检查点。
 
-## Active Loop
+## 五小时运行计划
 
-- Pattern: `phase0-capability-contract`
-- Level: `L1 — report-only`
-- Window: 2026-07-17 00:02–05:02 Asia/Shanghai
-- Cadence: every 30 minutes, plus this initial run
-- State: `STATE.md`, `.claw/current-status.md`, `.claw/task-board.md`, and `loop-run-log.md`
-- Machine-readable registry: `patterns/registry.yaml`
-- Primary work: `TASK-021`; watched delivery tasks: `TASK-009`, `TASK-010`, and `TASK-020`
+| 窗口 | 单一可验证目标 | 停止/升级条件 |
+|---|---|---|
+| 00:00–00:35 | L2 约束、预算、日志、Go 1.26.5 工具链与依赖许可门禁 | 工具链或依赖不可审计即只实施标准库核心，并记录缺口 |
+| 00:35–01:30 | Capability Registry 与 Invocation 测试优先垂直切片 | 同一项失败三次即暂停并升级 |
+| 01:30–02:20 | 非交互 CLI 与功能 API parity | 禁止 TTY 提示或重复业务逻辑 |
+| 02:20–03:20 | 官方 Go MCP SDK 的 stdio Tool 投影与 stdout 纯净测试 | 依赖/协议问题不得以自造不兼容协议绕过 |
+| 03:20–04:15 | 错误、幂等、审计、受限并发与交叉构建证据 | 不触碰数据库迁移、基础设施或发布 |
+| 04:15–05:00 | 独立验证、状态/测试报告、停机与交接 | 验证者不能是实现者；未验证项如实保留 |
 
-## Run Procedure
+## L2 路径 Allowlist
 
-1. Stop immediately if `STATE.md` has `pause: true` or the end time has passed.
-2. Read `loop-constraints.md`, `loop-budget.md`, `docs/safety.md`, `STATE.md`, `.claw/current-status.md`, `.claw/task-board.md`, `FEAT-009`, and `FEAT-020`.
-3. Triage only one smallest verifiable Phase 0 item.
-4. In this L1 window, do not change application source code, package manifests, dependencies, CI, infrastructure, secrets, or remote Git state.
-5. Run read-only evidence commands only. Record each result in `STATE.md` and append one JSON object to `loop-run-log.md`.
-6. Escalate ambiguity, conflicting specifications, or any request to enter L2 before the observation period has completed.
+允许：`go.mod`、`go.sum`、`cmd/ai-native-platform/`、`internal/capability/`、`internal/api/`、`internal/cli/`、`internal/mcp/`、`schemas/`、`docs/`、`.claw/` 与本 Loop 控制文件。
 
-## L2 Promotion Gate
+拒绝：密钥、环境文件、身份/授权实现、支付/计费、CI、生产基础设施、Docker 配置、数据库迁移、生产数据库写入、自动合并、推送、PR、发布和部署。完整规则见 `loop-constraints.md`。
 
-The loop remains L1 until all conditions are true:
+## Maker / Checker 与停机规则
 
-- At least seven calendar days of L1 runs have stable state updates and no safety violations.
-- The user explicitly approves the L2 path allowlist and the Node 24 LTS + TypeScript PoC ADR.
-- `TASK-010` has a verified build/test toolchain and `TASK-020` has an approved implementation plan.
-- A verifier independent of the implementer is available. Until then, no loop may self-approve an implementation result.
+- 当前实现者只能报告证据，不能宣布完成。
+- 最终 API/MCP/CLI parity、stdout 纯净、无 TTY 和交叉构建由独立验证者执行。
+- 每个工作项最多三次失败尝试；任一 denylist 路径、依赖许可不明、凭据、生产连接或范围歧义都会立即暂停并升级给用户。
+- 达到窗口结束、预算 80%、或没有可验证工作项时，停止源码修改并记录交接。
 
-## Safety and Human Gates
-
-- No push, merge, pull request, release, external message, secret change, infrastructure change, or auto-merge.
-- No subagents in this project loop.
-- A run changes only durable state, budget, log, planning, or ADR documents that are directly in scope.
-- Never claim test, elapsed-time, cost, or implementation results without command evidence.
-- Follow `docs/safety.md`; repeated no-progress outcomes must escalate and pause rather than loop indefinitely.
-- This L1 pattern has no MCP connector access. It uses the shared main worktree only for documentation; L2 source work requires an isolated worktree, as declared in `patterns/registry.yaml`.
-
-## Completion
-
-At the end of the five-hour window, the loop writes a factual handoff in `STATE.md` and `.claw/current-status.md`, appends a final run log entry, and pauses. Code work remains a user-approved L2 follow-up.
+已完成的 L1 原始证据保留在 `docs/archive/loop-engineering/`，不构成本次 L2 的技术前提。

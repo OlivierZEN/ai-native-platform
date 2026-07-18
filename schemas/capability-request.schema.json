@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-native-platform.local/schemas/capability-request.schema.json",
+  "type": "object",
+  "required": ["capability_id", "request_id", "tenant_id", "actor", "input"],
+  "properties": {
+    "capability_id": {"type": "string", "minLength": 1},
+    "request_id": {"type": "string", "minLength": 1},
+    "tenant_id": {"type": "string", "minLength": 1},
+    "idempotency_key": {"type": "string"},
+    "actor": {
+      "type": "object",
+      "required": ["id", "scopes"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "scopes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "input": {"type": "object"}
+  }
+}

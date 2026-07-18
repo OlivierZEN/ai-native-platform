@@ -1,28 +1,12 @@
-# Loop Budget — AI-Native Platform
+# L2 Loop Budget — Go Capability Contract PoC
 
-## Window
-
-- Start: 2026-07-16T16:02:28Z
-- End: 2026-07-16T21:02:28Z
-- Maximum scheduled runs: 10, plus the initial bootstrap run
-- Run cadence: 30 minutes
-
-## Limits
-
-- Level: L1 report-only
-- Active work items per run: 1
-- Subagents per run: 0
-- Evidence-command attempts per item: 3
-- Source-code edits per run: 0
-- Remote write actions per run: 0
-
-## Pause Conditions
-
-- `STATE.md` sets `Pause: true`.
-- The window ends.
-- A command would require secrets, infrastructure, remote write access, or an unapproved L2 code change.
-- The same ambiguity or failed evidence command reaches the third attempt.
-
-## Cost Observation
-
-The environment does not expose a reliable per-run model-token meter or an end-to-end run timer. The loop therefore limits cadence, items, attempts, and subagent count mechanically. `duration_s` is `null` unless a complete run duration was measured; command outcomes remain the source of truth. It must not fabricate token, currency, or elapsed-time usage.
+- Window: 2026-07-18 00:03:53–05:03:53 Asia/Shanghai (hard stop).
+- Max active work item: 1.
+- Max failed attempts per item: 3.
+- Max dependency additions: 2, each with license and transitive-dependency evidence.
+- Bootstrap checkpoint: 13 source files were recorded as a one-time, completed initial repository baseline. This exception is authorized only by the active user Goal to continue the bounded L2 PoC; it does not expand the path allowlist or delivery scope.
+- Max source files changed before each subsequent checkpoint: 8.
+- Max verifier agents: 1; the verifier must not modify implementation files.
+- Remote write, publish and auto-merge budget: 0.
+- At 80% elapsed window: stop adding scope and reserve time for verification and handoff.
+- On a denylist violation, repeated failure, or incomplete dependency/security evidence: set `STATE.md` pause to `true`, append an escalation record, and stop source changes. A process-only budget exception requires a recorded checkpoint and the active user Goal must still authorize the same bounded work.

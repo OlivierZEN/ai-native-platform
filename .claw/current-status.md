@@ -1,100 +1,57 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-16T17:03:46Z
-updated_by: ai
-phase: loop_l1_bootstrap
-active_task: "TASK-021 - Establish Phase 0 Loop Engineering controls"
-next_action: "Keep local Loop evidence unpushed; TASK-009 review and Node 24 LTS provisioning remain L2 gates"
+updated_at: 2026-07-18T15:51:53Z
+updated_by: ai + human-expanded Phase 0 L2 source authorization
+phase: phase0_l2_scope_authorized
+active_task: "TASK-010 ready; not claimed"
+next_action: "Create the TASK-010 feature spec and a fresh L2 implementation checkpoint, then begin the authorized local Phase 0 source work."
 read_next:
   goals: true
-  decisions: false
+  decisions: true
   issue_list: false
   task_board: true
-  test_report: false
+  test_report: true
   devops: false
 ---
 
 # 项目当前状态
 
-`current-status.md` 是唯一的热状态入口。每次会话先读它，再按需读取其他状态文件。
-
 ## 快照
 
-- 会话目标：在五小时窗口内按 Loop Engineering 的 L1 规则建立 Phase 0 循环控制系统
-- 当前关注点：Loop 状态、约束、预算、运行日志和 Capability Contract PoC 的实施前证据
-- 活跃任务：`TASK-021`
-- 阻塞状态：代码实现被 L1 观察期与 L2 人工升级门禁主动限制
+- 当前技术栈：Go 1.26.5 单运行时与签名二进制交付（ADR-007）。API、MCP 与无交互 CLI 从同一 Capability Contract 投影。
+- 当前数据 PoC：Docker PostgreSQL 16.13，单可用区、单 writer，8 GiB/16 GiB 内存档位；50 并发、200 活跃用户、100 万记录；不做 HA、备份或恢复演练（ADR-008）。
+- 当前租户设计：既有 Agent CC 运营管理端扩展为产品无关的统一租户控制面；一个全局租户分别拥有 Agent CC `0..1` 与 Native `0..1` 产品订阅，任一产品都可单独或按任意顺序开通。只有需要绑定时，两者才必须归属同一全局租户并共享 UUIDv4 `tenant_id + 20 位 org_id`（ADR-009、FEAT-011）。
+- 当前隔离原则：UUID 提供不可枚举和误命中缓冲，但不是授权边界；受信 TenantContext、强制 RLS、同租户关系约束、事务级数据库上下文和连接池残留测试必须共同生效。
+- 架构评审状态：`FEAT-009` 已于 2026-07-18 由用户正式批准，`TASK-009` 已关闭，ADR-003 已接受；`TASK-010` 已解除依赖并进入 `ready`。
+- 当前任务：`TASK-020` 的五小时 L2 Go Capability Contract PoC 已独立验证完成：`system.capability.list` 从同一 Go Registry/Invoker 投影为 API、MCP 与无交互 CLI。
+- 实现状态：用户于 2026-07-18 将 L2 源码授权扩大到本仓库的 PostgreSQL、本地租户控制面和共享身份集成；`TASK-010` 已可建立新阶段检查点并开始实施。旧五小时 Capability PoC 的文件预算和 denylist 仍作为历史证据保留，不再代表新授权范围。
 
-## 本次会话进展
+## 当前 L2 授权边界
 
-### 已完成
+- 允许：本仓库 Go 源码、规格、迁移、测试和本地工具；本机专用 Docker PostgreSQL 16.13 PoC 的 schema/migration、128 bucket、RLS、TenantContext、连接池、路由和容量验证。
+- 允许：Native 租户控制面、产品生命周期、配额/路由投影、Capability API/MCP/CLI、幂等与审计；统一运营控制面使用版本化 adapter/port 接入。
+- 允许：共享身份或企业 IdP 的当前仓库集成边界，包括令牌验证、audience/issuer/scope 校验、全局主体与最小成员投影、TenantContext 解析及负向测试；不复制密码或长期凭据。
+- 仍禁止：访问或修改生产/共享远程数据库、生产身份系统或真实租户数据；生产/预生产部署、HA/备份演练、CI/镜像/制品发布、远端 Git push/PR/merge，以及向 Agent CC 或运营端其他仓库写入代码。扩大这些边界需要再次明确授权。
 
-- 创建 `.claw/` 状态目录和 `docs/specs/` 交付文档目录
-- 将绿地架构设计登记为 `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- 创建 Phase 0 任务队列、目标基线和 ADR 索引
-- 初始化 Git 仓库并创建首个项目基线提交，远端为 `OlivierZEN/ai-native-platform`
-- 确认平台为无前端的纯 Agent 平台；所有已发布原子能力必须具备 API、MCP 和非交互式 CLI 三个等价入口
-- 创建持续五小时的本地 Loop Engineering 自动化；每 30 分钟执行一次 L1 报告循环
-- 执行首轮 Loop Readiness Audit：`74/100`、`L1`；`.claw` 状态校验通过
-- 新增专用安全策略与停滞断路器；复审提升至 `81/100`、`L1`
-- 依据 Node 与 MCP 官方文档创建 `ADR-005` 运行时提案；尚未接受，未修改依赖或代码
-- 创建 `patterns/registry.yaml`，声明 L1 MCP 禁用、主工作树文档范围和 L2 隔离工作树要求；复审 `89/100`、`L1`
-- 为 `FEAT-020` 增加 CC-01 至 CC-09 的 L2 证据矩阵；所有实现和测试条目仍为 `not_started_l1`
-- 验证 8 条 Loop JSONL 记录格式、时间顺序与 L1 零源码动作；治理状态校验通过
-- 自动化在 00:32 追加第 9 条 L1 记录；00:34 人工接续复审维持 `89/100`、`L1`，状态和日志校验通过且工作树无漂移
-- 只读审阅官方 Codex triage/verifier/约束/预算模板；确认它们需要新的 `.codex` 配置，且 verifier 与当前禁用子智能体规则冲突
-- 审阅 FEAT-009：纯 Agent、无前端和三入口约束一致；但 spec 为 `draft` 且 Phase 0 决策未完成，不能自动批准 TASK-009
-- 只读检查本机运行时：Node 为 `v26.0.0`，未发现 Node 24 或版本管理器；Node 24 LTS 是未来 L2 的环境前置条件
-- 远端只读核对：`origin/main` 与 GitHub `main` 仍为 `3c8c961`；本地 `main` 领先 10 个提交且未推送
+## 下一步
 
-### 进行中
+1. 为 `TASK-010` 创建独立 feature spec 和新阶段 L2 计划/预算/检查点，固化仓库与工程基线后开始已授权源码工作。
+2. Event Bus、Search/OLAP、Wasm/流程、数据驻留和计费作为后置 ADR，在对应功能任务启动前决策，不阻塞 Phase 0 核心编码。
+3. `TASK-011` 实施前先盘点既有运营开户接口、共享身份依赖和 Agent CC 存量 `org_id`，形成产品无关全局租户目录、独立产品订阅、绑定契约和 UUIDv4 回填差异报告。
+4. PostgreSQL、租户控制面和身份集成已获本地 L2 授权；高风险/异步 operation、持久审计和通用输出 Schema 校验必须在对应 feature spec 中明确状态机、失败语义和独立验证，不得扩展到生产或远端系统。
 
-- `TASK-021`：Loop Engineering L1 控制面正在建立；不执行应用代码修改
+## 证据与归档
 
-### 下一步
-
-- 保持本地提交未推送；`TASK-009` 审批与 Node 24 LTS 环境仍是进入 L2 的前置条件
-- 保持 `ADR-005` 为待批准提案；不得在 `TASK-009` 审批和 L2 授权前创建应用实现
-- 在五小时 L1 窗口结束后交接 L2 实施计划，等待人工批准
-
-## 修改文件
-
-- `README.md` / `AGENTS.md` - 项目级 AI 协作声明
-- `.claw/` - 持久状态与 Phase 0 任务队列
-- `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md` - 架构基线
-- `docs/specs/FEAT-020-pure-agent-capability-contract.md` - API/MCP/CLI 三入口契约
-- `LOOP.md` / `STATE.md` / `loop-*.md` - Loop Engineering 的持久控制面
+- 已完成 PoC 计划：`docs/superpowers/plans/2026-07-18-five-hour-go-l2-loop.md`；它不覆盖本次扩大授权，新阶段计划将在 `TASK-010` 启动时创建。
+- 统一租户设计：`docs/specs/FEAT-011-unified-tenant-operations-control-plane.md`。
+- 已完成 L1 的状态、日志、预算、约束、计划和测试证据：`docs/archive/loop-engineering/` 与 `docs/archive/plans/`。
+- 已替代的运行时 ADR：`docs/archive/decisions/ADR-005-superseded-runtime-proposal.md`。
 
 ## 已验证事实
 
-- Build: `not_run`（L1 期间禁止创建或修改应用构建配置）
-- Tests: `passed`（2026-07-16T17:03:46Z 的项目状态校验；最近 Loop 审计与运行日志完整性校验仍通过；应用测试尚无可运行目标）
-- Lint: `not_run`
-- 依赖变更: `none`
-
-## 待确认
-
-- `TASK-010` 的 Node 24 LTS + TypeScript/MCP PoC 提案是否获批准
-- L1 观察期结束后是否允许进入 L2 受控实现
-
-## 相关状态文件
-
-- `task-board.md` - `TASK-021` 的 L1 控制面与后续 Phase 0 依赖
-- `goals.md` - 已确认范围、成功标准和阶段目标
-- `decisions.md` - `ADR-003` 及待定技术决策
-- `test-report.md` - 状态校验的真实结果
-
-## 相关设计文档
-
-- `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md` - 当前架构与交付基线
-- `docs/specs/FEAT-020-pure-agent-capability-contract.md` - 已确认的纯 Agent 入口约束
-- `docs/superpowers/plans/2026-07-17-phase0-loop-engineering.md` - 五小时 L1 与后续 L2 实施计划
-
-## 维护规则
-
-- 保持简短，只记录当前快照。
-- 当前会话的活跃任务 ID 应与 `task-board.md` 保持一致。
-- 不复制完整 issue、ADR 或测试详情。
-- 不在这里写长篇功能设计，功能设计写到 `docs/specs/`。
-- 如需历史归档，放到独立历史文件，不放在这里。
+- 本次统一租户及独立产品订阅文档治理校验：`passed`（2026-07-18T15:29:56Z）；状态 validator、已跟踪文件 `git diff --check` 与现行文档矛盾措辞检索均通过。本次只修改文档和项目状态，不修改或重新验证应用源码。此前独立验证仍已通过 Go 全量测试、race、vet、模块校验、四目标 `CGO_ENABLED=0` 构建和 denylist 审查。
+- 本次 `FEAT-009` 批准与 `TASK-009` 关闭治理校验：`passed`（2026-07-18T15:43:29Z）；状态 validator、`git diff --check` 与状态冲突检索均通过。本次不修改或重新验证应用源码。
+- 本次 L2 授权扩展治理校验：`passed`（2026-07-18T15:46:48Z）；状态 validator、`git diff --check` 与现行授权冲突检索均通过。此次只记录授权边界，尚未开始新阶段源码或数据库操作。
+- 本次远端发布前校验：`passed`（2026-07-18T15:51:53Z）；Go 1.26.5 全量测试、race、vet、模块校验、四目标纯 Go 构建、状态 validator、差异检查、敏感凭据模式和大文件检查均通过。
+- 历史验证的完整输出与运行记录在归档中；它们不是当前 Go 工具链的实现证据。

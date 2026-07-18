@@ -2,7 +2,7 @@
 
 ## Status
 
-Architecture direction approved in conversation on 2026-07-17. This document is awaiting written-spec review before it drives the ADR, Phase 0 plan, or source implementation.
+Accepted by the user on 2026-07-17. ADR-007 and ADR-008 record the runtime and Phase 0 PostgreSQL decisions. Source implementation remains blocked until the user separately approves the L2 allowlist.
 
 ## Purpose
 
@@ -35,7 +35,7 @@ One Go module builds a signed binary for each supported operating-system and CPU
 
 ### Runtime and commands
 
-Phase 0 uses Go 1.26.5 in CI and release builds. The local Go 1.26.4 installation is not release evidence and must be upgraded or matched by the approved L2 toolchain before code verification.
+Phase 0 uses Go 1.26.5 in CI and release builds. The local Go 1.26.4 installation is not release evidence and must be upgraded or matched by the approved L2 toolchain before code verification. PostgreSQL runs as local Docker PostgreSQL 16.13 in a single-availability-zone PoC, with no HA or backup/recovery exercise in Phase 0.
 
 The release binary is named `ai-native-platform` and has only non-interactive commands:
 
@@ -77,7 +77,7 @@ The Go runtime serves short API, MCP, and CLI invocations concurrently. It must 
 - asynchronous operation records and an outbox/event path for long-running work;
 - admission control, backpressure, circuit breakers, and stable overload errors for slow dependencies.
 
-Language performance is not a capacity proof. Phase 0 must measure p50/p95/p99 latency, error rate, saturation, queue depth, memory, CPU, and tenant-fairness behavior under a documented concurrent workload before any throughput claim is made.
+Language performance is not a capacity proof. Phase 0 must measure p50/p95/p99 latency, error rate, saturation, queue depth, memory, CPU, and tenant-fairness behavior under a documented concurrent workload before any throughput claim is made. The accepted capacity baseline is 50 concurrent requests, 200 active users, and 1,000,000 business records for each 8 GiB and 16 GiB Docker-memory profile; CPU, I/O, record shape, and request mix must be frozen in the benchmark manifest.
 
 ### Distribution model
 
@@ -117,7 +117,7 @@ Phase 0 starts with the low-risk `system.capability.list` vertical slice. It mus
 
 ## Decision Consequences
 
-ADR-005 must be revised from its Node.js proposal to an accepted Go 1.26.5 Phase 0 runtime decision. FEAT-020, the Phase 0 plan, Loop L2 prerequisites, and hot project state must replace Node-specific prerequisites with Go toolchain, binary-distribution, and compliance evidence. Historical Loop records remain unchanged because they accurately describe the earlier Node proposal at the time they were recorded.
+ADR-005 is superseded by ADR-007, which is the accepted Go 1.26.5 Phase 0 runtime decision. FEAT-020, the active Go implementation plan, Loop L2 prerequisites, and hot project state use Go toolchain, binary-distribution, and compliance evidence. Historical Loop records remain unchanged because they accurately describe the earlier Node proposal at the time they were recorded.
 
 ## References
 

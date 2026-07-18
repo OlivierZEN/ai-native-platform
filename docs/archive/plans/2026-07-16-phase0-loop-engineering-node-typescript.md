@@ -1,4 +1,6 @@
-# Phase 0 Loop Engineering Implementation Plan
+# Archived Phase 0 Loop Engineering Plan — Node/TypeScript Proposal
+
+> **Archive status:** superseded on 2026-07-17 by ADR-007 and the active [Go Capability Contract plan](../../superpowers/plans/2026-07-17-phase0-go-capability-contract.md). This file is retained only as the exact L1-era planning record; it must not be used to implement, provision, or validate the platform.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 

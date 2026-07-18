@@ -5,10 +5,10 @@ title: Pure-Agent Capability Contract for API, MCP, and CLI
 status: approved
 owner_role: shared
 task_ids: TASK-020
-related_decisions: ADR-004, ADR-005 (proposed)
+related_decisions: ADR-004, ADR-007 (accepted)
 related_issues: none
-updated_at: 2026-07-16T16:14:56Z
-updated_by: ai
+updated_at: 2026-07-17T16:46:51Z
+updated_by: ai + independent checker
 ---
 
 # FEAT-020 - 纯 Agent 能力契约：API、MCP 与 CLI
@@ -71,21 +71,21 @@ CLI 不显示菜单、确认提示或依赖终端会话状态。高风险操作�
 
 ## L2 实施证据清单
 
-以下清单把验收标准转为可重复运行的证据要求。当前 L1 只完成了清单设计；所有条目必须在用户批准 L2 allowlist 后，使用 Node 24 LTS 的真实代码、测试和命令输出验证。
+以下清单把验收标准转为可重复运行的证据要求。当前 L1 只完成了清单设计；所有条目必须在用户批准 L2 allowlist 后，使用 Go 1.26.5 的真实代码、测试和命令输出验证。
 
 | ID | 需证明的契约不变量 | 最小 L2 证据 | 当前状态 |
 |---|---|---|---|
-| CC-01 | 单一 registry 是已发布能力、版本、input/output schema、风险、权限、幂等、错误码和审计事件的唯一事实源 | registry 单元测试：注册、查找、重复 ID、schema 失败、未知 capability | `not_started_l1` |
-| CC-02 | API、MCP、CLI 都只调用共享 invocation 层，不复制领域逻辑 | 适配器集成测试与依赖替身证明三入口均到达同一 invocation 函数 | `not_started_l1` |
-| CC-03 | 同一成功输入的业务结果、能力 ID、请求 ID、审计 ID 和结果 schema 相等 | 对一个低风险样例能力运行 API/MCP/CLI 三入口 parity test | `not_started_l1` |
-| CC-04 | 同一失败输入产生同一稳定错误码和可预测 transport 映射 | malformed input、未知 capability、未授权与幂等冲突的三入口负向测试 | `not_started_l1` |
-| CC-05 | CLI 面向 Agent、没有 TTY 依赖或交互菜单 | 无 TTY 子进程测试：stdin JSON/flags 输入、stdout 仅 JSON/JSON Lines、stderr 仅诊断、非零退出码附 JSON 错误对象 | `not_started_l1` |
-| CC-06 | STDIO MCP 不污染 JSON-RPC stdout，Tool schema 从 registry 投影 | in-process MCP 测试与子进程 smoke test；断言 `StdioServerTransport` stdout 无协议外日志 | `not_started_l1` |
-| CC-07 | 幂等、审计、身份和租户上下文在三入口保持一致 | 重放同一 idempotency key 的契约测试；比较 audit event、actor、tenant、request ID 和 result | `not_started_l1` |
-| CC-08 | 缺少任一入口投影或契约测试的能力不能发布 | publisher/registry gate 的失败测试；确认该 capability 不进入发现列表 | `not_started_l1` |
-| CC-09 | 高风险或异步操作不以 CLI 提示取代治理状态 | 三入口都返回同一 `operation_id` / approval 状态，且 CLI 无 confirm prompt 的测试 | `not_started_l1` |
+| CC-01 | 单一 registry 是已发布能力、版本、input/output schema、风险、权限、幂等、错误码和审计事件的唯一事实源 | `internal/capability/registry_test.go` 覆盖发布 metadata、schema 与高风险门禁、草稿隐藏、幂等/审计 | `independently_verified_for_poc` |
+| CC-02 | API、MCP、CLI 都只调用共享 invocation 层，不复制领域逻辑 | 三个 adapter 均规范化为 `capability.Request` 并调用 `Invoker.Invoke`；适配器 parity 测试覆盖其可观察结果 | `independently_verified_for_poc` |
+| CC-03 | 同一成功输入的业务结果、能力 ID、请求 ID、审计 ID 和结果 schema 相等 | `TestAPICLIAndMCPProduceEquivalentResult` 进行语义 JSON parity 比较 | `independently_verified_for_poc` |
+| CC-04 | 同一失败输入产生同一稳定错误码和可预测 transport 映射 | `TestAPICLIAndMCPUseSameStableFailureCodes` 覆盖输入验证、未授权、幂等冲突；API/CLI 还覆盖多 JSON 文档。未发布 MCP tool 按协议发现缺失，不伪造为已发布 capability 的业务错误。 | `independently_verified_for_poc` |
+| CC-05 | CLI 面向 Agent、没有 TTY 依赖或交互菜单 | `cmd/ai-native-platform/main_test.go` 子进程经 stdin JSON 验证单一 JSON stdout、无 stderr；错误为结构化 JSON 和非零退出码 | `independently_verified_for_poc` |
+| CC-06 | STDIO MCP 不污染 JSON-RPC stdout，Tool schema 从 registry 投影 | `internal/mcp/server_test.go` 校验 published registry 投影；子进程 stdio 测试只解析 JSON-RPC stdout | `independently_verified_for_poc` |
+| CC-07 | 幂等、审计、身份和租户上下文在三入口保持一致 | `TestAPICLIAndMCPKeepReplayAuditContext` 与并发幂等测试覆盖重放 request/audit identity、actor、tenant 和 result | `independently_verified_for_poc` |
+| CC-08 | 缺少任一入口投影或契约测试的能力不能发布 | 已发布定义必须具备 object input/output schema；草稿从 registry/API invocation/CLI discovery/MCP tools 排除；高风险同步定义拒绝注册 | `independently_verified_for_poc` |
+| CC-09 | 高风险或异步操作不以 CLI 提示取代治理状态 | 该低风险、同步 PoC 不实现高风险 operation；registry 已拒绝发布缺少 async approval 的高风险定义，且 CLI 没有确认提示。完整 `operation_id` 生命周期属于后续 Changeset/operation capability。 | `bounded_poc_guard_only` |
 
-L2 完成判定要求 CC-01 至 CC-09 都有可复现命令输出，并由独立于实现者的验证者审阅。任何“仅 API 成功”或“仅 MCP 能启动”的结果都不足以证明 Capability Contract 已完成。
+完整 FEAT-020 的完成判定仍要求 CC-01 至 CC-09 都有可复现命令输出，并由独立于实现者的验证者审阅。2026-07-18 的受限 L2 只完成一个低风险同步能力：CC-01 至 CC-08 已独立验证为该 PoC 适用，CC-09 仅验证发布门禁；高风险异步 `operation_id` 生命周期不在本次完成声明内。任何“仅 API 成功”或“仅 MCP 能启动”的结果都不足以证明 Capability Contract 已完成。
 
 ## 风险与缓解
 

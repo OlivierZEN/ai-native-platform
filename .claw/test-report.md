@@ -1,59 +1,21 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-16T17:03:46Z
-updated_by: ai
-last_run_at: 2026-07-16T17:03:46Z
+updated_at: 2026-07-18T15:51:53Z
+updated_by: ai pre-publish verification + prior independent checker
+last_run_at: 2026-07-18T15:51:53Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-`test-report.md` 只记录真实执行过的测试或验证结果，不记录猜测。
+## 当前运行摘要
 
-推荐状态值：`passed` / `failed` / `partial` / `not_run`
+- 状态：`passed`（此结果仅覆盖本次单一低风险 Capability Contract PoC）。
+- 2026-07-18 发布前复测：`GOTOOLCHAIN=go1.26.5 go test ./... -count=1`、`GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`GOTOOLCHAIN=go1.26.5 go vet ./...`、`GOTOOLCHAIN=go1.26.5 go mod verify`（`all modules verified`）、`validate-state.py .claw` 和 `git diff --check` 均通过。
+- 同次发布前复测：`CGO_ENABLED=0 -trimpath` 的 `linux/amd64`、`linux/arm64`、`darwin/arm64`、`windows/amd64` 构建全部通过，临时产物已清理；敏感凭据模式扫描和 5 MB 以上文件检查无发现。
+- 独立 checker 复跑：上述 Go 命令全部通过；`CGO_ENABLED=0 -trimpath` 的 `linux/amd64`、`linux/arm64`、`darwin/arm64`、`windows/amd64` 构建全部通过，临时产物已清理；其核对确认 API/CLI/MCP 均进入同一 `Invoker`、已发布 Registry 投影、草稿拒绝、无 TTY CLI、MCP stdout JSON-RPC 以及 denylist 路径。
+- 已修复并覆盖：MCP 子进程测试的 `stderr` data race、并发幂等双执行、重放审计身份不一致、硬编码 MCP Tool、API/CLI/MCP 成功与三类稳定错误 parity、CLI `describe`、多 JSON 文档输入。
+- 依赖：`github.com/modelcontextprotocol/go-sdk v1.6.1` 及其传递图已记录在 `docs/specs/FEAT-020-go-dependency-gate.md`；本地 PoC 许可门禁已接受。生产内部 proxy、SBOM/notice/签名、持久审计、高风险异步 `operation_id` 和通用输出 Schema 运行时校验仍未实现，也不在本测试结果中。
 
-## 最新运行摘要
-
-- 状态：`passed`
-- 范围：`agentic-project-guidelines` 状态文件与 Loop Engineering L1 控制面及运行日志完整性
-- 命令：`python3 /Users/owenmacbook/.agents/skills/y-agentic-project-guidelines/scripts/validate-state.py .claw`
-- 环境：`local workspace`
-- 附加证据：`npx @cobusgreyling/loop-audit . --suggest`，结果为 `89/100`、`L1`；安全策略、停滞升级、MCP 范围与工作树策略已被审计识别
-- 运行日志校验：Node 解析 8 条 JSONL 记录；run ID 单调递增、`source_actions` 总数为 0、时长校正记录存在
-- 最新 Loop 审计：`npx @cobusgreyling/loop-audit .` 返回 `89/100`、`L1`；Node 解析 9 条 JSONL 记录且 `source_actions` 总数为 0
-- 运行时可用性检查：本机为 Node `v26.0.0`，未发现 Node 24 或版本管理器；这是一项 L2 前置条件缺口，不是已验证的构建环境
-- 远端只读核对：GitHub `main` 与 `origin/main` 均为 `3c8c961`；本地证据提交保持未推送
-
-## 结果汇总
-
-| 类型 | 总数 | 通过 | 失败 | 跳过 | 覆盖率 |
-|------|------|------|------|------|--------|
-| 单元测试 | 0 | 0 | 0 | 0 | 0% |
-| 集成测试 | 0 | 0 | 0 | 0 | 0% |
-| E2E 测试 | 0 | 0 | 0 | 0 | - |
-| 治理状态校验 | 1 | 1 | 0 | 0 | - |
-| Loop 运行日志完整性 | 1 | 1 | 0 | 0 | - |
-| Loop Readiness 审计 | 1 | 1 | 0 | 0 | - |
-| 总计 | 3 | 3 | 0 | 0 | - |
-
-## 失败项
-
-- 暂无失败项。
-
-## 覆盖率趋势
-
-| 日期 | 行覆盖率 | 分支覆盖率 | 函数覆盖率 |
-|------|----------|------------|------------|
-| 2026-07-16 | - | - | - |
-
-## 常用测试命令
-
-- 在项目命令明确后，记录真实可运行的测试命令。
-- 不要在这里保留通用占位命令或猜测性的命令。
-
-## 维护规则
-
-- 只有在实际运行命令后才更新这里。
-- `current-status.md` 只应摘录一行测试摘要。
-- 如果没有运行测试，明确写 `not_run`，不要留空也不要虚构结果。
+L1 历史审计工具及其结果已完成使命并归档在 `docs/archive/loop-engineering/2026-07-16-l1-test-report.md`；它们不属于当前 Go 运行时的测试基线。
