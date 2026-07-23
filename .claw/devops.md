@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-23T07:06:06Z
-updated_by: ai after verified capability matrix static release
+updated_at: 2026-07-24T00:55:00Z
+updated_by: integration-agent after controlled provisioning production release
 verification_status: passed
 ---
 
@@ -25,7 +25,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 2026-07-23 部署制品 SHA-256：`24fa672c9399e2f60cce4412ed754654141594e76e82b2d253bf309c93b3db59`。
+- 2026-07-24 部署制品 SHA-256：`c1617398e9ddf3b83a942fa8b5852e54f7caf943900771703e8b1bacbf712962`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动
@@ -47,13 +47,14 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 ## 部署与发布
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- release 目录：`/opt/semattice/releases/20260723T0535Z`；当前链接：`/opt/semattice/current`。
+- 当前 release 目录：`/opt/semattice/releases/20260724T0045Z-controlled-provisioning`；当前链接：`/opt/semattice/current`。
 - systemd unit：`/etc/systemd/system/semattice.service`；仓库模板为 `deploy/semattice/semattice.service`。
 - Nginx server block：`/etc/nginx/conf.d/semattice.conf`；仓库模板为 `deploy/semattice/nginx.conf`。
 - 静态说明：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。
 - 当前静态说明 release：`20260723T0658Z`；发布前的 HTML/CSS/JS 备份位于 `/var/www/semattice-backups/20260723T0658Z`。
 - 更新时先安装新的不可变 release 目录，核对 checksum，再原子切换 `/opt/semattice/current` 并重启 `semattice`。不要覆盖或删除旧 release。
 - 回滚时将 `current` 指回前一 release 并重启；数据库 migration 不自动回滚，数据目录不得删除。
+- 受控开户生产 smoke：从受信 AgentCiCi 主机向 `POST /internal/v1/company-provisionings` 发送 HMAC 请求。无签名请求必须为 403；对格式合法但不存在的 `company_id`，签名请求应在 AgentCiCi 组织校验后返回 `FAILED_PRECONDITION` / 412，且不创建 tenant、reservation 或 operation。
 
 ## 排障
 
