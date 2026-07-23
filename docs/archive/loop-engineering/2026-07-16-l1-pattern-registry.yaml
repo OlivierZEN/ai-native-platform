@@ -1,0 +1,61 @@
+version: 1
+patterns:
+  - id: phase0-capability-contract
+    status: active
+    level: L1
+    purpose: >-
+      Establish durable controls and evidence for the pure-Agent Capability Contract
+      before an implementation loop is allowed.
+    state:
+      - STATE.md
+      - .claw/current-status.md
+      - .claw/task-board.md
+      - loop-run-log.md
+    cadence:
+      interval_minutes: 30
+      window_end: 2026-07-16T21:02:28Z
+    scope:
+      l1_write_allowlist:
+        - LOOP.md
+        - STATE.md
+        - loop-constraints.md
+        - loop-budget.md
+        - loop-run-log.md
+        - docs/safety.md
+        - patterns/registry.yaml
+        - .claw/
+        - directly relevant planning or ADR documents
+      l1_denylist:
+        - src/
+        - tests/
+        - package.json
+        - lockfiles
+        - CI workflows
+        - build configuration
+        - deployment files
+        - dependency changes
+        - remote Git writes
+    mcp:
+      current_mode: not_required
+      connector_access: denied
+      rationale: >-
+        This L1 governance loop has no external MCP connector or product MCP server.
+        Product MCP Tool implementation remains a user-approved L2 concern governed by
+        ADR-004 and the proposed ADR-005.
+    worktree:
+      l1_mode: shared_main_docs_only
+      l2_requirement: isolated_worktree_required
+      rationale: >-
+        L1 changes only durable governance documents. Any source, test, manifest, or
+        dependency change requires a dedicated worktree after L2 authorization.
+    budget:
+      max_active_items: 1
+      max_evidence_attempts_per_item: 3
+      max_source_edits: 0
+      max_remote_writes: 0
+      max_subagents: 0
+    safety_policy: docs/safety.md
+    verifier:
+      status: missing
+      l2_blocker: true
+      requirement: independent verifier must review L2 results

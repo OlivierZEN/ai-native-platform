@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CloudCC Semattice — 面向智能体的业务数据与语义运行底座。API、CLI 与 MCP stdio 使用说明。">
+  <title>CloudCC Semattice · Agentic Business Data Runtime</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="CloudCC Semattice 首页">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span><strong>CloudCC</strong><em>Semattice</em></span>
+    </a>
+    <nav aria-label="页面导航">
+      <a href="#capabilities">能力矩阵</a>
+      <a href="#api">API</a>
+      <a href="#cli">CLI</a>
+      <a href="#mcp">MCP</a>
+      <a href="#security">安全边界</a>
+    </nav>
+    <a class="status-pill" href="/healthz"><span></span> Edge online</a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">AGENTIC BUSINESS DATA RUNTIME · 语义格</p>
+        <h1>Business data,<br><span>arranged for agents.</span></h1>
+        <p class="hero-lede">对象、字段、关系、记录、权限与原子能力组成一个可治理的语义格网。没有业务前端；所有已发布能力从同一契约投影为 HTTPS API、非交互 CLI 与 MCP Tool。</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#quickstart">开始调用 <span>↘</span></a>
+          <a class="button ghost" href="/downloads/semattice-linux-amd64">下载 Linux CLI</a>
+        </div>
+      </div>
+
+      <div class="lattice-card" aria-label="Semattice 能力格网示意">
+        <div class="lattice-head">
+          <span>SEMANTIC LATTICE / LIVE CONTRACT</span>
+          <b>v1</b>
+        </div>
+        <div class="lattice-map" aria-hidden="true">
+          <div class="node node-a"><small>01</small><strong>METADATA</strong><span>objects · fields</span></div>
+          <div class="node node-b"><small>02</small><strong>RECORDS</strong><span>CRUD · query</span></div>
+          <div class="node node-c"><small>03</small><strong>POLICY</strong><span>RBAC · sharing</span></div>
+          <div class="node node-d"><small>04</small><strong>CHANGESET</strong><span>validate · publish</span></div>
+          <div class="core">S</div>
+          <svg viewBox="0 0 600 420" preserveAspectRatio="none">
+            <path d="M300 210 L122 92 M300 210 L475 92 M300 210 L125 330 M300 210 L478 330"/>
+            <path class="pulse" d="M122 92 L475 92 L478 330 L125 330 Z"/>
+          </svg>
+        </div>
+        <div class="lattice-foot">
+          <span><i></i> API</span><span><i></i> CLI</span><span><i></i> MCP stdio</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="contract-strip" aria-label="平台契约">
+      <div><strong>01</strong><span>One contract</span><small>统一 schema、权限和错误语义</small></div>
+      <div><strong>02</strong><span>Three projections</span><small>API · CLI · MCP</small></div>
+      <div><strong>03</strong><span>Tenant bound</span><small>JWT + TenantContext + RLS</small></div>
+      <div><strong>04</strong><span>Audit linked</span><small>request_id · audit_id</small></div>
+    </section>
+
+    <section class="capability-landscape" id="capabilities">
+      <div class="capability-intro">
+        <div class="section-heading">
+          <p class="eyebrow">PLATFORM CAPABILITY LANDSCAPE</p>
+          <h2>从业务语义到数据治理，<br>形成完整的能力格网</h2>
+          <p>Semattice 不是一组松散接口，而是一套从租户开通、语义建模、安全演进、记录运行到授权共享的原子能力系统。下方矩阵直接来自当前运行时 Capability Registry。</p>
+        </div>
+        <div class="capability-score" aria-label="平台能力规模">
+          <div class="score-main"><strong>49</strong><span>Published<br>Capabilities</span></div>
+          <div class="score-meta">
+            <span><b>07</b> 能力域</span>
+            <span><b>03</b> 等价入口</span>
+            <span><b>12</b> 数据迁移</span>
+            <span><b>128</b> 租户桶</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="platform-pillars" aria-label="平台核心能力介绍">
+        <article>
+          <span class="pillar-no">A / SEMANTIC</span>
+          <h3>语义元数据底座</h3>
+          <p>以版本化的对象、字段和关系描述业务结构；已发布快照不可变，记录运行时只接受明确的元数据契约。</p>
+          <ul>
+            <li>对象、字段、关系定义</li>
+            <li>确定性版本快照</li>
+            <li>UUIDv7 记录与引用</li>
+          </ul>
+        </article>
+        <article>
+          <span class="pillar-no">B / EVOLUTION</span>
+          <h3>动态字段安全演进</h3>
+          <p>Changeset 将验证、影响模拟、独立审批、回填、覆盖率检查和发布串成可恢复流程，破坏性清理单独审批。</p>
+          <ul>
+            <li>有界、可续跑 backfill</li>
+            <li>索引与唯一性 coverage</li>
+            <li>回滚、purge 与 tombstone</li>
+          </ul>
+        </article>
+        <article>
+          <span class="pillar-no">C / RUNTIME</span>
+          <h3>业务数据运行时</h3>
+          <p>记录 CRUD、关系边和受限查询 DSL 共用元数据校验、乐观锁、软删除、幂等写入与 typed index。</p>
+          <ul>
+            <li>元数据驱动 CRUD</li>
+            <li>类型化索引查询</li>
+            <li>版本兼容与惰性迁移</li>
+          </ul>
+        </article>
+        <article>
+          <span class="pillar-no">D / GOVERNANCE</span>
+          <h3>租户与授权治理</h3>
+          <p>租户上下文、FORCE RLS、角色与 Permission Set、组织数据范围、团队和规则共享共同构成纵深隔离。</p>
+          <ul>
+            <li>产品独立开通与生命周期</li>
+            <li>对象、字段、记录级 PDP</li>
+            <li>最小授权解释与审计</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="matrix-shell">
+        <div class="matrix-title">
+          <div>
+            <p class="eyebrow">LIVE CONTRACT / 49 ATOMIC OPERATIONS</p>
+            <h3>能力矩阵</h3>
+            <p>每项能力均从同一契约投影为 HTTPS API、非交互 CLI 与 MCP Tool；scope 和风险等级在三个入口保持一致。</p>
+          </div>
+          <button type="button" class="matrix-toggle" id="toggle-matrix" aria-expanded="false">展开全部 <span>＋</span></button>
+        </div>
+
+        <div class="matrix-columns" aria-hidden="true">
+          <span>能力域 / 原子能力</span><span>用途</span><span>Required scope</span><span>Risk</span>
+        </div>
+
+        <div class="matrix-list">
+          <details class="capability-domain" open>
+            <summary>
+              <span class="domain-index">01</span>
+              <span class="domain-name"><strong>租户与产品生命周期</strong><small>Tenant &amp; Product Lifecycle</small></span>
+              <span class="domain-flow">开户 → 配额 → 暂停 / 恢复 → 注销</span>
+              <span class="domain-count">06</span>
+              <span class="domain-risk"><i class="risk-low">L</i><i class="risk-medium">M</i><i class="risk-high">H</i></span>
+              <span class="domain-open" aria-hidden="true"></span>
+            </summary>
+            <div class="domain-body">
+              <div class="capability-item"><code>tenant.provision</code><span>为统一全局租户开通 Native 产品投影</span><code>tenant.provision</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>tenant.get-status</code><span>读取产品生命周期、路由和权益状态</span><code>tenant.status.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>tenant.update-entitlement</code><span>更新版本化服务档位与权益</span><code>tenant.entitlement.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>tenant.suspend</code><span>暂停 Native 产品访问，不影响其他产品</span><code>tenant.lifecycle.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>tenant.resume</code><span>在全局生命周期允许时恢复产品访问</span><code>tenant.lifecycle.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>tenant.decommission</code><span>发起经独立审批的异步产品注销</span><code>tenant.decommission</code><b class="risk-high">H</b></div>
+            </div>
+          </details>
+
+          <details class="capability-domain">
+            <summary>
+              <span class="domain-index">02</span>
+              <span class="domain-name"><strong>语义元数据模型</strong><small>Semantic Metadata</small></span>
+              <span class="domain-flow">版本 → 对象 → 字段 → 关系 → 快照</span>
+              <span class="domain-count">06</span>
+              <span class="domain-risk"><i class="risk-low">L</i><i class="risk-medium">M</i><i class="risk-high">H</i></span>
+              <span class="domain-open" aria-hidden="true"></span>
+            </summary>
+            <div class="domain-body">
+              <div class="capability-item"><code>metadata.version.create</code><span>创建租户的下一元数据草稿版本</span><code>metadata.version.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.version.get</code><span>读取有序对象、字段与关系定义</span><code>metadata.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.object.upsert</code><span>在草稿版本创建或更新对象定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.field.upsert</code><span>在草稿版本创建或更新字段定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.relation.upsert</code><span>在草稿版本创建或更新关系定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.version.publish</code><span>独立审批后发布不可变确定性快照</span><code>metadata.publish</code><b class="risk-high">H</b></div>
+            </div>
+          </details>
+
+          <details class="capability-domain">
+            <summary>
+              <span class="domain-index">03</span>
+              <span class="domain-name"><strong>Changeset 安全演进</strong><small>Schema Evolution</small></span>
+              <span class="domain-flow">验证 → 模拟 → 审批 → 回填 → 发布</span>
+              <span class="domain-count">10</span>
+              <span class="domain-risk"><i class="risk-low">L</i><i class="risk-medium">M</i><i class="risk-high">H</i></span>
+              <span class="domain-open" aria-hidden="true"></span>
+            </summary>
+            <div class="domain-body">
+              <div class="capability-item"><code>metadata.changeset.validate</code><span>冻结配额快照并生成确定性演进计划</span><code>metadata.changeset.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.changeset.simulate</code><span>读取冻结的影响模拟与执行计划</span><code>metadata.changeset.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.changeset.get-status</code><span>读取状态、覆盖率、错误和审批信息</span><code>metadata.changeset.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.changeset.approve</code><span>附加经过验证的独立审批</span><code>metadata.changeset.approve</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>metadata.changeset.backfill</code><span>执行一批有界、可恢复的候选数据演进</span><code>metadata.changeset.execute</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.changeset.validate-coverage</code><span>冻结写入并核验记录、索引、唯一与引用覆盖率</span><code>metadata.changeset.execute</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.changeset.publish</code><span>所有演进就绪后原子激活新版本</span><code>metadata.changeset.publish</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>metadata.changeset.rollback</code><span>在非破坏且仍为当前版本时回滚指针</span><code>metadata.changeset.rollback</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>metadata.changeset.cancel</code><span>激活前取消已验证或已批准的变更集</span><code>metadata.changeset.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.changeset.purge</code><span>执行经单独审批的破坏性字段清理批次</span><code>metadata.changeset.purge</code><b class="risk-high">H</b></div>
+            </div>
+          </details>
+
+          <details class="capability-domain">
+            <summary>
+              <span class="domain-index">04</span>
+              <span class="domain-name"><strong>业务记录运行时</strong><small>Business Record Runtime</small></span>
+              <span class="domain-flow">创建 → 读取 → 查询 → 更新 → 软删除</span>
+              <span class="domain-count">05</span>
+              <span class="domain-risk"><i class="risk-low">L</i><i class="risk-medium">M</i></span>
+              <span class="domain-open" aria-hidden="true"></span>
+            </summary>
+            <div class="domain-body">
+              <div class="capability-item"><code>runtime.record.create</code><span>按当前元数据契约创建业务记录</span><code>runtime.record.create</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>runtime.record.get</code><span>按对象 API 名和 UUIDv7 获取记录</span><code>runtime.record.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>runtime.record.query</code><span>通过受限 typed-index DSL 查询活动记录</span><code>runtime.record.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>runtime.record.update</code><span>使用 revision 乐观锁合并更新记录</span><code>runtime.record.update</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>runtime.record.delete</code><span>使用 revision 乐观锁软删除记录</span><code>runtime.record.delete</code><b class="risk-medium">M</b></div>
+            </div>
+          </details>
+
+          <details class="capability-domain">
+            <summary>
+              <span class="domain-index">05</span>
+              <span class="domain-name"><strong>角色与权限治理</strong><small>Authorization &amp; RBAC</small></span>
+              <span class="domain-flow">主体 → 角色 → 权限包 → 数据范围 → PDP</span>
+              <span class="domain-count">12</span>
+              <span class="domain-risk"><i class="risk-low">L</i><i class="risk-medium">M</i><i class="risk-high">H</i></span>
+              <span class="domain-open" aria-hidden="true"></span>
+            </summary>
+            <div class="domain-body">
+              <div class="capability-item"><code>authorization.role.create</code><span>经平台与 RBAC 授权创建业务角色</span><code>authorization.manage</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>authorization.permission-set.create</code><span>创建可复用的租户 Permission Set</span><code>authorization.manage</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>authorization.permission-set.grant</code><span>向 Permission Set 附加原子权限</span><code>authorization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>authorization.role.attach-permission-set</code><span>把可复用权限包绑定到角色</span><code>authorization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>authorization.role.assign</code><span>冲突检查后向投影主体分配角色</span><code>authorization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>authorization.role.revoke</code><span>终止角色分配并使权限快照失效</span><code>authorization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>authorization.role.set-conflict</code><span>声明两个角色间的对称职责分离冲突</span><code>authorization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>authorization.role.set-data-scope</code><span>为角色绑定经批准的有界数据范围</span><code>authorization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>authorization.object-policy.set</code><span>发布经批准的对象授权强制策略</span><code>authorization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>authorization.group.create</code><span>创建用于复用共享的租户访问组</span><code>authorization.manage</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>authorization.group.set-membership</code><span>添加或终止主体的访问组成员关系</span><code>authorization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>authorization.access.explain</code><span>向授权审计者解释最小匹配访问来源</span><code>authorization.read</code><b class="risk-low">L</b></div>
+            </div>
+          </details>
+
+          <details class="capability-domain">
+            <summary>
+              <span class="domain-index">06</span>
+              <span class="domain-name"><strong>共享与组织治理</strong><small>Sharing &amp; Organization</small></span>
+              <span class="domain-flow">团队 / 直接共享 / 规则投影 / 组织重组</span>
+              <span class="domain-count">09</span>
+              <span class="domain-risk"><i class="risk-high">H</i></span>
+              <span class="domain-open" aria-hidden="true"></span>
+            </summary>
+            <div class="domain-body">
+              <div class="capability-item"><code>record.team.add-member</code><span>向记录协作团队添加投影主体</span><code>record.share.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>record.share.grant</code><span>向投影主体或组授予直接记录共享</span><code>record.share.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>record.share.revoke</code><span>撤销活动的直接记录共享</span><code>record.share.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>record.sharing-rule.upsert</code><span>创建或替换受限的组织到组共享规则</span><code>record.share.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>record.sharing-rule.refresh</code><span>将一批共享规则投影为 record-to-group 边</span><code>record.share.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>record.sharing-rule.retry</code><span>清除陈旧边并重启失败的规则投影</span><code>record.share.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>organization.merge.start</code><span>启动经批准、非破坏性的组织合并</span><code>organization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>organization.merge.execute</code><span>执行一批有界的组织合并迁移</span><code>organization.manage</code><b class="risk-high">H</b></div>
+              <div class="capability-item"><code>organization.merge.cancel</code><span>取消尚未迁移记录的已批准合并</span><code>organization.manage</code><b class="risk-high">H</b></div>
+            </div>
+          </details>
+
+          <details class="capability-domain">
+            <summary>
+              <span class="domain-index">07</span>
+              <span class="domain-name"><strong>能力发现</strong><small>System Discovery</small></span>
+              <span class="domain-flow">Registry → Descriptor → Projection</span>
+              <span class="domain-count">01</span>
+              <span class="domain-risk"><i class="risk-low">L</i></span>
+              <span class="domain-open" aria-hidden="true"></span>
+            </summary>
+            <div class="domain-body">
+              <div class="capability-item"><code>system.capability.list</code><span>列出主体可见的已发布低风险能力描述</span><code>system.capability.read</code><b class="risk-low">L</b></div>
+            </div>
+          </details>
+        </div>
+
+        <div class="matrix-legend">
+          <span><i class="risk-low">L</i> Low · 读取与发现</span>
+          <span><i class="risk-medium">M</i> Medium · 受控写入</span>
+          <span><i class="risk-high">H</i> High · 审批或治理动作</span>
+          <small>矩阵快照：2026-07-23 · Runtime Registry 49/49</small>
+        </div>
+      </div>
+    </section>
+
+    <section class="quickstart" id="quickstart">
+      <div class="section-heading">
+        <p class="eyebrow">QUICKSTART</p>
+        <h2>同一个能力，三种调用方式</h2>
+        <p>示例使用只读能力 <code>system.capability.list</code>。正式令牌由统一身份服务签发，必须包含租户、组织、主体、有效期与所需 scope。</p>
+      </div>
+
+      <article class="method" id="api">
+        <div class="method-index">01 / HTTPS</div>
+        <div class="method-body">
+          <div class="method-title">
+            <div>
+              <p class="eyebrow">REMOTE TRANSPORT</p>
+              <h3>功能 API</h3>
+            </div>
+            <span class="availability live">公网可用</span>
+          </div>
+          <p>所有原子能力使用统一入口：<code>POST /v1/capabilities/{capability-id}/invoke</code>。身份由 Bearer JWT 绑定，调用方不能用请求体伪造 tenant 或 actor。</p>
+          <div class="code-shell">
+            <div class="code-bar"><span>shell</span><button class="copy" data-copy="api-code">复制</button></div>
+            <pre id="api-code"><code>export SEMATTICE_TOKEN='&lt;short-lived-jwt&gt;'
+
+curl -sS \
+  'https://semattice.agentcici.com/v1/capabilities/system.capability.list/invoke' \
+  -H "Authorization: Bearer ${SEMATTICE_TOKEN}" \
+  -H 'Content-Type: application/json' \
+  --data '{
+    "request_id": "req-capability-list-001",
+    "input": {}
+  }'</code></pre>
+          </div>
+          <div class="response-grid">
+            <div><span>Success</span><code>200 · status=succeeded</code></div>
+            <div><span>No token</span><code>401 · UNAUTHENTICATED</code></div>
+            <div><span>No scope</span><code>403 · UNAUTHORIZED</code></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="method" id="cli">
+        <div class="method-index">02 / PROCESS</div>
+        <div class="method-body">
+          <div class="method-title">
+            <div>
+              <p class="eyebrow">NON-INTERACTIVE</p>
+              <h3>Agent CLI</h3>
+            </div>
+            <span class="availability local">受信主机</span>
+          </div>
+          <p>CLI 没有菜单或确认提示，只读取 flags/stdin JSON，并向 stdout 输出单个 JSON。当前 CLI 在进程内加载 Capability Runtime，完整业务能力需要受控数据库与身份环境。</p>
+          <div class="code-shell">
+            <div class="code-bar"><span>shell</span><button class="copy" data-copy="cli-code">复制</button></div>
+            <pre id="cli-code"><code>chmod 700 ./semattice-linux-amd64
+export AI_NATIVE_IDENTITY_ISSUER='https://semattice.agentcici.com'
+export AI_NATIVE_IDENTITY_AUDIENCE='semattice-api'
+export AI_NATIVE_IDENTITY_ALGORITHM='HS256'
+export AI_NATIVE_IDENTITY_HMAC_KEY='&lt;secret-from-secure-store&gt;'
+export AI_NATIVE_IDENTITY_TOKEN='&lt;short-lived-jwt&gt;'
+export AI_NATIVE_CONTROL_DATABASE_URL='&lt;controlled-postgres-url&gt;'
+export AI_NATIVE_RUNTIME_DATABASE_URL='&lt;rls-runtime-postgres-url&gt;'
+
+printf '%s' '{
+  "request_id":"req-cli-001",
+  "input":{}
+}' | ./semattice-linux-amd64 capability invoke \
+  --id system.capability.list</code></pre>
+          </div>
+          <div class="command-row">
+            <code>semattice capability list</code>
+            <code>semattice capability describe --id &lt;id&gt;</code>
+            <code>semattice capability invoke --id &lt;id&gt;</code>
+          </div>
+        </div>
+      </article>
+
+      <article class="method" id="mcp">
+        <div class="method-index">03 / STDIO</div>
+        <div class="method-body">
+          <div class="method-title">
+            <div>
+              <p class="eyebrow">MODEL CONTEXT PROTOCOL</p>
+              <h3>MCP Tool Server</h3>
+            </div>
+            <span class="availability local">stdio</span>
+          </div>
+          <p>MCP 客户端启动 Semattice 子进程并通过 stdio 交换 JSON-RPC。能力 ID 会映射为工具名，例如 <code>system.capability.list</code> → <code>system_capability_list</code>。当前版本不暴露远程 HTTP MCP。</p>
+          <div class="code-shell">
+            <div class="code-bar"><span>mcp.json</span><button class="copy" data-copy="mcp-code">复制</button></div>
+            <pre id="mcp-code"><code>{
+  "mcpServers": {
+    "semattice": {
+      "command": "/usr/local/bin/semattice",
+      "args": ["mcp", "stdio"],
+      "env": {
+        "AI_NATIVE_IDENTITY_ISSUER": "https://semattice.agentcici.com",
+        "AI_NATIVE_IDENTITY_AUDIENCE": "semattice-api",
+        "AI_NATIVE_IDENTITY_ALGORITHM": "HS256",
+        "AI_NATIVE_IDENTITY_HMAC_KEY": "&lt;secret-from-secure-store&gt;",
+        "AI_NATIVE_IDENTITY_TOKEN": "&lt;short-lived-jwt&gt;",
+        "AI_NATIVE_CONTROL_DATABASE_URL": "&lt;controlled-postgres-url&gt;",
+        "AI_NATIVE_RUNTIME_DATABASE_URL": "&lt;rls-runtime-postgres-url&gt;"
+      }
+    }
+  }
+}</code></pre>
+          </div>
+          <p class="call-note">调用工具时，认证模式只需提交 <code>request_id</code>、可选 <code>idempotency_key</code> 与领域 <code>input</code>；tenant、actor、scopes 和 approvals 均从已验证令牌绑定。</p>
+        </div>
+      </article>
+    </section>
+
+    <section class="security" id="security">
+      <div class="section-heading inverse">
+        <p class="eyebrow">FAIL CLOSED BY DESIGN</p>
+        <h2>调用入口不是授权边界的捷径</h2>
+      </div>
+      <div class="security-grid">
+        <div><span>IDENTITY</span><h3>短期身份</h3><p>验证 issuer、audience、算法、有效期、subject、tenant、org 与 scopes。</p></div>
+        <div><span>ISOLATION</span><h3>租户隔离</h3><p>受信 TenantContext、PostgreSQL FORCE RLS、同租户关系约束共同生效。</p></div>
+        <div><span>GOVERNANCE</span><h3>高风险治理</h3><p>高风险能力需要审批上下文；Changeset、幂等、审计和稳定错误贯穿三入口。</p></div>
+      </div>
+      <div class="boundary-note">
+        <strong>部署边界</strong>
+        <p>这是单节点验证部署，不承诺 HA、自动备份恢复或生产 SLA。公网提供 HTTPS API；数据库、CLI runtime 与 MCP stdio 保持在受信环境。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="brand footer-brand">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span><strong>CloudCC</strong><em>Semattice</em></span>
+    </div>
+    <p>Semantic + Lattice · 面向智能体的业务数据与语义运行底座</p>
+    <a href="#top">返回顶部 ↑</a>
+  </footer>
+</body>
+</html>

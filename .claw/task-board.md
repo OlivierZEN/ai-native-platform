@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-16T15:34:20Z
-updated_by: ai
+updated_at: 2026-07-23T13:52:26Z
+updated_by: ai after user-approved phased usage metering design
 board_status: active
 ---
 
@@ -28,216 +28,33 @@ board_status: active
 
 ## Active Tasks
 
-### TASK-009 - Review the greenfield architecture baseline
+### TASK-026 - Enforce AgentCiCi-controlled company provisioning
 
-- status: `review`
-- priority: `high`
-- owner_role: `shared`
-- claimed_by: ``
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `none`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md, .claw/goals.md, .claw/decisions.md`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 绿地边界、目标架构、阶段路线和验收标准已完成架构评审
-- 评审结论和任何架构修订均写回 feature spec 与 ADR
-- 后续 Phase 0 任务的前置决策已明确
-
-#### Next Action
-
-- 评审 `FEAT-009`；批准后将其状态改为 `approved` 并开始 `TASK-010`
-
-#### Handoff Note
-
-- 本项目已完成治理初始化。实现前先读 `FEAT-009` 第 21、22、24、27 节；不要跳过 Phase 0 直接建设完整 CRM。
-
-### TASK-010 - Define the technology stack and repository baseline
-
-- status: `todo`
+- status: `in_progress`
 - priority: `critical`
-- owner_role: `shared`
-- claimed_by: ``
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `TASK-009`
+- owner_role: `integration-agent`
+- claimed_by: `project-manager`
+- spec_path: `docs/specs/FEAT-026-agentcici-controlled-company-provisioning.md`
+- depends_on: `TASK-011, TASK-025`
 - blocked_by: `none`
 - related_issues: `none`
-- scope_files: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md, .claw/decisions.md, repository root`
-- branch: `n/a`
+- scope_files: `tenant control-plane provisioning, internal HMAC transport, AgentCiCi reservation contract, database migrations and tests`
+- branch: `agent/go-capability-platform-baseline`
 - pr_url: `n/a`
 
 #### Done When
 
-- 后端、前端、部署、CI/CD 和安全门禁的关键选型形成 ADR
-- 仓库结构、编码规范与本地开发基线可执行
+- Semattice cannot create a company projection without AgentCiCi reserve/complete evidence
+- approved callers, HMAC replay protection, idempotency, conflict recovery and cross-service status are verified
+- production release and smoke evidence are recorded for both projects
 
 #### Next Action
 
-- 在 TASK-009 获批后创建该任务的独立 feature spec，并完成选型比较
+- 本机真实 HTTP 联调已于 2026-07-24 通过：AgentCiCi 创建新组织后调用受控入口，Semattice 反向 reserve/complete 并在独立 PostgreSQL 16 投影 `active` tenant；同一幂等键重试未新增 operation。下一步是按既有发布阻断要求完成 Semattice 生产 migration 13 的专用 migrator 执行与证据，再单独安排线上验收。
 
 #### Handoff Note
 
-- 不把尚未验证的技术选型写成已接受决策。
-
-### TASK-011 - Build the tenant control-plane contract
-
-- status: `todo`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: ``
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `TASK-010`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `tenant registry, shard registry, provisioning, quotas, routing contract`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- registry、开户、配额和路由契约已实现并通过测试
-
-#### Next Action
-
-- 创建独立 feature spec，细化控制面数据和 API 合约。
-
-#### Handoff Note
-
-- `tenant_id -> shard_id + tenant_bucket` 是控制面唯一事实源。
-
-### TASK-012 - Validate the PostgreSQL shard baseline
-
-- status: `todo`
-- priority: `critical`
-- owner_role: `backend-agent`
-- claimed_by: ``
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `TASK-010`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `PostgreSQL schema, 128 LIST partitions, RLS, pooling context, HA and backup validation`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 分区裁剪、RLS、连接池上下文清理和故障恢复均有真实验证证据
-
-#### Next Action
-
-- 创建独立 feature spec 与可重复运行的隔离/性能测试计划。
-
-#### Handoff Note
-
-- 不允许租户请求直接指定 shard 或 bucket。
-
-### TASK-013 - Design the metadata core model
-
-- status: `todo`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: ``
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `TASK-010`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `object, field, relation, package, version and compiled metadata model`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 元数据模型、版本快照和编译契约具有确定性测试
-
-#### Next Action
-
-- 创建独立 feature spec，明确数据模型与依赖图规则。
-
-#### Handoff Note
-
-- 元数据是平台协议，不是仅供页面使用的配置。
-
-### TASK-014 - Validate the Changeset publisher
-
-- status: `todo`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: ``
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `TASK-013`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `changeset validation, simulation, approval, publish and rollback`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- Changeset 可预检、审批、发布、审计与回滚，并有版本一致性测试
-
-#### Next Action
-
-- 创建独立 feature spec，定义治理状态机和失败语义。
-
-#### Handoff Note
-
-- 人工 UI 与 Agent 工具必须生成等价的 Changeset。
-
-### TASK-015 - Benchmark object records and typed indexes
-
-- status: `todo`
-- priority: `critical`
-- owner_role: `backend-agent`
-- claimed_by: ``
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `TASK-012, TASK-013`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `object_record, typed dynamic indexes, relations and query planning`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 目标负载下的写放大、查询延迟和存储成本有可重复的基准证据
-
-#### Next Action
-
-- 创建独立 feature spec，冻结 PoC 负载、指标与退出准则。
-
-#### Handoff Note
-
-- 仅为声明的可查询字段建立类型化索引。
-
-### TASK-016 - Validate authorization and record sharing
-
-- status: `todo`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: ``
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `TASK-012, TASK-013, TASK-015`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `object, field and record authorization; sharing; permission snapshots`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 对象、字段、记录权限及跨租户越权场景均通过验证
-
-#### Next Action
-
-- 创建独立 feature spec，定义授权决策链和共享计算边界。
-
-#### Handoff Note
-
-- 应用权限、RLS 与审计测试必须共同生效。
+- `company_id` remains the AgentCiCi `org_id`; do not alter tenant-internal `organization_id` authorization semantics.
 
 ### TASK-017 - Validate transactional outbox and workers
 
@@ -301,13 +118,13 @@ board_status: active
 - depends_on: `TASK-011, TASK-012, TASK-014, TASK-015, TASK-016, TASK-017, TASK-018`
 - blocked_by: `none`
 - related_issues: `none`
-- scope_files: `isolation, capacity, hot-tenant, failure and recovery test suites`
+- scope_files: `isolation, capacity and hot-tenant test suites; production HA/recovery is out of Phase 0 scope`
 - branch: `n/a`
 - pr_url: `n/a`
 
 #### Done When
 
-- 高风险架构假设的性能、隔离和故障测试均有真实、可复现的结果
+- 高风险架构假设的性能、隔离和热租户公平性测试均有真实、可复现的结果；生产 HA/恢复测试留待后续阶段
 
 #### Next Action
 
@@ -317,9 +134,427 @@ board_status: active
 
 - 测试结果必须记录在 `test-report.md`，不能以设计结论替代实测。
 
+### TASK-027 - Implement phased usage metering and cost observability
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-027-phased-usage-metering-and-cost-observability.md`
+- depends_on: `TASK-017, TASK-012, TASK-015, TASK-020`
+- blocked_by: `TASK-017`
+- related_issues: `none`
+- scope_files: `capability invocation/transports, PostgreSQL migrations and RLS, transactional outbox consumer, record runtime deltas, usage query capabilities, tests and capacity evidence`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Phase 1 exposes tenant-authorized API/MCP/CLI request counts, unique capability executions, versioned RU, logical business-data bytes and effective record counts without duplicate metering
+- ledger/outbox/current counters/rollups/physical samples have RLS, retention, calibration and real performance evidence
+- shared-partition physical storage is explicitly presented as a platform size or allocation estimate, never as a falsely exact tenant value
+
+#### Next Action
+
+- Add PostgreSQL end-to-end metering/RLS/calibration tests and a metering-on/off performance baseline. Internal package race/vet/module checks passed on 2026-07-23; full repository validation remains blocked by two existing `cmd` tests (stdio EOF and disabled public `tenant.provision`).
+
+#### Handoff Note
+
+- User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
+
 ## Completed Tasks
 
-- 暂无已完成任务。
+### TASK-025 - Rename provisioning global identity to company_id
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-025-company-identity-rename.md`
+- depends_on: `TASK-011`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `tenant control models/capabilities, JWT principal, tenant_registry migration, current architecture specs and tests`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 开户、状态、JWT、operations port 与数据库全都只使用 `company_id`
+- `organization_id` 授权组织树保持不变
+- 新旧数据库路径、API/MCP/CLI 和回归门禁有真实验证
+
+#### Next Action
+
+- 已完成本地 v2 改名与 migration 13 验证；既有 20 位公司编号值未重键。远程 ECS 制品、外部运营端和 JWT 发行方的协议切换需单独授权和发布任务。
+
+#### Handoff Note
+
+- `company_id` 是统一运营控制面的全局企业标识；`organization_id` 只属于租户内 RBAC/共享组织树。旧 `org_id` 输入与 JWT claim 已 fail closed。
+
+### TASK-024 - Add authenticated Streamable HTTP MCP transport
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-024-streamable-http-mcp.md`
+- depends_on: `TASK-020`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `cmd/ai-native-platform/main.go, internal/identity/jwt.go, internal/mcp/**, README.md`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- `serve` exposes authenticated Streamable HTTP MCP at `/mcp` while stdio MCP and Capability API remain compatible
+- every MCP HTTP request verifies bearer identity and sessions cannot cross tenant/principal boundaries
+- SDK Streamable HTTP client tool invocation, authentication rejection, full test/race/vet/module/build checks pass
+
+#### Next Action
+
+- 已完成本地验证。远程 ECS 部署、Nginx streaming 代理和 MCP OAuth resource metadata 需要独立授权和部署任务。
+
+#### Handoff Note
+
+- 该 endpoint 使用 MCP Streamable HTTP，不是旧 HTTP+SSE；默认 stateful session 空闲 5 分钟关闭，未配置 EventStore，因此不承诺断线重放。
+
+### TASK-023 - Add the platform capability matrix to the deployed guide
+
+- status: `done`
+- priority: `high`
+- owner_role: `frontend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
+- depends_on: `TASK-022`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `deploy/semattice/www/**, docs/specs/FEAT-022-*, .claw/task-board.md, .claw/current-status.md, .claw/test-report.md`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 首页说明平台核心设计、数据运行、元数据演进、租户、授权与共享能力
+- 能力矩阵覆盖当前 Registry 实际发布的全部 49 项 Capability，并标明数量、风险与调用入口
+- 更新后的静态资产部署到授权 ECS，公网内容、交互、响应式结构与无控制台错误均有验证
+
+#### Next Action
+
+- 已完成。能力矩阵后续必须随 Capability Registry 的发布能力变化同步更新并重复 parity 验证。
+
+#### Handoff Note
+
+- 已部署分组精确为 `6 tenant + 6 semantic metadata + 10 changeset + 5 record runtime + 12 authorization + 9 sharing/organization + 1 system = 49`；每项 ID、scope 和风险均通过运行时 parity。页面没有描述尚未实现的远程 HTTP MCP、outbox/worker、HA 或生产 SLA。
+
+### TASK-022 - Deploy CloudCC Semattice to the authorized ECS
+
+- status: `done`
+- priority: `critical`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
+- depends_on: `TASK-010, TASK-011, TASK-012, TASK-013, TASK-014, TASK-015, TASK-016`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `deploy/semattice/**, docs/specs/FEAT-022-*, .claw/devops.md; authorized ECS 115.29.222.70`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- PostgreSQL 16、迁移、独立数据库角色、Semattice systemd 服务和 Nginx TLS 在授权 ECS 上运行
+- `semattice.agentcici.com` 展示 API/CLI/MCP 使用说明，HTTPS API 真实可调用
+- 公网 HTTPS、未授权拒绝、CLI、MCP stdio 和服务重启均有真实验证证据
+
+#### Next Action
+
+- 已完成。后续只进行证书续期、版本升级或故障处理；新功能继续使用独立任务。
+
+#### Handoff Note
+
+- PostgreSQL 16.13、Nginx 1.30.2 和 Semattice systemd 已启用；公网首页/HTTPS/API、CLI 下载、短期 JWT API、CLI、MCP stdio 与服务重启均验证通过。三入口发现 49 项能力，MCP 实际调用 `system_capability_list` 成功。凭据不在仓库；MCP 当前仍为 stdio，不伪装成 HTTP transport。
+
+### TASK-016 - Implement role-centered authorization and record sharing
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-016-role-centered-rbac-organization-data-sharing.md`
+- depends_on: `TASK-012, TASK-013, TASK-015`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `principal/organization/role/permission-set models, object/field/record PDP, organization data scopes, Owner, teams, share grants/rules, snapshots and audit`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 角色中心的对象、字段、Capability 和平台管理权限由 Permission Set 可复用组合，并强制最小权限与职责分离
+- 记录权限由 Owner、数据归属组织范围、团队、显式共享和规则共享联合计算；组织层级不传播功能权限
+- 对象、字段、记录、共享、调岗、组织合并和跨租户越权场景均有真实 PostgreSQL 与三入口验证
+
+#### Next Action
+
+- 已完成：角色中心 RBAC、组织数据范围、Owner、组/团队/直接共享、规则 `record × group` 投影及失败恢复、条件策略、职责分离、重组、解释审计、三入口、跨租户负向和本地百万记录验证均通过。通用 worker/outbox 与 200 活跃用户/热点公平性容量验收是 TASK-017/TASK-019 的独立工作。
+
+#### Handoff Note
+
+- 已完成并由本地 PostgreSQL 证据验证。Profile 不进入业务授权模型；组织树只计算数据范围与记录共享，禁止 `record × user` ACL 物化。规则投影只存 record-to-group 边且未 ready 时 fail closed；构建结束会检查缺边，access group disabled 会撤销其共享路径；组织合并不物理删除。通用自动运行/告警与完整容量验收已明确拆分至 TASK-017/TASK-019。
+
+### TASK-009 - Review the greenfield architecture baseline
+
+- status: `done`
+- priority: `high`
+- owner_role: `shared`
+- claimed_by: `human + root`
+- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md, .claw/goals.md, .claw/decisions.md`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 绿地边界、目标架构、阶段路线和验收标准已完成架构评审
+- 评审结论和架构修订均已写回 feature spec 与 ADR
+- Phase 0 核心编码前置决策已明确；后置组件选型不阻塞开工
+
+#### Next Action
+
+- 已完成。后续从 `TASK-010` 开始执行 Phase 0，不重新打开本任务；架构变更通过对应 feature spec 和 ADR 管理。
+
+#### Handoff Note
+
+- 用户于 2026-07-18 正式批准 `FEAT-009`，规格状态已改为 `approved`，ADR-003 已接受。Event Bus、Search/OLAP、Wasm/流程、数据驻留和计费仍为独立后置 ADR，不阻塞 `TASK-010`。
+
+### TASK-010 - Define the technology stack and repository baseline
+
+- status: `done`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-010-go-engineering-baseline.md`
+- depends_on: `TASK-009`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `go.mod, go.sum, cmd/**, internal/config/**, internal/observability/**, internal/database/**, scripts/**, docs/**`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Go 工程、配置、结构化日志、pgx 连接、显式 checksum migration runner 和测试目录基线可执行
+- migrator/control/runtime 三种连接身份分离，26 个外部模块许可和 checksum 已审计
+
+#### Next Action
+
+- 已完成；后续任务复用同一配置、日志、连接池和迁移 runner，新增依赖继续执行许可门禁。
+
+#### Handoff Note
+
+- Go 1.26.5 单运行时、CGO-free 四目标构建和 PostgreSQL 16 基线已由 maker 与独立 checker 验证。生产 CI、发布、SBOM/provenance/signature 和部署仍不在本任务授权范围。
+
+### TASK-011 - Integrate the unified tenant operations control plane
+
+- status: `done`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-011-unified-tenant-operations-control-plane.md`
+- depends_on: `TASK-010`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `Native operations port, JWT identity, tenant registry, lifecycle, routing, operation, audit, API/MCP/CLI`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Native 可独立开户；与 Agent CC 绑定时复用运营控制面提供的 UUIDv4 `tenant_id + 20 位 company_id`
+- 生命周期、修订、幂等、失败恢复、审计与可信身份负向测试通过
+- 六个租户能力由同一 Registry/Invoker 投影为 authenticated API、MCP 和无交互 CLI
+
+#### Next Action
+
+- 已完成当前仓库 Native 适配器与契约；未来跨仓库接入须由运营端实现版本化 `operations.Port`，不在本任务伪造完成。
+
+#### Handoff Note
+
+- `ai_native_control` 是非 owner、非 superuser、非 BYPASSRLS 的独立跨租户身份，仅在 tenant registry/operation/audit 三表获得精确权限；真实 main 双连接接线测试通过。
+
+### TASK-012 - Validate the PostgreSQL shard baseline
+
+- status: `done`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-012-postgresql-shard-isolation-poc.md`
+- depends_on: `TASK-010`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `PostgreSQL 16.13 schema, 128 LIST partitions, FORCE RLS, TenantContext, pool isolation tests`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- migrations 1/2/3 可从空库执行，128 bucket、分区裁剪、FORCE RLS、事务级 TenantContext、连接池清理和跨租户关系拒绝均有 PostgreSQL 16 实证
+- runtime/control 角色最小权限和无上下文 fail-closed 测试通过
+
+#### Next Action
+
+- 已完成隔离与分区基线；8/16 GiB 下的 50 并发、200 活跃用户和 100 万记录完整容量验收保留给 `TASK-019`。
+
+#### Handoff Note
+
+- PoC 使用绑定 127.0.0.1 的专用临时 PostgreSQL 16.13；未连接生产/共享数据库，未执行 HA、备份或恢复。
+
+### TASK-013 - Design the metadata core model
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-013-metadata-core-model.md`
+- depends_on: `TASK-010`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `metadata version, object, field, relation, immutable publication, snapshot, API/MCP/CLI`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- UUIDv7 元数据版本、对象、字段和关系模型具有同租户/同版本复合约束及 FORCE RLS
+- draft-only 变更、批准发布、发布后不可变、确定性 snapshot/digest 与六能力三入口 parity 测试通过
+
+#### Next Action
+
+- 已完成；`TASK-014` 已在此不可变元数据版本之上实现 Changeset 治理，后续任务继续保持本任务核心约束。
+
+#### Handoff Note
+
+- 元数据 CRUD/publish 始终使用严格 `ai_native_runtime` TenantContext；只有路由解析使用独立 control pool。跨租户、跨版本和已发布修改均 fail closed。
+
+### TASK-014 - Validate the Changeset publisher
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-014-changeset-and-dynamic-field-evolution.md`
+- depends_on: `TASK-013, TASK-015`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `changeset state machine, dynamic field/index lifecycle, versioned quota gates, candidate projection, resumable backfill/coverage, unique/reference validation, purge/tombstone`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Changeset 可预检、模拟、审批、发布、审计与受限回滚，并有版本一致性测试
+- required/indexed/unique/reference、改名、改类型和删除均通过分阶段迁移，覆盖率未达 100% 时不能激活
+- 每对象动态字段/索引和记录 JSONB 边界在 API、MCP、CLI 中一致执行，回填可恢复且不绕过 TenantContext/RLS
+
+#### Next Action
+
+- 已完成。下一阶段创建并批准 `TASK-016` 的授权与共享独立规格；`TASK-019` 继续负责 8/16 GiB 容量认证，不重新打开本任务。
+
+#### Handoff Note
+
+- migrations 5/6、十项 Changeset 能力、候选版本新写投影、按对象有界回填、revision 冲突恢复、required/index/unique/reference coverage、predecessor 转换、purge/tombstone 和版本化 service-tier 配额均已在真实 PostgreSQL 16 下通过。通用 worker/outbox 属于 `TASK-017`；最终容量数值属于 `TASK-019`。
+
+### TASK-015 - Benchmark object records and typed indexes
+
+- status: `done`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-015-record-runtime-and-typed-indexes.md`
+- depends_on: `TASK-012, TASK-013`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `object_record, record_index_*, record_relation, internal/record/**, runtime.record.* API/MCP/CLI, benchmark harness`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 元数据驱动的 create/get/update/delete/query 通过 API、MCP 和无交互 CLI 等价暴露
+- 乐观锁、软删除、类型校验、声明式 typed index、关系约束和受限查询 DSL 在真实 PostgreSQL 16 下通过
+- 1,000,000 记录下的写放大、查询计划、延迟和存储成本有可重复证据；生产容量验收仍留给 TASK-019
+
+#### Next Action
+
+- 已完成；不要在本任务追加对象/字段/记录共享权限或 outbox。分别进入 TASK-016 和 TASK-017 的独立规格。
+
+#### Handoff Note
+
+- 五项 `runtime.record.*` 能力、migration 4、五类 640 typed partitions、durable write idempotency 和真实 bounded query planner 已通过本地 maker 验证。100 万记录为单机物理路径证据；50 并发与 8/16 GiB 容量仍由 TASK-019 验收。
+
+### TASK-020 - Implement the pure-Agent capability contract PoC
+
+- status: `done`
+- priority: `critical`
+- owner_role: `shared`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-020-pure-agent-capability-contract.md`
+- depends_on: `TASK-010` (user-authorized narrow L2 exception for the Go PoC only)
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `capability registry, API gateway, MCP server, non-interactive CLI, contract tests`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 每个已发布原子能力从统一 Capability Contract 派生 API、MCP Tool 与 CLI
+- CLI 仅支持结构化输入和 JSON/JSON Lines 输出，无菜单、提示或终端状态依赖
+- 三入口通过等价性、权限、幂等、审计和错误码契约测试
+
+#### Next Action
+
+- 已完成受限 L2 PoC；后续 PostgreSQL、租户控制面与身份集成已由用户另行扩大授权，必须转入 `TASK-010/011/012` 的独立规格与检查点，不在本任务继续追加源码。
+
+#### Handoff Note
+
+- `system.capability.list` 通过同一 Go Registry/Invoker 暴露 API、MCP 和无交互 CLI，独立 checker 已验证 test/race/vet/module verify、四目标纯 Go cross-build、无 TTY、MCP stdout 和 denylist。本任务完成时尚未授权数据库与身份集成；后续扩大授权以 `current-status.md` 为准。生产部署、CI、发布仍未授权，高风险异步 `operation_id`、持久审计与通用输出 Schema 校验仍未实现。
+
+### TASK-021 - Establish the Phase 0 Loop Engineering controls
+
+- status: `done`
+- priority: `critical`
+- owner_role: `project-manager`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `LOOP.md, STATE.md, loop-constraints.md, loop-budget.md, loop-run-log.md, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- L1 loop state, budget, constraints and append-only run log are present and internally consistent
+- Five-hour local automation ran with no remote-write or source-edit permission
+- Initial readiness audit and project-state validation have real recorded results
+- Five-hour handoff identifies the L2 promotion gate and next verified action
+
+#### Next Action
+
+- 已完成；不要恢复该 L1 bootstrap。后续 L2 授权和任务状态以 `current-status.md` 与活跃任务卡为准。
+
+#### Handoff Note
+
+- This was the L1 report-only bootstrap. Its original source-code gate has since been satisfied and expanded by the user; do not reuse this completed task as the current authorization record.
+- Local L1 evidence is ahead of `origin/main` and deliberately unpushed; publishing remains a human-approved action.
+- Five-hour handoff: state validation passed; 23 pre-handoff logs were monotonic, L1-only, with zero source actions. This line records the historical gate at handoff; subsequent approvals, Go evidence and expanded L2 scope are recorded in `current-status.md` and later task cards.
 
 ## 维护规则
 
