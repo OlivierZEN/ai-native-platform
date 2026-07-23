@@ -10,6 +10,14 @@ import (
 )
 
 func Run(ctx context.Context, invoker *capability.Invoker, args []string, in io.Reader, out, _ io.Writer) int {
+	return run(ctx, invoker, nil, args, in, out)
+}
+
+func RunAs(ctx context.Context, invoker *capability.Invoker, principal capability.TrustedPrincipal, args []string, in io.Reader, out, _ io.Writer) int {
+	return run(ctx, invoker, &principal, args, in, out)
+}
+
+func run(ctx context.Context, invoker *capability.Invoker, principal *capability.TrustedPrincipal, args []string, in io.Reader, out io.Writer) int {
 	if len(args) == 2 && args[0] == "capability" && args[1] == "list" {
 		return write(out, capability.ListResult{Capabilities: invoker.RegistryDescriptors()})
 	}
@@ -40,6 +48,14 @@ func Run(ctx context.Context, invoker *capability.Invoker, args []string, in io.
 	if request.CapabilityID != args[3] {
 		return writeFailure(out, capability.Response{CapabilityID: args[3], RequestID: request.RequestID, AuditID: "audit:" + request.RequestID, Status: capability.StatusFailed, Error: &capability.StableError{Code: capability.CodeValidationFailed, Message: "capability_id must match --id"}})
 	}
+	if principal != nil {
+		bound, stableErr := capability.BindTrustedPrincipal(request, *principal)
+		if stableErr != nil {
+			return writeFailure(out, capability.Response{CapabilityID: args[3], RequestID: request.RequestID, AuditID: "audit:" + request.RequestID, Status: capability.StatusFailed, Error: stableErr})
+		}
+		request = bound
+	}
+	request.Entrypoint = "cli"
 	response := invoker.Invoke(ctx, request)
 	if exitCode := write(out, response); exitCode != 0 {
 		return exitCode

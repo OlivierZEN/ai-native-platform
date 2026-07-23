@@ -2,7 +2,8 @@
 kind: feature-spec
 id: FEAT-020-DEPENDENCY-GATE
 title: Go Capability Contract PoC Dependency Gate
-status: accepted_for_poc
+status: superseded
+superseded_by: FEAT-010
 owner_role: shared
 related_tasks: [TASK-020]
 related_adrs: [ADR-007]
@@ -14,6 +15,8 @@ updated_at: 2026-07-17T16:35:47Z
 ## Scope
 
 This record governs only the first L2 PoC dependency set. It does not authorize a production release, an internal module proxy configuration, or a broader dependency catalogue.
+
+This is a historical snapshot of TASK-020 before PostgreSQL, identity and UUID dependencies were added. The current complete module graph and license gate are owned by `FEAT-010`; none of the counts or “no additional module” statements below describe the current repository.
 
 ## Direct dependency candidate
 
@@ -51,4 +54,4 @@ The following exact `GOTOOLCHAIN=go1.26.5 go list -m all` graph was reviewed fro
 - MCP official SDK listing: Go is Tier 1.
 - Go SDK `v1.6.1` license and module manifest reviewed on 2026-07-18.
 - Local Go 1.26.5 toolchain verified with `GOTOOLCHAIN=go1.26.5 go version`.
-- Exact module graph and local license-file review recorded above; no additional module was introduced beyond the SDK's resolved graph.
+- At the time of TASK-020, no additional module was introduced beyond the SDK's resolved graph. This historical statement was superseded when TASK-010/011/012/013 added approved dependencies.

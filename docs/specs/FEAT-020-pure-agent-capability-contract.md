@@ -5,24 +5,24 @@ title: Pure-Agent Capability Contract for API, MCP, and CLI
 status: approved
 owner_role: shared
 task_ids: TASK-020
-related_decisions: ADR-004, ADR-007 (accepted)
+related_decisions: ADR-004, ADR-007, ADR-012
 related_issues: none
-updated_at: 2026-07-17T16:46:51Z
-updated_by: ai + independent checker
+updated_at: 2026-07-23T01:22:19Z
+updated_by: ai after human-confirmed CloudCC Semattice product naming
 ---
 
 # FEAT-020 - 纯 Agent 能力契约：API、MCP 与 CLI
 
 ## 背景与目标
 
-平台是纯 AI Native 系统，不提供 Web、移动端、BFF 或人工交互式控制台。所有业务、配置和运维均由 Agent 操作。为避免同一功能在功能 API、MCP Tool 和 CLI 中出现不同的权限、幂等、审计和错误语义，每个已发布原子能力必须从同一个版本化 Capability Contract 派生三个入口。
+CloudCC Semattice（语义格）是纯 AI Native 系统，不提供 Web、移动端、BFF 或人工交互式控制台。所有业务、配置和运维均由 Agent 操作。为避免同一功能在功能 API、MCP Tool 和 CLI 中出现不同的权限、幂等、审计和错误语义，每个已发布原子能力必须从同一个版本化 Capability Contract 派生三个入口。
 
 ## 范围
 
 ### In Scope
 
 - Capability Contract：能力 ID、动作、输入/输出 JSON Schema、版本、同步/异步语义、权限、风险、配额、幂等、错误码和审计事件。
-- 功能 API、MCP Service 和 `agent-cli` 对同一契约的适配。
+- 功能 API、MCP Service 和面向 Agent 的 CLI 对同一契约的适配；目标品牌命令为 `semattice`，当前 `ai-native-platform` 二进制按 ADR-012 保持兼容。
 - 三入口的能力发现、调用、异步 operation 查询、审计和契约测试。
 - 无 TTY、结构化输入输出的 CLI 运行模式。
 

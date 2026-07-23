@@ -4,10 +4,21 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
 
 	"github.com/OlivierZEN/ai-native-platform/internal/capability"
+	"github.com/modelcontextprotocol/go-sdk/auth"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
+
+const trustedPrincipalTokenInfoKey = "cloudcc_semattice.trusted_principal"
+
+// BearerIdentityVerifier validates the identity attached to every Streamable
+// HTTP request. The expiration is propagated to the MCP SDK so it can enforce
+// the bearer-token lifecycle and bind sessions to the verified principal.
+type BearerIdentityVerifier func(context.Context, string) (capability.TrustedPrincipal, time.Time, error)
 
 type toolInput struct {
 	RequestID      string   `json:"request_id"`
@@ -19,19 +30,69 @@ type toolInput struct {
 }
 
 func NewServer(invoker *capability.Invoker) *mcp.Server {
+	return newServer(invoker, nil)
+}
+
+func NewServerAs(invoker *capability.Invoker, principal capability.TrustedPrincipal) *mcp.Server {
+	return newServer(invoker, &principal)
+}
+
+// NewAuthenticatedStreamableHTTPHandler exposes the MCP Streamable HTTP
+// transport. Each HTTP request must have a verified bearer identity. The
+// SDK's token context retains a tenant-qualified subject so subsequent requests
+// for a stateful MCP session cannot be replayed by a different principal.
+func NewAuthenticatedStreamableHTTPHandler(invoker *capability.Invoker, verify BearerIdentityVerifier) http.Handler {
+	if verify == nil {
+		panic("authenticated streamable MCP handler requires an identity verifier")
+	}
+
+	streamable := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {
+		tokenInfo := auth.TokenInfoFromContext(request.Context())
+		if tokenInfo == nil {
+			return nil
+		}
+		principal, ok := tokenInfo.Extra[trustedPrincipalTokenInfoKey].(capability.TrustedPrincipal)
+		if !ok {
+			return nil
+		}
+		return NewServerAs(invoker, principal)
+	}, &mcp.StreamableHTTPOptions{SessionTimeout: 5 * time.Minute})
+
+	// Streamable HTTP must reject cross-origin browser requests. The Go standard
+	// library guard validates Origin/Fetch Metadata while the SDK additionally
+	// rejects localhost DNS rebinding through an invalid Host header.
+	protected := http.NewCrossOriginProtection().Handler(streamable)
+	return auth.RequireBearerToken(func(ctx context.Context, rawToken string, _ *http.Request) (*auth.TokenInfo, error) {
+		principal, expiresAt, err := verify(ctx, rawToken)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", auth.ErrInvalidToken, err)
+		}
+		if expiresAt.IsZero() {
+			return nil, fmt.Errorf("%w: identity token is missing expiry", auth.ErrInvalidToken)
+		}
+		return &auth.TokenInfo{
+			Scopes:     append([]string(nil), principal.Actor.Scopes...),
+			Expiration: expiresAt,
+			UserID:     principal.TenantID + "\x00" + principal.Actor.ID,
+			Extra:      map[string]any{trustedPrincipalTokenInfoKey: principal},
+		}, nil
+	}, nil)(protected)
+}
+
+func newServer(invoker *capability.Invoker, principal *capability.TrustedPrincipal) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "ai-native-platform", Version: "v0.1.0"}, nil)
 	for _, definition := range invoker.RegistryDefinitions() {
-		addCapabilityTool(server, invoker, definition)
+		addCapabilityTool(server, invoker, definition, principal)
 	}
 	return server
 }
 
-func addCapabilityTool(server *mcp.Server, invoker *capability.Invoker, definition capability.Definition) {
+func addCapabilityTool(server *mcp.Server, invoker *capability.Invoker, definition capability.Definition, principal *capability.TrustedPrincipal) {
 	descriptor := definition.Descriptor
 	server.AddTool(&mcp.Tool{
 		Name:         capability.MCPToolName(descriptor.ID),
 		Description:  descriptor.Description,
-		InputSchema:  invocationInputSchema(descriptor.InputSchema),
+		InputSchema:  invocationInputSchema(descriptor.InputSchema, principal != nil),
 		OutputSchema: invocationOutputSchema(descriptor.OutputSchema),
 	}, func(ctx context.Context, request *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		input, response := decodeToolInput(descriptor.ID, request.Params.Arguments)
@@ -43,14 +104,23 @@ func addCapabilityTool(server *mcp.Server, invoker *capability.Invoker, definiti
 			return responseResult(failedToolResponse(descriptor.ID, input.RequestID, capability.CodeValidationFailed, "input cannot be encoded as JSON")), nil
 		}
 
-		result := invoker.Invoke(ctx, capability.Request{
+		invocation := capability.Request{
 			CapabilityID:   descriptor.ID,
 			RequestID:      input.RequestID,
 			TenantID:       input.TenantID,
 			Actor:          capability.Actor{ID: input.ActorID, Scopes: input.Scopes},
 			IdempotencyKey: input.IdempotencyKey,
 			Input:          rawInput,
-		})
+		}
+		if principal != nil {
+			bound, stableErr := capability.BindTrustedPrincipal(invocation, *principal)
+			if stableErr != nil {
+				return responseResult(failedToolResponse(descriptor.ID, input.RequestID, stableErr.Code, stableErr.Message)), nil
+			}
+			invocation = bound
+		}
+		invocation.Entrypoint = "mcp"
+		result := invoker.Invoke(ctx, invocation)
 		return responseResult(result), nil
 	})
 }
@@ -76,12 +146,16 @@ func failedToolResponse(capabilityID, requestID string, code capability.ErrorCod
 	}
 }
 
-func invocationInputSchema(inputSchema json.RawMessage) json.RawMessage {
+func invocationInputSchema(inputSchema json.RawMessage, authenticated bool) json.RawMessage {
+	required := []string{"request_id", "tenant_id", "actor_id", "scopes", "input"}
+	if authenticated {
+		required = []string{"request_id", "input"}
+	}
 	return mustJSON(map[string]any{
 		"$schema":              "https://json-schema.org/draft/2020-12/schema",
 		"type":                 "object",
 		"additionalProperties": false,
-		"required":             []string{"request_id", "tenant_id", "actor_id", "scopes", "input"},
+		"required":             required,
 		"properties": map[string]any{
 			"request_id":      map[string]any{"type": "string"},
 			"tenant_id":       map[string]any{"type": "string"},
@@ -148,4 +222,8 @@ func mustJSON(value any) json.RawMessage {
 
 func RunStdio(ctx context.Context, invoker *capability.Invoker) error {
 	return NewServer(invoker).Run(ctx, &mcp.StdioTransport{})
+}
+
+func RunStdioAs(ctx context.Context, invoker *capability.Invoker, principal capability.TrustedPrincipal) error {
+	return NewServerAs(invoker, principal).Run(ctx, &mcp.StdioTransport{})
 }

@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 )
 
 type RegistryView interface {
@@ -21,6 +22,13 @@ type Definition struct {
 	Descriptor    Descriptor
 	ValidateInput func(json.RawMessage) *StableError
 	Handler       Handler
+}
+
+// Meter receives compact, payload-free invocation facts. Implementations must
+// never make an already-completed domain operation fail merely because a
+// dashboard write is unavailable.
+type Meter interface {
+	RecordInvocation(context.Context, Request, Response, bool, time.Duration)
 }
 
 type Registry struct {
@@ -88,9 +96,14 @@ type Invoker struct {
 	mu          sync.Mutex
 	idempotency map[string]idempotencyRecord
 	audits      []AuditEvent
+	meter       Meter
 }
 
 func NewInvoker(registry *Registry, maxConcurrency int) *Invoker {
+	return NewMeteredInvoker(registry, maxConcurrency, nil)
+}
+
+func NewMeteredInvoker(registry *Registry, maxConcurrency int, meter Meter) *Invoker {
 	if maxConcurrency < 1 {
 		panic("max concurrency must be positive")
 	}
@@ -98,10 +111,21 @@ func NewInvoker(registry *Registry, maxConcurrency int) *Invoker {
 		registry:    registry,
 		concurrency: make(chan struct{}, maxConcurrency),
 		idempotency: make(map[string]idempotencyRecord),
+		meter:       meter,
 	}
 }
 
 func (i *Invoker) Invoke(ctx context.Context, request Request) Response {
+	started := time.Now()
+	executed := false
+	response := i.invoke(ctx, request, &executed)
+	if i.meter != nil {
+		i.meter.RecordInvocation(ctx, request, response, executed, time.Since(started))
+	}
+	return response
+}
+
+func (i *Invoker) invoke(ctx context.Context, request Request, executed *bool) Response {
 	auditID := "audit:" + request.RequestID
 	if err := validateRequest(request); err != nil {
 		return i.record(request, failedResponse(request, auditID, err))
@@ -131,6 +155,7 @@ func (i *Invoker) Invoke(ctx context.Context, request Request) Response {
 			return i.record(request, replayResponse(existing, request, auditID))
 		}
 	}
+	*executed = true
 
 	select {
 	case i.concurrency <- struct{}{}:

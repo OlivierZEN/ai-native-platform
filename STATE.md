@@ -1,14 +1,15 @@
 # 当前 Loop 状态
 
-- 状态：`completed_l2_poc`
+- 状态：`completed_l2_loop`
 - 暂停：`true`
-- 窗口：2026-07-18 00:03:53–05:03:53 Asia/Shanghai
-- 当前任务：`TASK-020` Go Capability Contract PoC。
-- 运行时：已通过 `GOTOOLCHAIN=go1.26.5` 取得并验证 Go 1.26.5；后续 Go 命令必须显式使用该工具链。
-- 数据范围：不接入 PostgreSQL、不执行迁移、不建立 Docker/HA/备份工作；ADR-008 仍是后续独立 PoC。
-- 依赖范围：`github.com/modelcontextprotocol/go-sdk v1.6.1` 已在版本、许可证、校验和与传递依赖记录审计后锁定为本 PoC 依赖；生产 release 的内部 module proxy、SBOM/notice/签名仍未实现。
-- 完成规则：实现者不得自证完成；窗口尾段由独立验证者复跑 API/MCP/CLI parity 和安全检查。
-- 结果：`system.capability.list` 的 API、MCP Tool 和无交互 CLI PoC 已由独立 checker 通过 Go 1.26.5 tests/race/vet/module verification、四目标纯 Go cross-build、状态校验与 denylist 审查。为防止范围漂移，PoC 完成后暂停源码修改；后续范围需新 L2 检查点与用户授权。
-- 预算修正：初始 PoC 引导批次实际改动 13 个源文件，曾超过旧的每检查点 10 文件上限。该批次已作为一次性、已结束的引导检查点如实记录；后续检查点均遵守最多 8 个源文件。任何拒绝路径、依赖、安全或范围问题仍立即暂停。
+- Pattern：`phase0-postgres-tenant-metadata-l2`
+- 当前任务：无；`TASK-010` 至 `TASK-015` 的工程、租户、隔离、元数据、Changeset 与记录运行时任务已关闭为 `done`。
+- 完成内容：Go 工程基线；PostgreSQL migrations 1/2/3、128 bucket、FORCE RLS 与双连接身份；Native 租户/身份/operation/audit 六能力；UUIDv7 元数据版本、对象、字段、关系、不可变发布和确定性快照。
+- 新鲜空库证据：第三轮独立 checker 在 PostgreSQL 16.13 fresh schema 执行 migrations 1/2/3 和全量 race；control 精确三表最小授权、runtime fail-closed、实际 main 双角色接线和三入口 parity 全部通过。
+- Checker 1/2：分别发现单 pool/许可图不全，以及 control 多余 `shard_registry SELECT`；均已修复并加入回归测试。
+- Checker 3：`PASS`；Loop 结束并暂停，不自动开始 `TASK-014/015`。
+- Loop 后续进展：用户另行授权的 `TASK-015` 已完成记录 CRUD/query、typed indexes、关系边、durable idempotency 和百万记录物理基准；`TASK-014` 已完成 Changeset、候选投影、可恢复回填/coverage、unique/reference、purge/tombstone 与版本化配额。两项任务不改变上述已结束 Loop 的历史范围，现行证据见 `.claw/current-status.md` 与 `.claw/test-report.md`。
+- 数据库范围：仅使用绑定 `127.0.0.1` 独立端口的专用临时 PostgreSQL 16 容器；不复用或修改本机已有容器。
+- 远端预算：push、PR、merge、release、deploy 均为 0。
 
-每轮开始读取 `LOOP.md`、`loop-constraints.md`、`loop-budget.md` 和 `.claw/current-status.md`；每轮结束更新本文件与 `loop-run-log.md`。历史 L1 证据仅在 `docs/archive/loop-engineering/` 保留。
+后续新 Loop 开始前读取 `LOOP.md`、`loop-constraints.md`、`loop-budget.md` 和 `.claw/current-status.md`；本轮完成不授权 push、PR、发布或部署。

@@ -139,6 +139,36 @@ func TestInvokeReplayUsesCurrentRequestAndAuditIdentity(t *testing.T) {
 	}
 }
 
+type meterCall struct {
+	requestID string
+	executed  bool
+}
+
+type recordingMeter struct{ calls []meterCall }
+
+func (meter *recordingMeter) RecordInvocation(_ context.Context, request Request, _ Response, executed bool, _ time.Duration) {
+	meter.calls = append(meter.calls, meterCall{requestID: request.RequestID, executed: executed})
+}
+
+func TestMeterSeesReplayAsRequestButNotExecution(t *testing.T) {
+	meter := &recordingMeter{}
+	invoker := NewMeteredInvoker(NewRegistry(SystemCapabilityDefinitions()), 1, meter)
+	first := authorizedRequest()
+	first.RequestID = "req-meter-first"
+	first.IdempotencyKey = "idem-meter"
+	if got := invoker.Invoke(context.Background(), first); got.Status != StatusSucceeded {
+		t.Fatalf("first response = %#v", got)
+	}
+	replay := first
+	replay.RequestID = "req-meter-replay"
+	if got := invoker.Invoke(context.Background(), replay); got.Status != StatusSucceeded {
+		t.Fatalf("replay response = %#v", got)
+	}
+	if len(meter.calls) != 2 || !meter.calls[0].executed || meter.calls[1].executed {
+		t.Fatalf("meter calls = %#v, want first execution and replay-only request", meter.calls)
+	}
+}
+
 func TestInvokeCollapsesConcurrentIdenticalIdempotencyRequests(t *testing.T) {
 	started := make(chan struct{}, 4)
 	release := make(chan struct{})

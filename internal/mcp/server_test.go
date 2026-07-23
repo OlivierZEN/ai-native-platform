@@ -3,7 +3,11 @@ package mcpserver_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/OlivierZEN/ai-native-platform/internal/capability"
 	mcpserver "github.com/OlivierZEN/ai-native-platform/internal/mcp"
@@ -121,6 +125,73 @@ func TestServerProjectsOnlyPublishedRegistryDefinitions(t *testing.T) {
 	if err != nil || result.IsError {
 		t.Fatalf("projected tool result = %#v, err = %v", result, err)
 	}
+}
+
+func TestAuthenticatedStreamableHTTPUsesVerifiedIdentity(t *testing.T) {
+	invoker := capability.NewInvoker(capability.NewRegistry(capability.SystemCapabilityDefinitions()), 1)
+	principal := capability.TrustedPrincipal{
+		TenantID:  "11111111-1111-4111-8111-111111111111",
+		CompanyID: "orgaaaaaaaaaaaaaaaaa",
+		Actor:     capability.Actor{ID: "agent-http", Scopes: []string{"system.capability.read"}},
+		Source:    "jwt",
+	}
+	handler := mcpserver.NewAuthenticatedStreamableHTTPHandler(invoker, func(_ context.Context, token string) (capability.TrustedPrincipal, time.Time, error) {
+		if token != "valid-token" {
+			return capability.TrustedPrincipal{}, time.Time{}, errors.New("identity token is invalid")
+		}
+		return principal, time.Now().Add(time.Hour), nil
+	})
+	httpServer := httptest.NewServer(handler)
+	defer httpServer.Close()
+
+	client := mcp.NewClient(&mcp.Implementation{Name: "streamable-client", Version: "v1"}, nil)
+	session, err := client.Connect(context.Background(), &mcp.StreamableClientTransport{
+		Endpoint:   httpServer.URL,
+		HTTPClient: &http.Client{Transport: bearerTransport{token: "valid-token"}},
+	}, nil)
+	if err != nil {
+		t.Fatalf("connect streamable HTTP MCP: %v", err)
+	}
+	defer session.Close()
+
+	result, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name: "system_capability_list",
+		Arguments: map[string]any{
+			"request_id": "req-streamable-http",
+			"input":      map[string]any{},
+		},
+	})
+	if err != nil || result.IsError {
+		t.Fatalf("streamable tool call result=%#v err=%v", result, err)
+	}
+	if len(invoker.Audits()) != 1 || invoker.Audits()[0].TenantID != principal.TenantID || invoker.Audits()[0].ActorID != principal.Actor.ID {
+		t.Fatalf("verified identity did not bind invocation: %#v", invoker.Audits())
+	}
+
+	request, err := http.NewRequest(http.MethodPost, httpServer.URL, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Accept", "application/json, text/event-stream")
+	request.Header.Set("Content-Type", "application/json")
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("unauthenticated MCP HTTP status=%d, want %d", response.StatusCode, http.StatusUnauthorized)
+	}
+}
+
+type bearerTransport struct {
+	token string
+}
+
+func (transport bearerTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+	clone := request.Clone(request.Context())
+	clone.Header.Set("Authorization", "Bearer "+transport.token)
+	return http.DefaultTransport.RoundTrip(clone)
 }
 
 func projectionDefinition(id string, state capability.PublicationState) capability.Definition {

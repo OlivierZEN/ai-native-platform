@@ -1,0 +1,23 @@
+[Unit]
+Description=PostgreSQL 16.13 database server for Semattice
+After=network.target
+
+[Service]
+Type=notify
+User=postgres
+Group=postgres
+RuntimeDirectory=postgresql
+RuntimeDirectoryMode=0755
+ExecStart=/opt/postgresql/16.13/bin/postgres -D /var/lib/pgsql/16/data -c unix_socket_directories=/run/postgresql
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+KillSignal=SIGINT
+TimeoutStartSec=120s
+TimeoutStopSec=120s
+OOMScoreAdjust=-200
+PrivateTmp=true
+ProtectHome=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

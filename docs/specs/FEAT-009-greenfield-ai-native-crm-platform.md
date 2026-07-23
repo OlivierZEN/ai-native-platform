@@ -1,23 +1,25 @@
 ---
 kind: feature-spec
 feature_id: FEAT-009
-title: Greenfield AI-native multi-tenant business data and runtime platform
+title: CloudCC Semattice greenfield multi-tenant business data and semantic runtime
 status: approved
 owner_role: shared
 task_ids: TASK-009, TASK-010, TASK-011, TASK-012, TASK-013, TASK-014, TASK-015, TASK-016, TASK-017, TASK-018, TASK-019, TASK-020
-related_decisions: ADR-003, ADR-004, ADR-006, ADR-007, ADR-008, ADR-009
+related_decisions: ADR-003, ADR-004, ADR-006, ADR-007, ADR-008, ADR-009, ADR-010, ADR-012
 related_issues: none
-updated_at: 2026-07-18T15:42:14Z
-updated_by: ai + human-approved FEAT-009 architecture baseline
+updated_at: 2026-07-23T07:39:38Z
+updated_by: ai after company_id global-identity terminology migration
 ---
 
-# FEAT-009 - AI 原生多租户业务数据与运行时平台详细设计
+# FEAT-009 - CloudCC Semattice 多租户业务数据与语义运行时详细设计
 
 ## 0. 文档说明
 
 ### 0.1 文档目的
 
 本文定义一个全新的企业级多租户、Agent Native 业务数据与运行时平台，作为后续产品规划、技术选型、系统拆分、数据建模、API 设计和研发实施的共同基线。CRM 是首批可安装的业务领域包，不是平台内核的唯一或先决实现。
+
+产品正式名称为 **CloudCC Semattice（语义格）**，类别为 **Agentic Business Data Runtime**，中文定位为“面向智能体的业务数据与语义运行底座”。`Semattice` 由 `Sema(ntic) + (La)ttice` 组合而成；详细命名及兼容边界以 ADR-012 为准。本文保留的 `Native Platform` 和协议值 `native_platform` 均指 CloudCC Semattice，不表示另一个产品，也不授权直接重命名现有接口、二进制、环境变量或 Go module path。
 
 目标产品保持成熟 CRM 平台的核心业务能力，同时从底层解决以下结构性问题：
 
@@ -89,7 +91,7 @@ Phase 0 和 Phase 1 先验证平台内核。领域包只用于证明通用内核
 | 维度 | 目标 |
 |---|---|
 | 开户 | 新租户开户不执行建库、建 schema、建分区 DDL，目标 2 分钟内可用 |
-| 租户一致性 | 开通任一首个产品时统一分配 `UUIDv4 tenant_id + 20 位 org_id`；另一产品可不开放或以后绑定，绑定时必须复用同一标识；每个全局租户对每个产品最多一个投影 |
+| 租户一致性 | 开通任一首个产品时统一分配 `UUIDv4 tenant_id + 20 位 company_id`；另一产品可不开放或以后绑定，绑定时必须复用同一标识；每个全局租户对每个产品最多一个投影 |
 | 隔离 | 所有租户数据访问都由服务端租户上下文和数据库 RLS 双重约束 |
 | 扩展 | 新增对象和普通字段不修改业务表 DDL，不受预制列数量限制 |
 | 稳定性 | 自定义逻辑不得直接访问数据库、线程、文件系统或任意网络 |
@@ -104,7 +106,7 @@ Phase 0 和 Phase 1 先验证平台内核。领域包只用于证明通用内核
 ## 2. 核心架构原则
 
 1. **逻辑 OneDatabase，物理多分片**：产品模型统一，存储实例可横向增加。
-2. **统一租户身份、显式数据路由**：既有运营控制面是 `tenant_id + org_id` 和全局生命周期的唯一事实源；Native 的 `tenant_id -> shard_id + tenant_bucket` 是数据落点的唯一事实源。
+2. **统一租户身份、显式数据路由**：既有运营控制面是 `tenant_id + company_id` 和全局生命周期的唯一事实源；Native 的 `tenant_id -> shard_id + tenant_bucket` 是数据落点的唯一事实源。
 3. **元数据与能力契约即产品协议**：API、MCP、CLI、校验、权限、流程和 Agent 都消费同一版本化定义。
 4. **记录与索引分离**：JSONB 保存权威记录，类型化索引只为可查询字段服务。
 5. **事务与分析分离**：OLTP、搜索、分析、审计和文件按负载选择存储。
@@ -154,7 +156,7 @@ flowchart TB
 
 | 平面 | 主要职责 | 核心状态 |
 |---|---|---|
-| Unified Tenant Operations Control Plane | 全局 `tenant_id/org_id`、租户生命周期、Agent CC/Native 独立产品开通与状态汇总 | 由既有 Agent CC 运营管理端扩展；本仓库通过版本化接口接入 |
+| Unified Tenant Operations Control Plane | 全局 `tenant_id/company_id`、租户生命周期、Agent CC/Native 独立产品开通与状态汇总 | 由既有 Agent CC 运营管理端扩展；本仓库通过版本化接口接入 |
 | Native Tenant & Shard Control Plane | Native 产品侧生命周期投影、分片注册、放置、路由、配额 | Native 控制面 PostgreSQL |
 | Metadata Control Plane | 对象、字段、查询模板、权限、规则、版本、发布 | 元数据 PostgreSQL + 缓存 |
 | Runtime Data Plane | 原生业务记录、关系、共享、事务查询 | 分片 PostgreSQL |
@@ -194,7 +196,7 @@ flowchart TB
 | 标识 | 说明 | 建议格式 |
 |---|---|---|
 | `tenant_id` | 两个平台统一的内部租户主键，由既有运营控制面唯一分配 | 随机 UUIDv4，不编码时间或分片位置 |
-| `org_id` | 与 `tenant_id` 一对一的运营和 Agent CC 业务编号 | 20 位字符串；新 ID 延续 `org` + 17 位小写字母数字约定 |
+| `company_id` | 与 `tenant_id` 一对一的运营和 Agent CC 业务编号 | 20 位字符串；新 ID 延续 `org` + 17 位小写字母数字约定 |
 | `shard_id` | 物理分片逻辑编号 | 短字符串，如 `shard-001` |
 | `tenant_bucket` | 分片内物理分区号 | `smallint`，范围 `0..127` |
 | `object_id` | 对象定义稳定 ID | UUIDv7 |
@@ -215,7 +217,7 @@ ID 只保证唯一性，不编码物理分片位置。租户路由始终从受�
 ```text
 TenantContext
   tenant_id
-  org_id
+  company_id
   shard_id
   tenant_bucket
   user_id / service_principal_id / agent_id
@@ -228,8 +230,8 @@ TenantContext
 
 约束：
 
-- 外部请求可以携带租户域名、`org_id` 或 token 作为解析线索，但 body/header 中的 `tenant_id` 不能直接成为受信上下文，也不能自行指定 `shard_id` 和 `tenant_bucket`。
-- 网关从已验证令牌、统一运营租户事实和 Native active 投影解析唯一 `tenant_id/org_id`，再签发内部上下文；下游服务校验签名、受众和二者一致性。
+- 外部请求可以携带租户域名、`company_id` 或 token 作为解析线索，但 body/header 中的 `tenant_id` 不能直接成为受信上下文，也不能自行指定 `shard_id` 和 `tenant_bucket`。
+- 网关从已验证令牌、统一运营租户事实和 Native active 投影解析唯一 `tenant_id/company_id`，再签发内部上下文；下游服务校验签名、受众和二者一致性。
 - MQ、定时任务、批量任务必须在消息信封中显式携带租户上下文和版本。
 - 数据库事务使用 `SET LOCAL app.tenant_id` 与 `app.tenant_bucket`，PostgreSQL RLS 进行最后一道隔离；连接复用前必须证明上下文不会残留。
 
@@ -239,15 +241,15 @@ Agent CC 与 Native Platform 是两个可独立开通的产品，职责不同且
 
 | 层次 | 事实源与责任 |
 |---|---|
-| 全局租户目录 | 运营管理端在开通任一首个产品时创建或解析全局租户，分配随机 UUIDv4 `tenant_id` 与一对一 20 位 `org_id`，并独立维护 `agent_cc/native_platform` 产品状态；两个产品不得自行生成或替换租户 ID。 |
+| 全局租户目录 | 运营管理端在开通任一首个产品时创建或解析全局租户，分配随机 UUIDv4 `tenant_id` 与一对一 20 位 `company_id`，并独立维护 `agent_cc/native_platform` 产品状态；两个产品不得自行生成或替换租户 ID。 |
 | 认证 | 当前 Agent CC 身份中心或其配置的企业 IdP 可继续负责账号、登录、SSO、MFA、全局 `subject_id` 和组织成员状态，但身份能力必须独立于 Agent CC 产品订阅，支持 Native-only 租户；Native Platform 只验证面向自身受众的短期令牌。 |
 | Native 租户投影 | Native Platform 按运营控制面的幂等指令建立 `tenant_registry`，直接使用统一 UUID，维护 shard、bucket、配额、路由版本和产品侧生命周期；不再建立第二套组织到租户映射。 |
 | 本地成员投影 | 数据平台可按登录即时创建或通过受控生命周期事件同步最小成员投影，用于停用、审计和本地授权；不得成为密码、凭据或用户资料的第二事实源。 |
 | 数据授权 | 对象、字段、记录、共享、元数据发布和 Capability scope 均由数据平台独立计算；Agent CC 的普通应用角色不能自动扩大数据权限。 |
 | Agent 委托 | Agent 与服务账号使用独立主体和短期 scope。代表用户运行时必须记录 `delegated_by_subject_id`、能力范围、资源范围、预算、会话和策略版本。 |
-| 审计 | 运营控制面和两个产品分别保存审计记录，并用 `subject_id`、`tenant_id`、`org_id`、`operation_id`、请求 ID 和委托链关联；不得复制长期 token 或明文凭据。 |
+| 审计 | 运营控制面和两个产品分别保存审计记录，并用 `subject_id`、`tenant_id`、`company_id`、`operation_id`、请求 ID 和委托链关联；不得复制长期 token 或明文凭据。 |
 
-令牌和内部上下文至少携带：`subject_id`、统一 `tenant_id`、`org_id`、`actor_type`（human/agent/service）、面向数据平台的 audience、有效期、会话与请求 ID，以及必要的 delegated-by 和 membership/policy version。数据平台必须验证 `tenant_id/org_id` 与本地 active 投影一致，并校验签发者、受众、有效期、撤销或成员状态后，再执行本地数据权限计算。
+令牌和内部上下文至少携带：`subject_id`、统一 `tenant_id`、`company_id`、`actor_type`（human/agent/service）、面向数据平台的 audience、有效期、会话与请求 ID，以及必要的 delegated-by 和 membership/policy version。数据平台必须验证 `tenant_id/company_id` 与本地 active 投影一致，并校验签发者、受众、有效期、撤销或成员状态后，再执行本地数据权限计算。
 
 统一标识不等于共享数据库或共享权限。详细所有权、编排、迁移和验收规则见 `docs/specs/FEAT-011-unified-tenant-operations-control-plane.md`。
 
@@ -292,7 +294,7 @@ create table shard_registry (
 
 create table tenant_registry (
   tenant_id             uuid primary key,
-  org_id                varchar(20) collate "C" not null unique,
+  company_id                varchar(20) collate "C" not null unique,
   display_name          varchar(200) not null,
   shard_id              varchar(32) not null references shard_registry(shard_id),
   tenant_bucket         smallint not null check (tenant_bucket between 0 and 127),
@@ -352,9 +354,9 @@ sequenceDiagram
 
     Q->>O: 开通 agent_cc 或 native_platform + 可选已有 tenant_ref
     alt 绑定已有全局租户
-        O->>O: 解析并锁定已有 tenant_id + org_id
+        O->>O: 解析并锁定已有 tenant_id + company_id
     else 创建新全局租户
-        O->>O: 分配 tenant_id + org_id
+        O->>O: 分配 tenant_id + company_id
     end
     O->>O: 为选定产品创建 operation_id + product_revision
     alt 开通 Agent CC
@@ -375,7 +377,7 @@ sequenceDiagram
     O->>O: 只更新选定产品状态
 ```
 
-运营控制面是 `tenant_id`、`org_id`、全局生命周期和按产品开通状态的唯一写入方。Agent CC-only、Native-only 和双产品租户都合法，两个产品没有固定开通顺序。开通第二个产品并要求绑定时必须选择已有全局租户；若两个产品已经以不同 `tenant_id` 独立运行，禁止直接改映射，必须进入独立合并/迁移流程。任一产品开通使用自己的 `operation_id` 和产品修订号，失败不回滚另一个产品，也不生成第二组 ID。
+运营控制面是 `tenant_id`、`company_id`、全局生命周期和按产品开通状态的唯一写入方。Agent CC-only、Native-only 和双产品租户都合法，两个产品没有固定开通顺序。开通第二个产品并要求绑定时必须选择已有全局租户；若两个产品已经以不同 `tenant_id` 独立运行，禁止直接改映射，必须进入独立合并/迁移流程。任一产品开通使用自己的 `operation_id` 和产品修订号，失败不回滚另一个产品，也不生成第二组 ID。
 
 放置算法按以下顺序筛选：
 
@@ -630,6 +632,35 @@ create index on record_index_number_p000
 - `record_geo_index`：地理位置，使用 PostGIS 时按空间类型设计。
 
 字段创建默认 `queryPolicy=none` 或由产品模板指定。用户把字段加入筛选、排序、唯一约束或高频列表时，平台评估并创建后台索引任务；任务完成前查询器可拒绝高成本操作或受限降级，不静默执行全表扫描。
+
+#### 7.3.1 动态字段与 JSONB 产品边界
+
+PostgreSQL JSONB/TOAST 的理论单值上限不能作为 OLTP 产品配额。Phase 0/1 先采用以下保守护栏，最终由 `TASK-019` 在 8 GiB/16 GiB、50 并发、200 活跃用户和 100 万记录条件下校准：
+
+| 维度 | 默认/目标 | 硬边界 |
+|---|---:|---:|
+| 每对象在线动态字段定义 | 300 | 500 |
+| 8 GiB 档 active 类型化索引字段 | 10 | 20 |
+| 16 GiB 档 active 类型化索引字段 | 20 | 40 |
+| 平台 active 类型化索引字段绝对上限 | - | 50，且仅限专属分片与专项压测批准 |
+| 单条记录规范化业务 JSON | 平均不超过 4 KiB，P95 不超过 16 KiB | 64 KiB 告警，超过 256 KiB 拒绝 |
+| 单个 `json` 字段 | 建议不超过 16 KiB | 64 KiB |
+| JSON 嵌套深度/单数组元素数 | 4 层/100 | 8 层/1,000 |
+
+500 是字段定义数量上限，不是“500 个字段都可建索引”的承诺。`TASK-015` 的百万记录实测表明两个 typed index tree 合计 `737,198,080` bytes，平均每个“记录 × 索引字段”约 `368.60` bytes；按同一数据形状估算，20/40/50 个满覆盖索引字段仅 typed trees 就约为 `7.37/14.74/18.43 GB`，尚不包含权威记录、关系、唯一值、WAL、膨胀和维护空间。
+
+在线字段计数包含 `active`、`deprecated` 和 `purging`，完成数据清理并只保留审计 tombstone 后才释放名额。记录尺寸按服务端应用默认值并规范化后的 UTF-8 JSON 字节数计算；文件、图片、富文本附件和二进制必须存外部对象引用，禁止以 Base64 内联到 JSONB。
+
+#### 7.3.2 动态字段安全演进
+
+- 首次发布后 `field_id` 和 `api_name` 不可变；显示名与说明可以演进。技术改名或改类型必须创建新字段，经过转换/回填/切换后弃用旧字段。
+- 新 optional 且无索引字段可以即时发布；默认值必须声明 `on_create` 或 `backfill_required`，不得把只作用于新记录的默认值误报为历史数据已回填。
+- required 字段必须先以 optional 引入，完成 100% 回填和违规校验，再由下一元数据版本激活 required。
+- 新 indexed/unique/reference 字段先进入 `building`，对新写维护派生状态并回填历史记录；完成 coverage 校验后才进入 `active`。查询规划器不得使用 building/failed 索引，不得返回部分结果或静默全表扫描。
+- 删除依次经过 deprecated、read-only、hidden、purging、tombstone。运行时在清理完成前仍须识别旧 JSON key；清理必须覆盖权威 JSONB、typed index、关系、唯一值、搜索和 OLAP 派生副本。
+- 回填按 tenant/bucket/object/record 稳定游标分批执行，使用 TenantContext、幂等 operation、checkpoint 和乐观版本检查；并发更新冲突必须重试，禁止覆盖用户新写。
+
+详细状态机、Changeset 原子能力、覆盖率门禁和回滚边界见 [FEAT-014](./FEAT-014-changeset-and-dynamic-field-evolution.md)。
 
 ### 7.4 写入流程
 
@@ -1104,6 +1135,7 @@ API、MCP 和 CLI 结果必须返回数据新鲜度，不把最终一致结果�
 
 - 元数据版本写入和租户当前版本指针切换在控制面事务内完成。
 - 索引构建、数据回填等长任务作为发布前置任务；未完成时不能激活依赖它的配置。
+- required、indexed、unique、reference 和约束收紧必须采用 prepare/backfill/validate/activate 分阶段协议；激活要求合格记录覆盖率 100%、失败数为 0，且查询在索引 active 前 fail closed。
 - 自动化实例和每次 capability invocation 固定元数据版本。
 - 发布后观察错误率、规则失败、查询成本和 Agent 反馈，超过阈值自动阻止继续推广。
 
@@ -1118,7 +1150,7 @@ API、MCP 和 CLI 结果必须返回数据新鲜度，不把最终一致结果�
 - 搜索文档数、OLAP 扫描量和报表计算量。
 - AI token、工具调用、模型费用和外部连接器费用。
 
-不再使用“预制 100 张对象表、每张 500 个字段槽位”表达配额。配额是产品和成本治理策略，不是物理表结构上限。
+不再使用“预制 100 张对象表、每张 500 个字段槽位”表达配额。配额是产品和成本治理策略，不是物理表结构上限。首轮动态字段、类型化索引和 JSONB 尺寸护栏见 7.3.1；配额策略必须版本化、可审计，不能由租户或单个 Agent 绕过。
 
 ### 14.2 多级保护
 
@@ -1227,7 +1259,7 @@ operation_type
 ### 17.1 身份
 
 - 支持 OIDC/SAML SSO、MFA、SCIM、服务账号和短期 token。
-- 既有运营管理端统一提供 `tenant_id/org_id` 和租户生命周期；与 Agent CC 产品订阅解耦的共享身份服务或企业 IdP 提供账号认证和组织成员状态。Native Platform 通过受众受限令牌与版本化开户接口消费这些事实，不直连、复制或写入 Agent CC 用户数据库和运营数据库。
+- 既有运营管理端统一提供 `tenant_id/company_id` 和租户生命周期；与 Agent CC 产品订阅解耦的共享身份服务或企业 IdP 提供账号认证和组织成员状态。Native Platform 通过受众受限令牌与版本化开户接口消费这些事实，不直连、复制或写入 Agent CC 用户数据库和运营数据库。
 - 数据平台令牌必须绑定本服务 audience；接收后仍需基于本地对象、字段、记录与 Capability policy 再授权。
 - 内部服务使用 workload identity 和 mTLS，不共享长期 JWT 密钥。
 - 管理员、支持人员和 Agent 使用独立身份类型及更严格会话策略。
@@ -1270,7 +1302,8 @@ operation_type
 
 - 元数据定义按版本读取，事件和 API payload 采用向后兼容演进。
 - 字段类型不做危险原地强转；创建新版本、后台校验/回填、切换后再弃用旧版本。
-- 删除对象和字段先进入 deprecated，验证无依赖并经过保留期后再清理数据。
+- 首次发布后的字段 `api_name` 不原地重命名；技术改名使用新字段和显式迁移，避免现有 JSONB key 失去元数据解释。
+- 删除对象和字段先进入 deprecated，验证无依赖并经过保留期后再清理权威 JSONB 和全部派生数据；清理完成前运行时必须保留兼容识别，最终保留审计 tombstone。
 - 平台物理 schema 由平台团队迁移，不允许租户 Changeset 执行任意 DDL。
 
 ## 19. 核心业务运行设计
@@ -1326,14 +1359,14 @@ operation_type
 
 - 租户 A token 访问租户 B 的任意 ID。
 - 请求提供随机 UUID、格式正确但属于其他租户的 UUID，或伪造 tenant header、bucket、object ID 和 record ID。
-- token 的 `tenant_id` 与 `org_id`、Native active 投影或运营目录不一致。
+- token 的 `tenant_id` 与 `company_id`、Native active 投影或运营目录不一致。
 - 连接池复用、事务 rollback、超时和 panic/error 路径后继承前一个租户 session setting。
 - 查找、主从、多对多、共享、唯一索引或级联任务只替换 target ID，试图建立跨租户引用。
 - Worker 消息缺少或篡改租户上下文。
 - 搜索和 OLAP 过滤缺少 tenant 条件。
 - 任一 Agent 或服务身份试图提升自身权限或绕过审批。
 - 导出、Webhook、日志和 AI 上下文泄露敏感字段。
-- 任一产品重复/失败开通、第二产品绑定、乱序产品修订或篡改 `tenant_id/org_id` 时产生第二组租户 ID、错误产品投影、覆盖现有映射，或把两个不同全局租户静默绑定。
+- 任一产品重复/失败开通、第二产品绑定、乱序产品修订或篡改 `tenant_id/company_id` 时产生第二组租户 ID、错误产品投影、覆盖现有映射，或把两个不同全局租户静默绑定。
 
 ### 20.3 元数据属性测试
 
@@ -1377,11 +1410,11 @@ operation_type
 交付：
 
 - 共享身份/企业 IdP 联邦适配、统一运营端产品无关开户适配器、Native Tenant Control、Shard Router、Metadata、Runtime 基础服务。
-- 扩展既有运营接口：开通 Agent CC 或 Native 任一首个产品时创建或解析全局租户并建立统一 `UUIDv4 tenant_id + 20 位 org_id`；另一产品可保持 `not_provisioned`，以后绑定时复用同一标识。完成 Native 基础包安装、对象/字段/查询模板、记录 CRUD 和查询 DSL。
+- 扩展既有运营接口：开通 Agent CC 或 Native 任一首个产品时创建或解析全局租户并建立统一 `UUIDv4 tenant_id + 20 位 company_id`；另一产品可保持 `not_provisioned`，以后绑定时复用同一标识。完成 Native 基础包安装、对象/字段/查询模板、记录 CRUD 和查询 DSL。
 - 对象/字段权限、RLS、审计、幂等和乐观锁。
 - Agent 通过 API、MCP 和 CLI 调用的只读元数据工具与低风险 Changeset 闭环。
 
-退出条件：Agent CC-only、Native-only 和双产品三种租户组合均成立；开通首个产品只产生一组稳定 `tenant_id + org_id`，以后绑定的第二产品复用该标识，任一产品失败不影响另一产品且每个全局租户对每种产品最多一个投影；Native 开通无需 DDL；自定义对象和字段可配置并安全 CRUD；跨租户测试全部通过。
+退出条件：Agent CC-only、Native-only 和双产品三种租户组合均成立；开通首个产品只产生一组稳定 `tenant_id + company_id`，以后绑定的第二产品复用该标识，任一产品失败不影响另一产品且每个全局租户对每种产品最多一个投影；Native 开通无需 DDL；自定义对象和字段可配置并安全 CRUD；跨租户测试全部通过。
 
 ### Phase 2 - CRM MVP（12-16 周）
 
@@ -1457,7 +1490,7 @@ operation_type
 | 服务拆分过细 | 分布式复杂度失控 | 核心事务保持 runtime 模块内，按真实伸缩需求拆分 |
 | 容量按行数误判 | 提前饱和或资源浪费 | 以 CPU/I/O/存储/恢复时间和增长预测综合准入 |
 | 跨平台开户部分成功或状态漂移 | 两个平台租户状态不一致 | 运营控制面保存产品步骤、`operation_id` 幂等重试、`tenant_revision` 防乱序、周期对账和差异告警 |
-| 20 位 `org_id` 存量不合规 | 无法直接建立一对一统一目录 | 开户切换前盘点；异常进入显式兼容清单，禁止截断、覆盖或重新生成 |
+| 20 位 `company_id` 存量不合规 | 无法直接建立一对一统一目录 | 开户切换前盘点；异常进入显式兼容清单，禁止截断、覆盖或重新生成 |
 
 ## 24. 待架构评审决策
 
@@ -1477,7 +1510,7 @@ operation_type
 
 - 明确绿地边界，不包含老用户迁移和旧系统兼容方案。
 - 多租户、分片、bucket、开户、路由、扩容和再平衡形成闭环。
-- 既有运营管理端、共享身份服务、Agent CC 与 Native Platform 的租户所有权清晰；Agent CC 与 Native 均可独立开通，仅在绑定到同一全局租户时共享 `UUIDv4 tenant_id + 20 位 org_id`，不共享数据库或产品权限。
+- 既有运营管理端、共享身份服务、Agent CC 与 Native Platform 的租户所有权清晰；Agent CC 与 Native 均可独立开通，仅在绑定到同一全局租户时共享 `UUIDv4 tenant_id + 20 位 company_id`，不共享数据库或产品权限。
 - 元数据、记录、索引、关系、权限、自动化、事件和 AI 控制面有明确模型。
 - 数据库、搜索、OLAP、文件、缓存和消息各自负载边界清晰。
 - API、事务、一致性、安全、可观测、容灾、测试和实施阶段可执行。
@@ -1486,11 +1519,12 @@ operation_type
 ### 25.2 Phase 1 产品验收
 
 - 新建租户不执行任何租户专属 DDL。
-- 既有运营端支持 Agent CC-only、Native-only 和双产品开户；开通任一首个产品时创建或解析全局租户并生成 `tenant_id + org_id`，以后绑定的第二产品复用该标识。任一产品失败只影响自身状态，不回滚另一产品或产生第二组租户 ID。
+- 既有运营端支持 Agent CC-only、Native-only 和双产品开户；开通任一首个产品时创建或解析全局租户并生成 `tenant_id + company_id`，以后绑定的第二产品复用该标识。任一产品失败只影响自身状态，不回滚另一产品或产生第二组租户 ID。
 - 同一分片至少运行多个租户，跨租户读写测试全部失败并留下安全审计。
 - 可通过 API、MCP Tool 和 CLI 创建自定义对象、字段和查询模板，三者生成等价 Changeset。
 - 每个已发布原子能力均可通过 API、MCP Tool 和无交互 CLI 调用，并通过等价性测试。
 - 普通字段创建无需修改 `object_record` 表结构。
+- 动态字段与 JSONB 的默认/硬边界可在 Changeset 预检和记录写入时强制执行；required、索引、改名、改类型和删除均通过安全演进状态机验证。
 - 记录写入同步维护必要类型索引并产生 outbox 事件。
 - 元数据变更可预检、审批、发布和回滚。
 - 一个数据库分片达到准入水位后，新租户可自动分配到新分片。
@@ -1502,10 +1536,10 @@ operation_type
 | 项目方式 | 纯绿地新产品，不承担历史兼容 |
 | 租户存储 | 逻辑 OneDatabase，物理多 PostgreSQL 分片 |
 | 租户运营 | 既有 Agent CC 运营管理端扩展为产品无关的统一租户控制面；Agent CC 与 Native 均可单独或按任意顺序开通，并维护独立产品状态 |
-| 租户标识 | 开通任一首个产品时生成随机 UUIDv4 `tenant_id`；以后绑定的第二产品复用；20 位 `org_id` 与 UUID 一对一并作为运营业务编号和兼容标识 |
+| 租户标识 | 开通任一首个产品时生成随机 UUIDv4 `tenant_id`；以后绑定的第二产品复用；20 位 `company_id` 与 UUID 一对一并作为运营业务编号和兼容标识 |
 | 分区 | 每分片预建 128 个 `tenant_bucket` LIST 分区 |
 | 开户 | 统一运营端在任一首个产品开户时创建或解析全局租户并分配 ID；第二产品绑定时复用 ID；Native 控制面只选择 shard/bucket，不执行租户 DDL |
-| 对象记录 | `object_record` JSONB 权威记录 + 按需类型化索引 |
+| 对象记录 | `object_record` JSONB 权威记录 + 按需类型化索引；字段定义默认/硬上限 300/500，记录 JSONB 硬上限 256 KiB |
 | 大规模查询 | 搜索与 OLAP 分离，禁止重负载直接压 OLTP |
 | 自定义逻辑 | 声明式优先，复杂逻辑进入受限沙箱 |
 | 元数据变更 | 全部通过版本化 Changeset |
@@ -1520,7 +1554,7 @@ operation_type
 
 本规格评审通过后，不应直接从完整 CRM 功能开始编码。首先执行 Phase 0，并以“创建语义对象/字段/关系 -> 发布版本 -> 原生记录存储与查询 -> Agent 依据同一语义通过 API/MCP/CLI 操作 -> 审计与回滚”的最小闭环验证平台价值。优先验证三个高风险假设：
 
-1. `object_record + typed index` 在目标数据规模和 16C/64GB 分片规格下的写放大、查询延迟和存储成本。
+1. `object_record + typed index` 先在 8/16 GiB Phase 0 目标规格下验证字段/索引/JSONB 配额、写放大、查询延迟和存储成本；后续再验证 16 vCPU/64 GB 生产分片上限规格。
 2. PostgreSQL RLS、连接池租户上下文和 128 分区裁剪在并发场景下的正确性。
 3. Changeset、元数据编译、版本切换和 Agent 工具协议能否形成确定性、可回滚的配置闭环。
 

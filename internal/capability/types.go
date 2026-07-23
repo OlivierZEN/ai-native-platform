@@ -13,8 +13,12 @@ type ErrorCode string
 
 const (
 	CodeValidationFailed    ErrorCode = "VALIDATION_FAILED"
+	CodeUnauthenticated     ErrorCode = "UNAUTHENTICATED"
 	CodeCapabilityNotFound  ErrorCode = "CAPABILITY_NOT_FOUND"
+	CodeResourceNotFound    ErrorCode = "RESOURCE_NOT_FOUND"
 	CodeUnauthorized        ErrorCode = "UNAUTHORIZED"
+	CodeConflict            ErrorCode = "CONFLICT"
+	CodeFailedPrecondition  ErrorCode = "FAILED_PRECONDITION"
 	CodeIdempotencyConflict ErrorCode = "IDEMPOTENCY_CONFLICT"
 	CodeOverloaded          ErrorCode = "OVERLOADED"
 	CodeInternal            ErrorCode = "INTERNAL"
@@ -25,18 +29,35 @@ type StableError struct {
 	Message string    `json:"message"`
 }
 
+func (err *StableError) Error() string {
+	if err == nil {
+		return ""
+	}
+	return string(err.Code) + ": " + err.Message
+}
+
 type Actor struct {
 	ID     string   `json:"id"`
 	Scopes []string `json:"scopes"`
 }
 
+type TrustedPrincipal struct {
+	TenantID  string
+	CompanyID string
+	Actor     Actor
+	Approvals []string
+	Source    string
+}
+
 type Request struct {
-	CapabilityID   string          `json:"capability_id"`
-	RequestID      string          `json:"request_id"`
-	TenantID       string          `json:"tenant_id"`
-	Actor          Actor           `json:"actor"`
-	IdempotencyKey string          `json:"idempotency_key,omitempty"`
-	Input          json.RawMessage `json:"input"`
+	CapabilityID   string            `json:"capability_id"`
+	RequestID      string            `json:"request_id"`
+	TenantID       string            `json:"tenant_id"`
+	Actor          Actor             `json:"actor"`
+	IdempotencyKey string            `json:"idempotency_key,omitempty"`
+	Input          json.RawMessage   `json:"input"`
+	Principal      *TrustedPrincipal `json:"-"`
+	Entrypoint     string            `json:"-"`
 }
 
 type Response struct {
