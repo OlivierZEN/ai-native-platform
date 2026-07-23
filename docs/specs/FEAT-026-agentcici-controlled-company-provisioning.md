@@ -2,9 +2,9 @@
 kind: feature-spec
 feature_id: FEAT-026
 title: AgentCiCi-controlled company provisioning
-status: in_progress
-updated_at: 2026-07-24T00:00:00Z
-updated_by: integration-agent after local production gates
+status: verified
+updated_at: 2026-07-24T00:55:00Z
+updated_by: integration-agent after production acceptance
 owner_role: integration-agent
 ---
 
@@ -52,4 +52,9 @@ owner_role: integration-agent
 
 - AgentCiCi 与 Semattice 在独立本机 PostgreSQL 16 环境完成真实 HTTP 联调：新建 AgentCiCi 组织后，内部 HMAC 入口成功完成 reserve、Semattice 本地 projection 与 complete；同一幂等键重试未新增 tenant 或 operation。
 - Semattice 全量 PostgreSQL 测试、`go test -race ./...`、`go vet ./...`、`go mod verify` 与 linux/amd64 无 CGO 构建全部通过。MCP/CLI 无数据库模式已验证不会触发空计量服务；公开 `tenant.provision` 未发布。
-- 下一发布动作仍为：使用专用 migrator 执行并核验 migration 13，再切换新的不可变制品并执行线上 HMAC 开户 smoke。
+- 生产已由独立 `semattice_migrator` 执行正向迁移并在完成后撤销临时 `CREATEROLE`，随后原子切换不可变制品；schema 已到 version 16。
+
+## 2026-07-24 生产验收
+
+- 新 release `/opt/semattice/releases/20260724T0045Z-controlled-provisioning` 的 SHA-256 为 `c1617398e9ddf3b83a942fa8b5852e54f7caf943900771703e8b1bacbf712962`；systemd 服务 active，edge `/healthz` 返回 `ok`。
+- 从 AgentCiCi 生产主机发起的未签名 `POST /internal/v1/company-provisionings` 被 403 拒绝；使用 `agentcici` HMAC 的相同路径请求获认证，并在 AgentCiCi 不存在组织校验处稳定返回 `FAILED_PRECONDITION` / 412。该 smoke 未创建 tenant、reservation 或 operation。

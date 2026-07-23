@@ -221,3 +221,9 @@ L1 历史审计结果归档在 `docs/archive/loop-engineering/2026-07-16-l1-test
 - AgentCiCi 与 Semattice 的真实本机 HTTP 联调通过：AgentCiCi 创建组织后，以内部 HMAC 调用 Semattice 受控开户入口；reserve、projection、complete 全部成功，同一幂等键重试没有新增 tenant 或 operation。
 - `./scripts/test-postgres.sh run`、`go test -race ./...`、`go vet ./...`、`go mod verify` 和 `CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 go build -trimpath -ldflags='-s -w' -o /tmp/semattice-release-check ./cmd/ai-native-platform`：全部通过。
 - 修复并覆盖无数据库 MCP/CLI 模式下空计量服务的接口 nil 陷阱；公开 `tenant.provision` 能力保持未发布，数据库角色接线测试以已验证的 tenant fixture 覆盖 metadata 运行时路径。
+
+## 2026-07-24 TASK-026 生产发布验收
+
+- 专用 `semattice_migrator` 成功执行生产正向 migration，`schema_migration` 达到 version 16；临时 `CREATEROLE` 已在迁移完成后撤销。运行时 control/runtime 身份未用于 migration。
+- 新二进制 SHA-256 `c1617398e9ddf3b83a942fa8b5852e54f7caf943900771703e8b1bacbf712962` 经远端校验后，`/opt/semattice/current` 原子指向 `20260724T0045Z-controlled-provisioning`；`systemctl` active、edge health 通过，近 20 分钟日志无 panic/fatal。
+- 跨生产主机 HMAC smoke：匿名请求被 403 拒绝；来自 AgentCiCi 的有效签名请求经过 Semattice 和 AgentCiCi 双向校验后，因专门构造的不存在组织返回 `FAILED_PRECONDITION` / HTTP 412。该负向探针未创建 tenant、reservation 或 operation，证明 fail-closed 与无副作用失败路径。
