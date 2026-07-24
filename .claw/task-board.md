@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-24T07:58:20Z
-updated_by: ai after user-confirmed Keycloak first-party access design
+updated_at: 2026-07-24T13:30:08Z
+updated_by: release-agent after initial CodeUp publication
 board_status: active
 ---
 
@@ -163,6 +163,34 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-030 - Publish the current project to Alibaba Cloud CodeUp
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `Git refs/remotes plus .claw/devops.md, .claw/current-status.md, .claw/task-board.md and .claw/test-report.md`
+- branch: `agent/go-capability-platform-baseline`
+- pr_url: `n/a`
+
+#### Done When
+
+- 当前工作树与提交历史通过发布前测试、状态、敏感信息和大文件门禁
+- CodeUp 独立 remote 保留 GitHub origin，并将当前 HEAD 发布为远程 main
+- 远程 main 与最终本地 HEAD 一致且工作树保持干净
+
+#### Next Action
+
+- 已完成；后续发布继续向 CodeUp `main` 推送普通快进提交，禁止使用 force/mirror 覆盖远端历史。
+
+#### Handoff Note
+
+- CodeUp 首次 `HEAD -> main` 已成功；GitHub origin、本地工作分支名和 upstream 未修改。不要用 `--mirror`、force push 或把 CodeUp 凭据写入仓库。
 
 ### TASK-029 - Deploy Keycloak production IdP and integrate Semattice resource-server authentication
 

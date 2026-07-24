@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-24T12:10:00Z
-updated_by: integration-agent after direct AgentCiCi login-page visual reuse
+updated_at: 2026-07-24T13:30:08Z
+updated_by: release-agent after initial CodeUp publication
 phase: cross-product-identity-live
 active_task: "TASK-027"
 next_action: "Keycloak identity and its AgentCiCi login theme are live; continue the independently authorized usage-metering task without widening production scope."
@@ -20,6 +20,7 @@ read_next:
 ## 快照
 
 - 术语边界已确认并写入项目规范：后续“数据平台”始终且仅指本仓库的 CloudCC Semattice（语义格，`/Volumes/AISpace/codehouse/AI-Native-Platform`）；Agent CC / AgentCiCi 与 CloudCC CRM 均是外部应用或集成方，不得混称。规范来源为根目录 `README.md` 与 `AGENTS.md`。
+- 用户指定的阿里云 CodeUp 仓库已作为独立 `codeup` remote 接入，当前项目快照首次发布到其 `main` 分支；GitHub `origin` 保持不变，本地工作分支与 upstream 未被改写。
 - 用户已确认并于 2026-07-24 明确授权官方应用身份互通实施（ADR-014、FEAT-028、FEAT-029）：Keycloak 是唯一 IdP；官方应用使用短期、单租户的 OACT 在 API/MCP/CLI 间互通，登录/切换公司/续期时换发而非逐请求交换；第三方只能使用独立 Keycloak Service Account 的数据平台最小权限 Token。当前执行 TASK-029，允许在 ECS `115.29.222.70` 部署 Keycloak、配置 `sso.agentcici.com`，并在此授权范围内实施跨仓库运行时改造和生产发布。
 - TASK-029 已完成基础链路发布：Keycloak 26.7.0 运行于授权 ECS 的 loopback `:8180`，Nginx 经现有 `*.agentcici.com` TLS 证书公开 `https://sso.agentcici.com`；独立 PostgreSQL `keycloak` 数据库/role、非特权 systemd、业务 Realm 和首批 client 已创建。AgentCiCi `2.8.11` 已切换至 Keycloak OIDC，24 个全局账户存在一对一外部身份映射，OACT JWKS 公开为 RS256。Semattice release `20260724T094721Z-keycloak-jwks` 已上线，固定信任 AgentCiCi OACT issuer/audience/JWKS 并保留旧 HS256 兼容；真实 RS256 技术烟测调用成功，未逐请求回调 Keycloak。
 - Keycloak `agentcici` Realm 已部署并启用 `agentcici` 原生 login theme：直接复用 AgentCiCi `login_mode2` 的星空参数、6 张真实立方体面图、3D 旋转与指针倾斜结构，不再以 CSS 近似重画。账号/密码/MFA/错误处理仍完全由 Keycloak 负责。`/opt/keycloak/backups/20260724T120956Z-before-agentcici-login-theme` 保留上一版本；真实授权入口的默认表单通过桌面浏览器验收。
@@ -75,6 +76,7 @@ read_next:
 
 ## 已验证事实
 
+- 2026-07-24 CodeUp 首次发布：空仓库认证和 `HEAD -> main` 推送成功；发布前全量 test、vet、module verify、状态 validator、差异、常见密钥、受跟踪敏感扩展名和 10 MiB 大文件门禁均通过。
 - 2026-07-23 产品命名治理：用户正式确认 CloudCC Semattice（语义格）；ADR-012、README、goals、FEAT-009/011/020 和兼容命名边界已更新。状态 validator、`git diff --check`、品牌存在性与旧标题冲突检索均通过；本次未修改或重新验证运行时代码。
 - 2026-07-23 TASK-022：授权 ECS 的 PostgreSQL 16.13、12 个 migration、三数据库身份、Nginx TLS、Semattice systemd、首页与下载已部署。公网 HTTPS 200、HTTP 301、未授权 API 401、短期 JWT API 200、CLI/MCP 三入口 49 能力、MCP 工具调用、制品 checksum、服务重启和 secret mode 均通过。
 - 2026-07-23 TASK-023：首页 7 个能力域按 `6 + 6 + 10 + 5 + 12 + 9 + 1 = 49` 覆盖运行时契约；49 个 ID、required scope 和风险等级逐项比对通过，公网桌面/移动浏览器、全部展开交互和零控制台告警验证通过。

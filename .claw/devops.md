@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-24T12:10:00Z
-updated_by: integration-agent after direct AgentCiCi login-page visual reuse
+updated_at: 2026-07-24T13:30:08Z
+updated_by: release-agent after initial CodeUp publication
 verification_status: passed
 ---
 
@@ -12,9 +12,10 @@ verification_status: passed
 
 ## 源代码管理
 
-- 远端仓库：`https://github.com/OlivierZEN/ai-native-platform.git`
-- 默认分支：`main`
-- 架构与治理基线已提交至默认分支
+- GitHub `origin`：`https://github.com/OlivierZEN/ai-native-platform.git`。
+- 阿里云 CodeUp `codeup`：`https://codeup.aliyun.com/627b18115b46541dd2ff340e/cloudcc-aidev-projects/cloudcc-semattice.git`。
+- CodeUp 发布分支：`main`；首次发布使用当前工作分支的完整 `HEAD` 快照，不改写 GitHub `origin`、本地分支名或 upstream。
+- 发布后校验：`git ls-remote codeup refs/heads/main` 必须与本地 `git rev-parse HEAD` 完全相等。
 
 ## 构建
 

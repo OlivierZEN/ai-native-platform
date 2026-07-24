@@ -1,13 +1,20 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-24T12:10:00Z
-updated_by: integration-agent after direct AgentCiCi login-page browser acceptance
-last_run_at: 2026-07-24T12:10:00Z
+updated_at: 2026-07-24T13:30:08Z
+updated_by: release-agent after CodeUp publication gates
+last_run_at: 2026-07-24T13:30:08Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-24 TASK-030 CodeUp 发布门禁
+
+- CodeUp 目标在首次检查时为空仓库，非交互认证成功；`git push codeup HEAD:refs/heads/main` 成功创建远程 `main`。
+- 当前工作树发布前为 clean；本地分支 `agent/go-capability-platform-baseline`，GitHub `origin` 保留，未修改 upstream、未 force push、未执行 mirror。
+- `GOTOOLCHAIN=go1.26.5 go test ./... -count=1`、`go vet ./...`、`go mod verify`、状态 validator、`git diff --check`、`git fsck --full --no-dangling`：全部通过。
+- 当前 157 个受跟踪文件无常见私钥头、阿里云/AWS/GitHub/OpenAI 密钥或 JWT；无敏感证书/密钥扩展名文件，无超过 10 MiB 的受跟踪文件。该扫描是发布门禁，不替代专用供应链 secret scanner。
 
 ## 当前运行摘要
 
