@@ -1,8 +1,8 @@
 ---
 kind: decisions
 version: 3
-updated_at: 2026-07-23T01:22:19Z
-updated_by: ai after accepted CloudCC Semattice naming ADR-012
+updated_at: 2026-07-24T07:58:20Z
+updated_by: ai after accepted Keycloak first-party access ADR-014
 ---
 
 # 技术决策记录
@@ -23,6 +23,7 @@ updated_by: ai after accepted CloudCC Semattice naming ADR-012
 | ADR-010 | 动态字段、按需索引与 JSONB 安全演进边界 | accepted | 2026-07-20 | Phase 0 安全边界已接受；数值待 TASK-019 校准 |
 | ADR-011 | 角色中心 RBAC、组织数据范围与混合记录共享 | accepted | 2026-07-22 | 用户确认；由 FEAT-016 实施 |
 | ADR-012 | CloudCC Semattice 产品品牌与兼容命名边界 | accepted | 2026-07-23 | 取代对外使用泛称 AI Native Platform / Native Platform |
+| ADR-014 | Keycloak 统一身份与官方应用上下文令牌 | accepted | 2026-07-24 | 细化 ADR-006 的官方应用互通与第三方边界 |
 
 推荐状态值：`proposed` / `accepted` / `rejected` / `superseded`
 
@@ -216,6 +217,24 @@ updated_by: ai after accepted CloudCC Semattice naming ADR-012
 - 参考资料：
   - `docs/specs/FEAT-025-company-identity-rename.md`
   - `docs/specs/FEAT-011-unified-tenant-operations-control-plane.md`
+
+## ADR-014 - Keycloak 统一身份与官方应用上下文令牌
+
+- 状态：`accepted`
+- 日期：2026-07-24
+- 背景：AgentCiCi、CloudCC Semattice 和未来的 FollowUp 是官方自有应用组合，既需要高频、低延迟互通，也必须与第三方服务隔离。Keycloak 适合作为账号、SSO、MFA 和全局主体的统一 IdP，但它在不定制的情况下不拥有应用侧“当前公司、产品订阅和最小调用范围”的事实。把每次调用都变为 OBO/Token Exchange 会增加延迟和故障面；把一个宽泛 Token 交给所有服务又会失去最小权限。
+- 备选方案：
+  - 每个应用分别登录、两两 Token Exchange：拒绝。新应用加入时形成网状耦合，且高频调用不必要地依赖身份服务。
+  - 单一宽泛 Keycloak Token 供所有官方应用和第三方使用：拒绝。无法安全表达多公司当前上下文，也无法形成第三方隔离边界。
+  - Keycloak 统一 IdP + 官方访问上下文服务（ACS）签发短期官方上下文 Access Token（OACT）+ 第三方独立 Keycloak 服务账号：采用。
+- 结论：Keycloak 是唯一 IdP，拥有密码、SSO、MFA、全局 `sub` 和服务账号。统一运营控制面继续拥有 `tenant_id/company_id`、成员与产品订阅事实。ACS 仅在登录、公司切换和续期时校验这些事实并以 JWKS 可验证的非对称 JWS 签发短期 OACT；它不保存密码，也不成为第二个用户目录。官方应用接受 OACT 并从同一 Token 得到单一租户、主体、scope、来源应用和委托链；数据平台仍独立实施本地 RBAC、记录授权和 RLS。第三方只通过自己的 Keycloak Confidential Client/Service Account 取得面向数据平台的最小权限 Token，不能获得 OACT 或官方应用 audience。
+- 原因：该方案把每次调用的认证收敛为资源服务器本地 JWKS 验签和本地授权，将与 Keycloak/ACS 的网络交互限制在低频签发与续期；同时使未来官方应用按注册 audience/scope 加入，而不建立两两信任关系。
+- 后续影响：数据平台需要由 HS256 单一 verifier 演进为 JWKS 多 issuer/verifier policy，补齐主体/成员投影与 version gate，并使 API、MCP、CLI fail closed。官方 BFF 负责保护 Keycloak Refresh Token 和 OACT 续期；第三方 Client 生命周期、租户绑定和撤销需独立运营流程。具体接口、Claim、事件、迁移、验收和阶段计划以 FEAT-028 为准。
+- 验证方式：验证官方用户多公司切换、官方服务委托、无用户服务账号、Token 到期续发、成员即时撤销、三入口认证等价性、Key/JWKS 轮换和第三方跨产品/跨租户拒绝；验证路径及失败语义见 FEAT-028。
+- 参考资料：
+  - `docs/specs/FEAT-028-keycloak-first-party-application-access.md`
+  - `docs/specs/FEAT-011-unified-tenant-operations-control-plane.md`
+  - `docs/specs/FEAT-016-role-centered-rbac-organization-data-sharing.md`
 
 ## 维护规则
 

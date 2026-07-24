@@ -4,6 +4,10 @@
 
 `Semattice` is the project-created brand blend `Sema(ntic) + (La)ttice`: semantic metadata, tenant data, relationships, policy, and atomic capabilities form a governed business lattice. ADR-012 in `.claw/decisions.md` is the naming source of truth. Existing protocol identifiers such as `native_platform`, the `ai-native-platform` compatibility binary, `AI_NATIVE_*` environment variables, and the current Go module path remain unchanged until a separately approved compatibility migration is implemented.
 
+## Terminology boundary
+
+In all requirements, discussions, design documents, and delivery notes for this project, **“数据平台” (data platform)** means this system only: **CloudCC Semattice (语义格)**, whose repository is `/Volumes/AISpace/codehouse/AI-Native-Platform`. Agent CC / AgentCiCi and CloudCC CRM are external applications or integration parties; neither may be called “数据平台”. Historical protocol names such as `Native Platform` and `ai-native-platform` continue to refer to this same system as defined by ADR-012.
+
 The Phase 0 Go implementation is a headless agent platform: every published atomic capability is projected from one registry/invoker into a functional HTTP API, authenticated MCP Tool, and non-interactive JSON CLI. The current core includes:
 
 - Go 1.26.5, structured `slog`, env-only configuration, pgxpool, and checksum-protected explicit migrations.

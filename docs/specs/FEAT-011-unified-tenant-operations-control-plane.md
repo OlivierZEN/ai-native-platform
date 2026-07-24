@@ -7,15 +7,15 @@ owner_role: integration-agent
 task_ids: TASK-011
 related_decisions: ADR-006, ADR-009, ADR-012
 related_issues: none
-updated_at: 2026-07-23T07:39:38Z
-updated_by: ai after company_id global-identity terminology migration
+updated_at: 2026-07-24T01:19:00Z
+updated_by: ai after data-platform terminology boundary clarification
 ---
 
 # FEAT-011 - 统一租户运营控制面接入
 
 ## 背景与目标
 
-本规格中的 `Native Platform` 是 **CloudCC Semattice（语义格）** 的历史/协议称谓，产品订阅代码继续使用 `native_platform`。品牌更新不改变 Agent CC 与 Semattice 的独立开通、按需绑定和统一租户规则，也不直接变更现有接口字段。
+本规格中的“数据平台”及 `Native Platform` 均指 **CloudCC Semattice（语义格）**，即仓库 `/Volumes/AISpace/codehouse/AI-Native-Platform`；`Native Platform` 是历史/协议称谓，产品订阅代码继续使用 `native_platform`。Agent CC / AgentCiCi 和 CloudCC CRM 是外部应用或集成方，不得被称为“数据平台”。品牌更新不改变 Agent CC 与 Semattice 的独立开通、按需绑定和统一租户规则，也不直接变更现有接口字段。
 
 Agent CC 已有一个独立运营管理端，当前只负责 Agent CC 多租户平台的开通和生命周期管理。Agent CC 与 Native Platform 是两个相互独立、都可以单独开通的产品，不存在固定先后或主从关系。
 

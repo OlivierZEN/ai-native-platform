@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-23T07:43:33Z
-updated_by: ai after TASK-025 company identity rename verification
-last_run_at: 2026-07-23T07:43:33Z
+updated_at: 2026-07-24T08:48:00Z
+updated_by: integration-agent after TASK-029 Keycloak infrastructure verification
+last_run_at: 2026-07-24T08:48:00Z
 last_run_status: passed
 ---
 
@@ -14,6 +14,15 @@ last_run_status: passed
 - 状态：`passed`。覆盖 `TASK-010`、`TASK-011`、`TASK-012`、`TASK-013`、`TASK-015`、`TASK-016`、`TASK-024`、`TASK-025` 的当前本地实现，以及 `TASK-022` 的授权 ECS 部署验收。
 - 数据库：Docker PostgreSQL `16.13 (Debian 16.13-1.pgdg13+1)`；镜像 digest `postgres@sha256:5d143123fdf80462d1778cd4f24b9f7ca13c87174bca19141fb194c5a1ebca59`。仅绑定 `127.0.0.1:55432` 的专用临时容器，结束后清理。
 - 本轮 maker 从 fresh schema 执行 migrations 1–13；`schema_migration` checksum 可重复，128 个 object partitions 与五类共 640 个 typed-index partitions 完整。TASK-010–013 的第三轮独立 checker 历史结论继续有效；TASK-015 尚未声明新的独立 checker 结论。
+
+## 2026-07-24 TASK-029 Keycloak 基础设施验证
+
+- ECS `115.29.222.70` 已安装 Keycloak `26.7.0`（Amazon Corretto 21、PostgreSQL 16 独立 `keycloak` 数据库/role、非特权 `keycloak` systemd、loopback `8180/9000`）并通过 `systemctl` 重启后启动。
+- `https://sso.agentcici.com/realms/agentcici/.well-known/openid-configuration` 与 JWKS cert endpoint 均 HTTPS 200，证书校验成功；管理控制台重定向正常。
+- 本机 `/health/live` 与 `/health/ready` 均为 `UP`；公网 `/health`、`/metrics` 均为 404；Nginx `nginx -t` 通过。
+- `agentcici` Realm 与 `agentcici-bff`、`semattice-api`、`official-access-context`、`followup-worker` client 注册已创建；未读取/输出 client secret。
+- 随机、自动删除的账号和直接授权测试客户端验证：AgentCiCi `PBKDF2WithHmacSHA256` / 120,000 轮 / 256-bit hash，可作为 Keycloak `pbkdf2-sha256` credential 导入并成功换取 Token。导入时 Keycloak salt 使用 AgentCiCi 存储 salt 字符串 UTF-8 字节的 base64，不是二次解码该字符串。无真实账号、密码或 credential 被读取。
+- 回归保护：`https://semattice.agentcici.com/` 仍 HTTPS 200。此节只证明 IdP 基础设施，不证明 AgentCiCi/Semattice 运行时代码已完成 OACT/JWKS 切流。
 
 ## 2026-07-23 TASK-025 company_id 全局身份改名验证
 

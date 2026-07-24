@@ -100,7 +100,7 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 	}
 	invoker := capability.NewMeteredInvoker(capability.NewRegistry(definitions), 32, meter)
 	var verifier *identity.Verifier
-	if cfg.Identity.Issuer != "" {
+	if cfg.Identity.Issuer != "" || len(cfg.Identity.TrustedIssuers) > 0 {
 		verifier, err = identity.NewVerifier(cfg.Identity)
 		if err != nil {
 			return writeStartupFailure(out, capability.CodeValidationFailed, err.Error())

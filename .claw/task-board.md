@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-23T13:52:26Z
-updated_by: ai after user-approved phased usage metering design
+updated_at: 2026-07-24T07:58:20Z
+updated_by: ai after user-confirmed Keycloak first-party access design
 board_status: active
 ---
 
@@ -27,6 +27,34 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-029 - Deploy Keycloak production IdP and integrate Semattice resource-server authentication
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-029-keycloak-resource-server-and-production-idp.md`
+- depends_on: `TASK-028`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `Keycloak production deployment, Nginx TLS vhost, dedicated PostgreSQL database/role, Semattice token verifier, principal projection, API/MCP/CLI authentication tests and release evidence`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Keycloak is healthy at `https://sso.agentcici.com`, with fixed hostname, dedicated database/user, protected management secrets and production reverse-proxy configuration.
+- Semattice validates official OACT and third-party Keycloak service tokens locally through JWKS, rejects missing/invalid/unbound tokens, and never calls Keycloak per request.
+- AgentCiCi mapping/projection integration, production rollout and positive/negative smoke evidence are recorded without storing secrets in the repository.
+
+#### Next Action
+
+- Keycloak 基础设施已于 2026-07-24 部署并完成 OIDC/JWKS/健康/边界验证；下一步实现并本地验证 AgentCiCi 外部身份映射/OIDC BFF/OACT，以及 Semattice 多 issuer JWKS 验签、主体投影和 API/MCP/CLI fail-closed 路径后发布。
+
+#### Handoff Note
+
+- This task operationalizes FEAT-028. It supersedes the previous design-only remote-change restriction for this narrowly authorized identity scope.
 
 ### TASK-026 - Enforce AgentCiCi-controlled company provisioning
 
@@ -163,6 +191,32 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-028 - Specify Keycloak and official-application access architecture
+
+- status: `done`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-028-keycloak-first-party-application-access.md`
+- depends_on: `ADR-006, ADR-009, ADR-013`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `identity and token architecture specification only; no runtime or remote changes`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Keycloak IdP, official OACT, third-party service account, API/MCP/CLI, tenant mapping, expiry, revocation and future-app registration boundaries are explicit.
+
+#### Next Action
+
+- 设计文档已完成；任何 ACS、Keycloak、AgentCiCi、FollowUp 或数据平台实现必须另建任务并获得跨仓库/生产授权。
+
+#### Handoff Note
+
+- 以 FEAT-028 为唯一详细设计；Keycloak 登录 Token 不在官方服务间泛化转发，官方 OACT 和第三方 Token 是两条独立信任路径。
 
 ### TASK-025 - Rename provisioning global identity to company_id
 

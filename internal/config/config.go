@@ -36,11 +36,21 @@ type Log struct {
 }
 
 type Identity struct {
-	Issuer    string
-	Audience  string
-	Algorithm string
-	HMACKey   string
-	Token     string
+	Issuer         string
+	Audience       string
+	Algorithm      string
+	HMACKey        string
+	Token          string
+	TrustedIssuers []TrustedIssuer
+}
+
+// TrustedIssuer describes a non-HMAC JWT issuer verified through its published
+// JWKS. The source name is audit-only and must not be trusted from a token.
+type TrustedIssuer struct {
+	Source   string
+	Issuer   string
+	Audience string
+	JWKSURL  string
 }
 
 type Provisioning struct {
@@ -74,11 +84,12 @@ func Load(getenv func(string) string) (Config, error) {
 			Format: valueOr(strings.ToLower(getenv("AI_NATIVE_LOG_FORMAT")), "json"),
 		},
 		Identity: Identity{
-			Issuer:    getenv("AI_NATIVE_IDENTITY_ISSUER"),
-			Audience:  getenv("AI_NATIVE_IDENTITY_AUDIENCE"),
-			Algorithm: getenv("AI_NATIVE_IDENTITY_ALGORITHM"),
-			HMACKey:   getenv("AI_NATIVE_IDENTITY_HMAC_KEY"),
-			Token:     getenv("AI_NATIVE_IDENTITY_TOKEN"),
+			Issuer:         getenv("AI_NATIVE_IDENTITY_ISSUER"),
+			Audience:       getenv("AI_NATIVE_IDENTITY_AUDIENCE"),
+			Algorithm:      getenv("AI_NATIVE_IDENTITY_ALGORITHM"),
+			HMACKey:        getenv("AI_NATIVE_IDENTITY_HMAC_KEY"),
+			Token:          getenv("AI_NATIVE_IDENTITY_TOKEN"),
+			TrustedIssuers: nil,
 		},
 		Provisioning: Provisioning{
 			AgentCiCiBaseURL: strings.TrimRight(getenv("AI_NATIVE_AGENTCICI_BASE_URL"), "/"),
@@ -90,6 +101,11 @@ func Load(getenv func(string) string) (Config, error) {
 		return Config{}, parseErr
 	}
 	cfg.Provisioning.CallerKeys = callerKeys
+	trustedIssuers, trustedIssuersErr := parseTrustedIssuers(getenv("AI_NATIVE_IDENTITY_TRUSTED_ISSUERS"))
+	if trustedIssuersErr != nil {
+		return Config{}, trustedIssuersErr
+	}
+	cfg.Identity.TrustedIssuers = trustedIssuers
 
 	var err error
 	if cfg.Database.MaxConns, err = parseInt32(getenv("AI_NATIVE_DATABASE_MAX_CONNS"), cfg.Database.MaxConns, 1); err != nil {
@@ -155,6 +171,42 @@ func parseCallerKeys(raw string) (map[string]string, error) {
 	return values, nil
 }
 
+// parseTrustedIssuers accepts semicolon-separated source|issuer|audience|jwks_url entries.
+// A product configuration must list each official or third-party issuer explicitly;
+// token-provided iss/aud/JWKS values are never accepted.
+func parseTrustedIssuers(raw string) ([]TrustedIssuer, error) {
+	if strings.TrimSpace(raw) == "" {
+		return nil, nil
+	}
+	result := make([]TrustedIssuer, 0)
+	seenSource := map[string]struct{}{}
+	seenIssuer := map[string]struct{}{}
+	for _, rawItem := range strings.Split(raw, ";") {
+		parts := strings.Split(rawItem, "|")
+		if len(parts) != 4 {
+			return nil, fmt.Errorf("invalid trusted identity issuer configuration")
+		}
+		entry := TrustedIssuer{
+			Source: strings.TrimSpace(parts[0]), Issuer: strings.TrimSpace(parts[1]),
+			Audience: strings.TrimSpace(parts[2]), JWKSURL: strings.TrimSpace(parts[3]),
+		}
+		parsed, err := url.Parse(entry.JWKSURL)
+		if entry.Source == "" || entry.Issuer == "" || entry.Audience == "" || err != nil || parsed.Scheme != "https" || parsed.Host == "" {
+			return nil, fmt.Errorf("invalid trusted identity issuer configuration")
+		}
+		if _, exists := seenSource[entry.Source]; exists {
+			return nil, fmt.Errorf("invalid trusted identity issuer configuration")
+		}
+		if _, exists := seenIssuer[entry.Issuer]; exists {
+			return nil, fmt.Errorf("invalid trusted identity issuer configuration")
+		}
+		seenSource[entry.Source] = struct{}{}
+		seenIssuer[entry.Issuer] = struct{}{}
+		result = append(result, entry)
+	}
+	return result, nil
+}
+
 func validateProvisioning(p Provisioning) error {
 	present := 0
 	for _, value := range []bool{p.AgentCiCiBaseURL != "", p.AgentCiCiHMACKey != "", len(p.CallerKeys) > 0} {
@@ -188,6 +240,9 @@ func validateIdentity(identity Identity) error {
 		}
 	}
 	if present == 0 {
+		if len(identity.TrustedIssuers) == 0 {
+			return nil
+		}
 		return nil
 	}
 	if present != 4 {

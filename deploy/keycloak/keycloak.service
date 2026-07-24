@@ -1,0 +1,26 @@
+[Unit]
+Description=Keycloak identity and access management server
+After=network-online.target postgresql-16.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=keycloak
+Group=keycloak
+Environment=JAVA_HOME=/opt/java/current
+EnvironmentFile=/etc/keycloak/bootstrap-admin.env
+WorkingDirectory=/opt/keycloak/current
+ExecStart=/opt/keycloak/current/bin/kc.sh start --optimized
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=180s
+TimeoutStopSec=60s
+LimitNOFILE=65536
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full
+ReadWritePaths=/opt/keycloak/current/data
+
+[Install]
+WantedBy=multi-user.target

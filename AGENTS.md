@@ -15,3 +15,9 @@
 - 如果当前环境尚未安装该技能，必须先从 GitHub 安装：https://github.com/CloudCCAI/agentic-project-guidelines
 - 技能可用后，必须按技能中的 Greenfield 或 Brownfield 流程维护 `README.md`、`AGENTS.md`、`.claw/` 或 `.ai-dev/` 以及 `docs/specs/`。
 <!-- agentic-project-guidelines:end -->
+
+## Terminology Boundary
+
+- “数据平台”始终且仅指本仓库的 CloudCC Semattice（语义格）：`/Volumes/AISpace/codehouse/AI-Native-Platform`。
+- Agent CC / AgentCiCi 及 CloudCC CRM 是外部应用或集成方，禁止将其称为“数据平台”。
+- 历史/协议名称 `Native Platform`、`ai-native-platform` 和 `native_platform` 均仍指本系统；正式品牌与兼容边界以 ADR-012 为准。
