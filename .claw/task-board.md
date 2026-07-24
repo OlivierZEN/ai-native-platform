@@ -186,7 +186,7 @@ board_status: active
 
 #### Next Action
 
-- 已完成 Keycloak 基础设施、AgentCiCi OIDC/OACT、Semattice 本地 JWKS 验签、真实公司绑定和 AgentCiCi 登录主题上线。后续官方应用按现有 OACT/JWKS 契约接入，不再改变 IdP 的认证边界。
+- 已完成 Keycloak 基础设施、AgentCiCi OIDC/OACT、Semattice 本地 JWKS 验签、真实公司绑定和 AgentCiCi 登录主题上线；主题直接复用 AgentCiCi `login_mode2` 的真实图片与立方体结构。后续官方应用按现有 OACT/JWKS 契约接入，不再改变 IdP 的认证边界。
 
 #### Handoff Note
 

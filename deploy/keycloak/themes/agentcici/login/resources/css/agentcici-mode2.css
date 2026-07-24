@@ -1,0 +1,87 @@
+/* Directly reused from AgentCiCi's login_mode2 screen. */
+:root { color-scheme: dark; }
+
+html, body#keycloak-bg {
+  min-width: 320px;
+  min-height: 100dvh;
+  margin: 0;
+}
+
+.login-mode2 {
+  --mode2-ink: #eaf4ff;
+  --mode2-bronze: #d9e9ff;
+  --mode2-muted: #a9bbd4;
+  --mode2-line: rgba(135, 164, 210, 0.52);
+  --mode2-line-strong: rgba(151, 182, 232, 0.82);
+  --mode2-gold: #5f75a3;
+  --mode2-gold-strong: #8298c8;
+  --mode2-canvas: #071225;
+  --mode2-surface: #101d33;
+  --mode2-shelf: #15243d;
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  width: auto;
+  min-height: 100vh;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 34px 24px;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(219, 232, 255, 0.72) 0 0.8px, transparent 1.4px),
+    radial-gradient(circle at 68% 64%, rgba(154, 190, 255, 0.5) 0 0.7px, transparent 1.3px),
+    radial-gradient(circle at 42% 78%, rgba(214, 228, 255, 0.55) 0 0.6px, transparent 1.2px),
+    radial-gradient(circle at 12% 16%, rgba(179, 204, 255, 0.9) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 82% 14%, rgba(210, 226, 255, 0.88) 0 1.4px, transparent 2.4px),
+    radial-gradient(circle at 72% 47%, rgba(138, 177, 255, 0.72) 0 1px, transparent 2px),
+    radial-gradient(circle at 18% 78%, rgba(198, 220, 255, 0.82) 0 1.5px, transparent 2.6px),
+    radial-gradient(circle at 96% 58%, rgba(188, 211, 255, 0.7) 0 1px, transparent 2px),
+    radial-gradient(circle at 50% 46%, rgba(82, 132, 212, 0.18) 0%, transparent 26%),
+    radial-gradient(circle at 50% 36%, rgba(28, 78, 146, 0.26) 0%, transparent 34%),
+    radial-gradient(circle at 50% 58%, rgba(17, 62, 123, 0.28) 0%, transparent 42%),
+    linear-gradient(180deg, #030a17 0%, #071225 46%, #09182d 100%);
+  background-size: 122px 122px, 178px 178px, 242px 242px, 360px 360px, 520px 520px, 430px 430px, 620px 620px, 480px 480px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-position: 0 0, 38px 24px, 18px 58px, 0 0, 30px 0, 24px 60px, 0 30px, 16px 8px, 0 0, 0 0, 0 0, 0 0;
+  color: var(--mode2-ink);
+  font-family: var(--font-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif);
+}
+
+.login-mode2 *, .login-mode2 *::before, .login-mode2 *::after { box-sizing: border-box; }
+.login-mode2__center { position: relative; z-index: 2; width: min(560px, 100%); min-height: min(640px, calc(100dvh - 68px)); display: grid; grid-template-rows: auto auto; align-items: center; justify-items: center; align-content: center; gap: clamp(18px, 3vh, 30px); }
+.login-mode2__cube-zone { --mode2-tilt-x: 0deg; --mode2-tilt-y: 0deg; display: grid; justify-items: center; gap: 16px; width: min(420px, 100%); perspective: 1000px; }
+.login-mode2__cube-stage { position: relative; width: 268px; height: 268px; transform: rotateX(var(--mode2-tilt-x)) rotateY(var(--mode2-tilt-y)); transform-style: preserve-3d; transition: transform 0.12s ease-out; }
+.login-mode2__cube { position: absolute; inset: 0; width: 172px; height: 172px; margin: auto; transform-style: preserve-3d; animation: login-mode2-spin 14s linear infinite; }
+.login-mode2__cube-face { position: absolute; width: 172px; height: 172px; overflow: hidden; border: 1px solid rgba(185, 150, 82, 0.78); border-radius: 16px; background: var(--mode2-surface); box-shadow: 0 18px 42px rgba(58, 43, 20, 0.14); backface-visibility: hidden; }
+.login-mode2__cube-face img { display: block; width: 100%; height: 100%; object-fit: cover; filter: saturate(0.82) contrast(0.96) brightness(1.08); }
+.login-mode2__cube-face.is-contain { background: #fffdf8; }
+.login-mode2__cube-face.is-contain img { object-fit: contain; padding: 16px; filter: none; }
+.login-mode2__cube-face::after { content: ""; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255, 253, 248, 0.34), transparent 42%), linear-gradient(0deg, rgba(43, 34, 23, 0.32), transparent 46%); pointer-events: none; }
+.login-mode2__cube-face--front { transform: translateZ(86px); }
+.login-mode2__cube-face--back { transform: rotateY(180deg) translateZ(86px); }
+.login-mode2__cube-face--right { transform: rotateY(90deg) translateZ(86px); }
+.login-mode2__cube-face--left { transform: rotateY(-90deg) translateZ(86px); }
+.login-mode2__cube-face--top { transform: rotateX(90deg) translateZ(86px); }
+.login-mode2__cube-face--bottom { transform: rotateX(-90deg) translateZ(86px); }
+.login-mode2__form-shell { box-sizing: border-box; width: min(420px, 100%); padding: 18px; border: 1px solid rgba(137, 166, 215, 0.72); border-radius: 18px; background: linear-gradient(180deg, rgba(14, 27, 49, 0.96) 0%, rgba(8, 18, 34, 0.98) 100%); box-shadow: 0 24px 64px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(217, 233, 255, 0.06) inset; }
+.login-mode2 .boot-login__notice { margin: 0 0 16px; color: #bcd0f1; font-size: 13px; line-height: 1.55; }
+
+/* Keycloak owns the credential fields; these rules place them in the original form shell. */
+.keycloak-login-mode2__title { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.login-mode2 .pf-v5-c-form__group { margin: 0 0 13px; }
+.login-mode2 .pf-v5-c-form__label-text, .login-mode2 .pf-v5-c-form__label { color: #f0f6ff; font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+.login-mode2 .pf-v5-c-form-control, .login-mode2 .pf-v5-c-input-group { background: transparent; }
+.login-mode2 .pf-v5-c-form-control > input { min-height: 40px; color: #edf5ff; border: 1px solid rgba(128, 156, 202, .58); border-radius: 10px; background: rgba(15, 29, 52, .88); box-shadow: none; }
+.login-mode2 .pf-v5-c-form-control > input:hover { border-color: rgba(169, 193, 232, .78); }
+.login-mode2 .pf-v5-c-form-control > input:focus { border-color: rgba(196, 215, 247, .92); background: rgba(20, 37, 65, .94); box-shadow: 0 0 0 3px rgba(114, 149, 210, .2); }
+.login-mode2 .pf-v5-c-input-group .pf-v5-c-form-control > input { border-radius: 10px 0 0 10px; }
+.login-mode2 .pf-v5-c-input-group__item .pf-v5-c-button { min-height: 40px; color: #dceaff; border-color: rgba(128, 156, 202, .58); border-radius: 0 10px 10px 0; background: rgba(15, 29, 52, .88); }
+.login-mode2 #kc-form-buttons { margin-top: 14px; }
+.login-mode2 #kc-login, .login-mode2 #try-another-way, .login-mode2 #switch-organization { width: 100%; min-height: 40px; border: 1px solid rgba(118, 146, 196, .82); border-radius: 10px; color: #f7fbff; font-size: 13px; font-weight: 800; letter-spacing: 0; background: linear-gradient(180deg, #455b86 0%, #34496f 100%); box-shadow: 0 14px 30px rgba(0, 0, 0, .24); }
+.login-mode2 #kc-login:hover:not(:disabled), .login-mode2 #try-another-way:hover, .login-mode2 #switch-organization:hover { border-color: rgba(171, 194, 232, .88); background: linear-gradient(180deg, #536b9a 0%, #40577f 100%); }
+.login-mode2 .pf-v5-c-alert { margin: 0 0 14px; border-radius: 10px; color: #edf5ff; }
+.login-mode2 .pf-v5-c-alert__title, .login-mode2 .pf-v5-c-helper-text__item-text, .login-mode2 .pf-v5-c-login__main-footer, .login-mode2 .pf-v5-c-login__main-footer a, .login-mode2 #kc-info, .login-mode2 #kc-info a { color: #bcd0f1; }
+.login-mode2 .pf-v5-c-login__main-footer { margin-top: 14px; }
+
+@keyframes login-mode2-spin { from { transform: rotateX(-12deg) rotateY(0deg); } to { transform: rotateX(348deg) rotateY(360deg); } }
+@media (prefers-reduced-motion: reduce) { .login-mode2__cube { animation: none; transform: rotateX(-12deg) rotateY(28deg); } .login-mode2__cube-stage { transition: none; } }
+@media (max-width: 760px) { .login-mode2 { padding: 22px 16px; overflow: auto; } .login-mode2__center { min-height: 0; grid-template-rows: auto auto; } .login-mode2__form-shell { width: min(420px, calc(100vw - 32px)); } .login-mode2__cube-stage { width: 228px; height: 228px; } .login-mode2__cube, .login-mode2__cube-face { width: 146px; height: 146px; } .login-mode2__cube-face--front { transform: translateZ(73px); } .login-mode2__cube-face--back { transform: rotateY(180deg) translateZ(73px); } .login-mode2__cube-face--right { transform: rotateY(90deg) translateZ(73px); } .login-mode2__cube-face--left { transform: rotateY(-90deg) translateZ(73px); } .login-mode2__cube-face--top { transform: rotateX(90deg) translateZ(73px); } .login-mode2__cube-face--bottom { transform: rotateX(-90deg) translateZ(73px); } }

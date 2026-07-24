@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-24T12:00:00Z
-updated_by: integration-agent after Keycloak AgentCiCi login-theme rollout
+updated_at: 2026-07-24T12:10:00Z
+updated_by: integration-agent after direct AgentCiCi login-page visual reuse
 phase: cross-product-identity-live
 active_task: "TASK-027"
 next_action: "Keycloak identity and its AgentCiCi login theme are live; continue the independently authorized usage-metering task without widening production scope."
@@ -22,7 +22,7 @@ read_next:
 - 术语边界已确认并写入项目规范：后续“数据平台”始终且仅指本仓库的 CloudCC Semattice（语义格，`/Volumes/AISpace/codehouse/AI-Native-Platform`）；Agent CC / AgentCiCi 与 CloudCC CRM 均是外部应用或集成方，不得混称。规范来源为根目录 `README.md` 与 `AGENTS.md`。
 - 用户已确认并于 2026-07-24 明确授权官方应用身份互通实施（ADR-014、FEAT-028、FEAT-029）：Keycloak 是唯一 IdP；官方应用使用短期、单租户的 OACT 在 API/MCP/CLI 间互通，登录/切换公司/续期时换发而非逐请求交换；第三方只能使用独立 Keycloak Service Account 的数据平台最小权限 Token。当前执行 TASK-029，允许在 ECS `115.29.222.70` 部署 Keycloak、配置 `sso.agentcici.com`，并在此授权范围内实施跨仓库运行时改造和生产发布。
 - TASK-029 已完成基础链路发布：Keycloak 26.7.0 运行于授权 ECS 的 loopback `:8180`，Nginx 经现有 `*.agentcici.com` TLS 证书公开 `https://sso.agentcici.com`；独立 PostgreSQL `keycloak` 数据库/role、非特权 systemd、业务 Realm 和首批 client 已创建。AgentCiCi `2.8.11` 已切换至 Keycloak OIDC，24 个全局账户存在一对一外部身份映射，OACT JWKS 公开为 RS256。Semattice release `20260724T094721Z-keycloak-jwks` 已上线，固定信任 AgentCiCi OACT issuer/audience/JWKS 并保留旧 HS256 兼容；真实 RS256 技术烟测调用成功，未逐请求回调 Keycloak。
-- Keycloak `agentcici` Realm 已部署并启用 `agentcici` 原生 login theme：深蓝星空、3D 品牌立方体与居中统一账号表单复用用户确认的 AgentCiCi 登录风格，账号/密码/MFA/错误处理仍完全由 Keycloak 负责。`/opt/keycloak/backups/20260724T115724Z-before-agentcici-login-theme` 保留上一主题；真实授权入口的默认与空表单错误态均通过桌面浏览器验收。
+- Keycloak `agentcici` Realm 已部署并启用 `agentcici` 原生 login theme：直接复用 AgentCiCi `login_mode2` 的星空参数、6 张真实立方体面图、3D 旋转与指针倾斜结构，不再以 CSS 近似重画。账号/密码/MFA/错误处理仍完全由 Keycloak 负责。`/opt/keycloak/backups/20260724T120956Z-before-agentcici-login-theme` 保留上一版本；真实授权入口的默认表单通过桌面浏览器验收。
 - 用户于 2026-07-24 选择公司 `org2sva14i4udjmi2t4s`（智能体平台演示环境）作为真实验收租户。原失败原因是 Semattice 服务器无法解析过期回调域名 `onechat.agentcici.com`；已将运行配置改为 `https://x.agentcici.com` 并重启服务。以同一幂等键安全重放受控开户后，AgentCiCi binding 与 Semattice `tenant_registry` 均为 `PROVISIONED/active`，共享 tenant UUID `93ff0c87-a626-529e-b8cf-195825df2488`。
 - 最终 OACT 验收：目标公司存在两名已映射、有效成员。服务器内以其中一名成员的 Keycloak `sub` 和真实 `tenant_id + company_id` 签发一次性 120 秒 RS256 OACT；Semattice 固定 JWKS verifier 返回 HTTP 200 / `succeeded`，调用 `system.capability.list` 成功。未输出 Token、私钥、成员身份或密码，且该调用未回调 Keycloak。
 - 用户于 2026-07-23 授权优先实现 `TASK-027` 的 Phase 1 用量计量：API/MCP/CLI 请求、RU、逻辑业务数据大小和有效业务记录数。计量必须低开销、租户隔离、幂等且可审计；不在本阶段启用收费、自动停服、AI/连接器计量、外部 TSDB 或 Web UI。该实现替代当前“先执行 TASK-026 远程发布动作”的近期优先级，但不扩大既有远程生产授权。

@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-24T12:00:00Z
-updated_by: integration-agent after TASK-029 login-theme browser acceptance
-last_run_at: 2026-07-24T12:00:00Z
+updated_at: 2026-07-24T12:10:00Z
+updated_by: integration-agent after direct AgentCiCi login-page browser acceptance
+last_run_at: 2026-07-24T12:10:00Z
 last_run_status: passed
 ---
 
@@ -19,9 +19,9 @@ last_run_status: passed
 
 ## 2026-07-24 TASK-029 AgentCiCi IdP 登录主题验收
 
-- `theme-source`：`bash -n deploy/keycloak/apply-agentcici-login-theme.sh deploy/keycloak/configure-agentcici-realm.sh` 与 `git diff --check` 通过；主题是 Keycloak `keycloak.v2` 的原生 login theme，仅覆盖样式与中文消息，不改 form action、认证代码或 Keycloak session 参数。
-- `production`：在 `115.29.222.70` 将 `agentcici` Realm 设置为 `loginTheme=agentcici`、单一默认 locale `zh-CN`，Keycloak 重启后本机 `/health/ready` 为 `UP`。发布前主题/realm 设置备份为 `/opt/keycloak/backups/20260724T115724Z-before-agentcici-login-theme`；当前 theme 目录未保留 macOS sidecar 文件。
-- `browser-desktop`：真实 Authorization Code + PKCE 入口确认自定义 CSS 被 Keycloak 加载，标题、账号或邮箱、密码、密码可见性和“统一账号登录”均为中文；空表单提交返回 Keycloak 的“无效的用户名或密码。”错误态，表单、焦点、错误提示和星空主题均保持正常。截图：`output/playwright/keycloak-agentcici-login-theme-final.png`、`output/playwright/keycloak-agentcici-login-theme-error.png`（本地验收产物，未提交）。
+- `theme-source`：`bash -n deploy/keycloak/apply-agentcici-login-theme.sh` 与 `git diff --check` 通过；主题是 Keycloak `keycloak.v2` 的原生 login theme，不改 form action、认证代码或 Keycloak session 参数。
+- `production`：在 `115.29.222.70` 将 `agentcici` Realm 设置为 `loginTheme=agentcici`、单一默认 locale `zh-CN`，Keycloak 重启后本机 `/health/ready` 为 `UP`。发布前主题/realm 设置备份为 `/opt/keycloak/backups/20260724T120956Z-before-agentcici-login-theme`；当前 theme 目录未保留 macOS sidecar 文件。
+- `browser-desktop`：真实 Authorization Code + PKCE 入口确认生产 CSS 与 6 张原始 AgentCiCi `login_mode2` 立方体图片均由 Keycloak 加载；星空、立方体真实图片、旋转、居中框架与原页面一致。账号或邮箱、密码、密码可见性和“统一账号登录”均为中文，浏览器控制台无错误。截图：`.playwright-cli/page-2026-07-24T12-10-25-052Z.png`（本地验收产物，未提交）。
 
 ## 2026-07-24 TASK-029 应用认证链路发布验证
 

@@ -21,7 +21,7 @@ if [[ "${EUID}" -ne 0 ]]; then
   printf '%s\n' 'Run this theme deployment as root.' >&2
   exit 1
 fi
-if [[ ! -f "${theme_source}/login/theme.properties" || ! -f "${theme_source}/login/resources/css/agentcici.css" ]]; then
+if [[ ! -f "${theme_source}/login/theme.properties" || ! -f "${theme_source}/login/resources/css/agentcici-mode2.css" ]]; then
   printf '%s\n' 'Theme source is incomplete.' >&2
   exit 1
 fi
