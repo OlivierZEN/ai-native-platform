@@ -49,6 +49,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
 - 当前 release 目录：`/opt/semattice/releases/20260724T094721Z-keycloak-jwks`；当前链接：`/opt/semattice/current`。该 release SHA-256 为 `5647f68d192c1d4be2ebec7a67671b5d513fef06767a17eb877f04ada5d0922d`。
+- AgentCiCi 受控开户回调固定为 `AI_NATIVE_AGENTCICI_BASE_URL=https://x.agentcici.com`。不得使用当前无法解析的历史 `onechat.agentcici.com`；修改该值后须重启 `semattice` 并执行签名 reservation/complete smoke。
 - systemd unit：`/etc/systemd/system/semattice.service`；仓库模板为 `deploy/semattice/semattice.service`。
 - Nginx server block：`/etc/nginx/conf.d/semattice.conf`；仓库模板为 `deploy/semattice/nginx.conf`。
 - 静态说明：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。
