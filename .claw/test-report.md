@@ -1,13 +1,20 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-24T15:33:52Z
-updated_by: release-agent after Streamable HTTP MCP edge route verification
-last_run_at: 2026-07-24T15:33:52Z
+updated_at: 2026-07-24T15:54:00Z
+updated_by: release-agent after public MCP discovery production verification
+last_run_at: 2026-07-24T15:54:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-24 TASK-031 公开 MCP 发现与认证调用发布验证
+
+- 本机：`go test ./...`、`go vet ./...`、`go mod verify`、`git diff --check` 全部通过；`go test -race ./internal/mcp` 通过。新增 Streamable HTTP 测试覆盖匿名 initialize/tools/list、匿名同 session 的 tools/call 401、令牌在该 session 后续调用时重新验证并绑定 trusted principal。
+- 代码提交 `9cbbd28` 已快进合并并推送到 CodeUp `main`。Linux amd64 静态制品 SHA-256 为 `05c714d24dafd6f438683640da317bcd03c0d05705a58184db96b344c830c38b`，线上 release 为 `/opt/semattice/releases/20260724T155000Z-mcp-public-discovery`，切换后 `semattice` 为 `active`。
+- 首次公网 initialize 暴露 SDK loopback DNS-rebinding 对外 Host 的 403；未关闭该防护，而是将受控 Nginx `/mcp` upstream `Host` 固定为 `127.0.0.1`，`nginx -t` 与 reload 成功，备份为 `/etc/nginx/conf.d/semattice.conf.backup.20260724T155400Z-mcp-host`。
+- 公网匿名 `initialize` 返回 200 与 MCP session ID；`notifications/initialized` 返回 202；`tools/list` 返回 200 和 49 个已发布工具，且 schema 仅要求 `request_id` 与 `input`；同一 session 的匿名 `tools/call` 返回 401 `no bearer token`；`https://semattice.agentcici.com/healthz` 返回 200。未读取、打印或存储生产 Bearer token。
 
 ## 2026-07-24 TASK-024 Streamable HTTP MCP 线上路由验证
 

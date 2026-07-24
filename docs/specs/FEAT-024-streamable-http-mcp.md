@@ -2,13 +2,13 @@
 kind: feature-spec
 feature_id: FEAT-024
 title: Public-discovery, authenticated-invocation Streamable HTTP MCP endpoint
-status: implemented
+status: verified
 owner_role: backend-agent
 task_ids: TASK-024
 related_decisions: ADR-004, ADR-007
 related_issues: none
-updated_at: 2026-07-24T15:49:11Z
-updated_by: backend-agent after anonymous-discovery handler implementation
+updated_at: 2026-07-24T15:54:00Z
+updated_by: release-agent after public discovery production verification
 ---
 
 # FEAT-024 - 公开发现、认证调用的 Streamable HTTP MCP Endpoint
@@ -65,6 +65,6 @@ MCP client --> /mcp
 
 ## 风险与后续
 
-- 2026-07-24 已在授权 ECS 配置 Nginx 精确代理 `/mcp`，关闭 request/response buffering。发布本实现后，公网应允许匿名 MCP discovery，并继续拒绝没有 Bearer JWT 的工具调用；发布验收需要分别记录这两类结果。
+- 2026-07-24 已在授权 ECS 配置 Nginx 精确代理 `/mcp`，关闭 request/response buffering；该受控反向代理将上游 `Host` 固定为 `127.0.0.1`，保留 SDK 的 loopback DNS-rebinding 防护。生产验证已确认匿名 `initialize`/`notifications/initialized`/`tools/list` 成功，匿名 `tools/call` 返回 401，边缘 `/healthz` 为 200。
 - 当前验证器支持固定信任清单中的 JWKS/RS256，以及兼容期 HS256；这不等于完整 MCP OAuth resource-server 实现，后者仍需要独立规格与身份系统授权。
 - 多节点或长任务场景需要持久 EventStore、session 策略和容量验证。

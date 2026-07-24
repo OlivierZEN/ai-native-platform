@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-24T15:49:11Z
-updated_by: backend-agent after starting public MCP discovery delivery
+updated_at: 2026-07-24T15:54:00Z
+updated_by: release-agent after public MCP discovery production verification
 board_status: active
 ---
 
@@ -27,34 +27,6 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
-
-### TASK-031 - Permit public MCP discovery while authenticating tool invocation
-
-- status: `in_progress`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-024-streamable-http-mcp.md`
-- depends_on: `TASK-024, TASK-029`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `internal/mcp Streamable HTTP handler, MCP tests, endpoint contract documentation, production release evidence`
-- branch: `agent/go-capability-platform-baseline`
-- pr_url: `n/a`
-
-#### Done When
-
-- Anonymous MCP clients can initialize and list the published tool descriptors without a token.
-- Every tool invocation is authenticated and derives tenant, subject and scopes only from the JWT verified for that request.
-- Unit/full regression, main-branch merge and production smoke evidence are recorded.
-
-#### Next Action
-
-- Run repository validation, commit the handler and contract changes, merge to CodeUp `main`, then deploy the signed release artifact to the authorized ECS.
-
-#### Handoff Note
-
-- A discovery session ID is never an authorization grant. Keep the anonymous allowlist limited to `initialize`, `notifications/initialized` and `tools/list`; all other methods fail closed without Bearer authentication.
 
 ### TASK-026 - Enforce AgentCiCi-controlled company provisioning
 
@@ -191,6 +163,34 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-031 - Permit public MCP discovery while authenticating tool invocation
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-024-streamable-http-mcp.md`
+- depends_on: `TASK-024, TASK-029`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `internal/mcp Streamable HTTP handler, MCP tests, endpoint contract documentation, production release evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Anonymous MCP clients can initialize and list the published tool descriptors without a token.
+- Every tool invocation is authenticated and derives tenant, subject and scopes only from the JWT verified for that request.
+- Unit/full regression, main-branch merge and production smoke evidence are recorded.
+
+#### Next Action
+
+- 已完成：提交 `9cbbd28` 已快进到并推送 CodeUp `main`；release `20260724T155000Z-mcp-public-discovery` 已在授权 ECS 验证匿名 discovery、拒绝匿名 tool call 与 edge health。
+
+#### Handoff Note
+
+- A discovery session ID is never an authorization grant. Anonymous allowlist is only `initialize`, `notifications/initialized` and `tools/list`; all other methods fail closed without Bearer authentication. Nginx must set upstream `Host` to `127.0.0.1` to preserve the SDK's loopback DNS-rebinding protection.
 
 ### TASK-030 - Publish the current project to Alibaba Cloud CodeUp
 
