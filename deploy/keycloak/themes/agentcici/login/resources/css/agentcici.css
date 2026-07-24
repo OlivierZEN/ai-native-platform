@@ -1,0 +1,123 @@
+/* AgentCiCi Keycloak login theme. Authentication markup remains Keycloak-owned. */
+:root { color-scheme: dark; }
+
+body#keycloak-bg {
+  min-width: 320px;
+  min-height: 100dvh;
+  margin: 0;
+  color: #e9f2ff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background:
+    radial-gradient(circle at 8% 14%, rgba(202, 222, 255, .8) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 18% 74%, rgba(176, 204, 255, .78) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 31% 31%, rgba(213, 230, 255, .8) 0 .9px, transparent 1.5px),
+    radial-gradient(circle at 52% 18%, rgba(183, 211, 255, .72) 0 1px, transparent 1.7px),
+    radial-gradient(circle at 75% 43%, rgba(221, 234, 255, .72) 0 .8px, transparent 1.4px),
+    radial-gradient(circle at 91% 83%, rgba(166, 198, 255, .72) 0 1px, transparent 1.7px),
+    radial-gradient(ellipse at 50% 45%, rgba(22, 89, 173, .5) 0%, rgba(9, 39, 82, .36) 27%, transparent 57%),
+    linear-gradient(180deg, #020916 0%, #06162d 50%, #07182f 100%);
+  background-size: 190px 190px, 247px 247px, 316px 316px, 408px 408px, 532px 532px, 631px 631px, 100% 100%, 100% 100%;
+  background-position: 0 0, 48px 94px, 102px 24px, 26px 130px, 100px 66px, 14px 38px, 0 0, 0 0;
+}
+
+#keycloak-bg .pf-v5-c-login { min-height: 100dvh; padding: 34px 24px; background: transparent; }
+#keycloak-bg .pf-v5-c-login__container { width: min(420px, 100%); display: flex; flex-direction: column; align-items: center; }
+#keycloak-bg .pf-v5-c-login__header { width: 100%; margin: 0 0 19px; padding: 0; text-align: center; }
+
+#kc-header-wrapper {
+  position: relative;
+  width: 142px;
+  height: 142px;
+  margin: 0 auto;
+  overflow: visible;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  text-indent: -9999px;
+  transform: rotateX(-23deg) rotateY(32deg);
+  transform-style: preserve-3d;
+  border: 1px solid rgba(242, 225, 187, .78);
+  border-radius: 17px;
+  background: radial-gradient(circle at 72% 28%, rgba(255, 255, 255, .94) 0 3px, transparent 4px), linear-gradient(135deg, #fffefb 0%, #f2eadc 58%, #d8c9ad 100%);
+  box-shadow: 0 22px 38px rgba(0, 0, 0, .44), 0 0 34px rgba(72, 130, 229, .28);
+}
+
+#kc-header-wrapper::before,
+#kc-header-wrapper::after {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  border: 1px solid rgba(244, 224, 177, .65);
+  border-radius: 17px;
+  backface-visibility: hidden;
+  color: #0d63c5;
+  font-family: Georgia, "Songti SC", serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-indent: 0;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .7);
+}
+
+#kc-header-wrapper::before { content: "A·C"; transform: rotateY(90deg) translateZ(71px); background: linear-gradient(145deg, #faf7ef, #e1d3ba); }
+#kc-header-wrapper::after { content: "AI"; transform: rotateX(90deg) translateZ(71px); background: linear-gradient(145deg, #fffdf7, #eadcc3); }
+
+#keycloak-bg .pf-v5-c-login__main {
+  width: 100%;
+  overflow: visible;
+  border: 1px solid rgba(132, 174, 234, .76);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(16, 41, 80, .92), rgba(5, 19, 42, .9));
+  box-shadow: 0 20px 54px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(225, 239, 255, .12);
+}
+
+#keycloak-bg .pf-v5-c-login__main-header { display: block; padding: 18px 19px 2px; background: transparent; }
+#keycloak-bg .pf-v5-c-login__main-header-utilities { display: none; }
+#kc-page-title { width: 100%; margin: 0; color: #f1f6ff; font-size: 20px; font-weight: 650; letter-spacing: .02em; text-align: center; }
+#keycloak-bg .pf-v5-c-login__main-body { padding: 12px 18px 17px; background: transparent; }
+#kc-form-wrapper::before { display: block; margin: 0 0 15px; color: #c7d9f4; font-size: 13px; line-height: 1.55; content: "使用 AgentCiCi 统一账号登录。账号密码和多因素验证由统一身份中心安全处理。"; }
+#keycloak-bg .pf-v5-c-form__group { margin-bottom: 13px; }
+#keycloak-bg .pf-v5-c-form__label-text, #keycloak-bg .pf-v5-c-form__label { color: #dce9fb; font-size: 13px; font-weight: 600; }
+#keycloak-bg .pf-v5-c-form-control, #keycloak-bg .pf-v5-c-input-group { background: transparent; }
+
+#keycloak-bg .pf-v5-c-form-control > input {
+  min-height: 42px;
+  color: #f4f8ff;
+  border-color: rgba(141, 178, 235, .65);
+  border-radius: 10px;
+  background: rgba(1, 12, 30, .48);
+  box-shadow: none;
+}
+
+#keycloak-bg .pf-v5-c-input-group .pf-v5-c-form-control > input { border-radius: 10px 0 0 10px; }
+#keycloak-bg .pf-v5-c-input-group__item .pf-v5-c-button { min-height: 42px; color: #dce9fb; border-color: rgba(141, 178, 235, .65); border-radius: 0 10px 10px 0; background: rgba(15, 43, 84, .72); }
+#keycloak-bg .pf-v5-c-form-control > input:focus, #keycloak-bg .pf-v5-c-input-group__item .pf-v5-c-button:focus-visible { border-color: #9bc5ff; outline: 2px solid rgba(129, 185, 255, .66); outline-offset: 2px; box-shadow: none; }
+
+#keycloak-bg #kc-login {
+  min-height: 42px;
+  border: 1px solid rgba(177, 207, 255, .86);
+  border-radius: 10px;
+  color: #f7fbff;
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: .02em;
+  background: linear-gradient(180deg, #5677ad, #3c5988);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 6px 13px rgba(0, 0, 0, .23);
+  transition: border-color 160ms ease-out, background 160ms ease-out, transform 160ms ease-out;
+}
+
+#keycloak-bg #kc-login:hover:not(:disabled) { border-color: #d4e6ff; background: linear-gradient(180deg, #6388c2, #46669c); transform: translateY(-1px); }
+#keycloak-bg #kc-login:focus-visible { outline: 2px solid #b9d7ff; outline-offset: 3px; }
+#keycloak-bg .pf-v5-c-alert, #keycloak-bg .pf-v5-c-helper-text, #keycloak-bg .pf-v5-c-login__main-footer, #keycloak-bg .pf-v5-c-login__main-footer a { color: #d8e7fb; }
+#keycloak-bg .pf-v5-c-alert { border-radius: 10px; }
+#keycloak-bg .pf-v5-c-alert__title, #keycloak-bg .pf-v5-c-helper-text__item-text { color: inherit; }
+
+@media (prefers-reduced-motion: reduce) { #kc-header-wrapper, #keycloak-bg #kc-login { transition: none; } }
+@media (max-width: 540px) {
+  #keycloak-bg .pf-v5-c-login { padding: 24px 16px; }
+  #kc-header-wrapper { width: 122px; height: 122px; }
+  #kc-header-wrapper::before { transform: rotateY(90deg) translateZ(61px); }
+  #kc-header-wrapper::after { transform: rotateX(90deg) translateZ(61px); }
+}

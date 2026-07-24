@@ -28,34 +28,6 @@ board_status: active
 
 ## Active Tasks
 
-### TASK-029 - Deploy Keycloak production IdP and integrate Semattice resource-server authentication
-
-- status: `in_progress`
-- priority: `critical`
-- owner_role: `integration-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-029-keycloak-resource-server-and-production-idp.md`
-- depends_on: `TASK-028`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `Keycloak production deployment, Nginx TLS vhost, dedicated PostgreSQL database/role, Semattice token verifier, principal projection, API/MCP/CLI authentication tests and release evidence`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- Keycloak is healthy at `https://sso.agentcici.com`, with fixed hostname, dedicated database/user, protected management secrets and production reverse-proxy configuration.
-- Semattice validates official OACT and third-party Keycloak service tokens locally through JWKS, rejects missing/invalid/unbound tokens, and never calls Keycloak per request.
-- AgentCiCi mapping/projection integration, production rollout and positive/negative smoke evidence are recorded without storing secrets in the repository.
-
-#### Next Action
-
-- Keycloak 基础设施已于 2026-07-24 部署并完成 OIDC/JWKS/健康/边界验证；下一步实现并本地验证 AgentCiCi 外部身份映射/OIDC BFF/OACT，以及 Semattice 多 issuer JWKS 验签、主体投影和 API/MCP/CLI fail-closed 路径后发布。
-
-#### Handoff Note
-
-- This task operationalizes FEAT-028. It supersedes the previous design-only remote-change restriction for this narrowly authorized identity scope.
-
 ### TASK-026 - Enforce AgentCiCi-controlled company provisioning
 
 - status: `in_progress`
@@ -191,6 +163,34 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-029 - Deploy Keycloak production IdP and integrate Semattice resource-server authentication
+
+- status: `done`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-029-keycloak-resource-server-and-production-idp.md`
+- depends_on: `TASK-028`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `Keycloak production deployment, Nginx TLS vhost, dedicated PostgreSQL database/role, Semattice token verifier, principal projection, API/MCP/CLI authentication tests and release evidence`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Keycloak is healthy at `https://sso.agentcici.com`, with fixed hostname, dedicated database/user, protected management secrets and production reverse-proxy configuration.
+- Semattice validates official OACT and third-party Keycloak service tokens locally through JWKS, rejects missing/invalid/unbound tokens, and never calls Keycloak per request.
+- AgentCiCi mapping/projection integration, production rollout and positive/negative smoke evidence are recorded without storing secrets in the repository.
+
+#### Next Action
+
+- 已完成 Keycloak 基础设施、AgentCiCi OIDC/OACT、Semattice 本地 JWKS 验签、真实公司绑定和 AgentCiCi 登录主题上线。后续官方应用按现有 OACT/JWKS 契约接入，不再改变 IdP 的认证边界。
+
+#### Handoff Note
+
+- This task operationalizes FEAT-028. It supersedes the previous design-only remote-change restriction for this narrowly authorized identity scope.
 
 ### TASK-028 - Specify Keycloak and official-application access architecture
 

@@ -49,6 +49,12 @@ flowchart LR
 
 所有 browser redirect URI 必须精确列出 AgentCiCi HTTPS callback；禁用 implicit、resource owner password 与 wildcard redirect。第三方按“第三方 × 公司 × 环境”创建独立 confidential service-account client，不可复用上述官方 client。
 
+## IdP 登录主题
+
+- 用户已确认使用 AgentCiCi 用户入口的深蓝星空、3D 品牌立方体和居中操作区作为 `agentcici` Realm 的 IdP 登录视觉基线。该主题是 Keycloak 原生 login theme，保留 Keycloak 的 form action、CSRF/session 参数、密码可见性、错误提示、重置密码与 MFA 流程，不调用 AgentCiCi 的旧密码登录接口。
+- 主题源码位于 `deploy/keycloak/themes/agentcici`，不依赖 AgentCiCi 前端的跨域图片或运行时资源；`apply-agentcici-login-theme.sh` 在备份原主题后原子替换该目录、更新 realm theme/locale 并重启 Keycloak 清理 theme cache。
+- 回滚时，以部署输出的 `/opt/keycloak/backups/<timestamp>-before-agentcici-login-theme/agentcici` 恢复 theme 目录，并将 realm `loginTheme` 改回 `keycloak.v2` 后重启 Keycloak。该回滚不触及用户、credential、client 或会话数据库数据。
+
 ## 数据平台实现边界
 
 1. 认证器从单一 HS256 升级为多 issuer：接受 ACS OACT（JWKS、`aud=semattice-api`）以及经显式 client/tenant binding 的第三方 Keycloak access token；旧 HS256 只保留受控兼容窗口，默认不再作为新调用路径。

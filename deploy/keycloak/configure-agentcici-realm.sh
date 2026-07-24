@@ -86,6 +86,17 @@ kcadm update "clients/${agentcici_bff_id}" -r agentcici \
   -s 'directAccessGrantsEnabled=false' \
   -s 'implicitFlowEnabled=false' >/dev/null
 
+# The theme changes only the Keycloak browser surface. It never forwards
+# passwords to AgentCiCi or changes the authorization-code + PKCE flow.
+# A fresh IdP can still be configured before the theme package is deployed.
+if [[ -d /opt/keycloak/current/themes/agentcici ]]; then
+  kcadm update realms/agentcici \
+    -s loginTheme=agentcici \
+    -s internationalizationEnabled=true \
+    -s defaultLocale=zh-CN \
+    -s 'supportedLocales=["zh-CN"]' >/dev/null
+fi
+
 create_client semattice-api '{
   "clientId":"semattice-api",
   "name":"CloudCC Semattice Resource Server",

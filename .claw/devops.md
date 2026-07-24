@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-24T08:48:00Z
-updated_by: integration-agent after Keycloak production baseline deployment
+updated_at: 2026-07-24T12:00:00Z
+updated_by: integration-agent after Keycloak AgentCiCi login-theme rollout
 verification_status: passed
 ---
 
@@ -55,6 +55,8 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 静态说明：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。
 - 当前静态说明 release：`20260723T0658Z`；发布前的 HTML/CSS/JS 备份位于 `/var/www/semattice-backups/20260723T0658Z`。
 - Keycloak 当前 release：`/opt/keycloak/releases/keycloak-26.7.0`，当前链接为 `/opt/keycloak/current`；systemd unit 为 `/etc/systemd/system/keycloak.service`，Nginx vhost 为 `/etc/nginx/conf.d/sso.agentcici.com.conf`。受控安装前备份在 `/root/keycloak-backups/20260724T083102Z-before-keycloak`。
+- Keycloak 登录主题源码为 `deploy/keycloak/themes/agentcici`；在 Keycloak 主机上以 root 运行 `deploy/keycloak/apply-agentcici-login-theme.sh <theme-source>`。脚本会备份现有主题和 realm 的 `loginTheme` 字段、原子替换 `/opt/keycloak/current/themes/agentcici`、设置 `agentcici` Realm 的 theme/中文 locale 并重启 Keycloak。主题只改变浏览器外观，绝不复制或输出密码、Token、client secret 或数据库配置。
+- 当前主题发布备份为 `/opt/keycloak/backups/20260724T115724Z-before-agentcici-login-theme`。恢复时停止 Keycloak、将该备份中的 `agentcici` 目录移回 `themes/`，把 realm `loginTheme` 恢复为备份字段（或内置 `keycloak.v2`），再启动并以本机 `/health/ready` 验证。
 - Keycloak 运行配置在 `/etc/keycloak`，目录为 `root:keycloak 0750`；配置/数据库/bootstrap env 均为 `root:keycloak 0640`，初始管理员凭据文件为 `/root/keycloak-initial-admin.txt`（`0600`）。不得输出或复制这些值；首次管理员登录后应执行受控密码轮换。
 - 业务 Realm 为 `agentcici`；已登记 `agentcici-bff`、`semattice-api`、`official-access-context`、`followup-worker`。本次只创建非秘密 client 注册，后续应用接入再按最小权限读取并安全分发所需 secret。
 - 更新时先安装新的不可变 release 目录，核对 checksum，再原子切换 `/opt/semattice/current` 并重启 `semattice`。不要覆盖或删除旧 release。

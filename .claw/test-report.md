@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-24T08:48:00Z
-updated_by: integration-agent after TASK-029 Keycloak infrastructure verification
-last_run_at: 2026-07-24T08:48:00Z
+updated_at: 2026-07-24T12:00:00Z
+updated_by: integration-agent after TASK-029 login-theme browser acceptance
+last_run_at: 2026-07-24T12:00:00Z
 last_run_status: passed
 ---
 
@@ -16,6 +16,12 @@ last_run_status: passed
 - 本轮 maker 从 fresh schema 执行 migrations 1–13；`schema_migration` checksum 可重复，128 个 object partitions 与五类共 640 个 typed-index partitions 完整。TASK-010–013 的第三轮独立 checker 历史结论继续有效；TASK-015 尚未声明新的独立 checker 结论。
 
 ## 2026-07-24 TASK-029 Keycloak 基础设施验证
+
+## 2026-07-24 TASK-029 AgentCiCi IdP 登录主题验收
+
+- `theme-source`：`bash -n deploy/keycloak/apply-agentcici-login-theme.sh deploy/keycloak/configure-agentcici-realm.sh` 与 `git diff --check` 通过；主题是 Keycloak `keycloak.v2` 的原生 login theme，仅覆盖样式与中文消息，不改 form action、认证代码或 Keycloak session 参数。
+- `production`：在 `115.29.222.70` 将 `agentcici` Realm 设置为 `loginTheme=agentcici`、单一默认 locale `zh-CN`，Keycloak 重启后本机 `/health/ready` 为 `UP`。发布前主题/realm 设置备份为 `/opt/keycloak/backups/20260724T115724Z-before-agentcici-login-theme`；当前 theme 目录未保留 macOS sidecar 文件。
+- `browser-desktop`：真实 Authorization Code + PKCE 入口确认自定义 CSS 被 Keycloak 加载，标题、账号或邮箱、密码、密码可见性和“统一账号登录”均为中文；空表单提交返回 Keycloak 的“无效的用户名或密码。”错误态，表单、焦点、错误提示和星空主题均保持正常。截图：`output/playwright/keycloak-agentcici-login-theme-final.png`、`output/playwright/keycloak-agentcici-login-theme-error.png`（本地验收产物，未提交）。
 
 ## 2026-07-24 TASK-029 应用认证链路发布验证
 
