@@ -17,6 +17,13 @@ last_run_status: passed
 
 ## 2026-07-24 TASK-029 Keycloak 基础设施验证
 
+## 2026-07-24 TASK-029 应用认证链路发布验证
+
+- AgentCiCi 后端 V96 已上线；24 个有效全局账户以 `issuer=https://sso.agentcici.com/realms/agentcici + sub` 映射到 `account_external_identity`，密码哈希迁移不读取或输出明文。`agentcici-bff` 使用 Authorization Code + PKCE；入口 `/auth/oidc/login` 返回 302 到 Keycloak 且设置 `CICI_OIDC_STATE` 安全 Cookie。
+- AgentCiCi `2.8.11` 已启用 10 分钟 RS256 OACT 签名，公开 JWKS 返回 200、一枚 `RSA/sig/RS256` 公钥；签名私钥和 Keycloak client secret 均只在 root 受限配置中保存。
+- Semattice release `20260724T094721Z-keycloak-jwks` 已运行。全量 `GOTOOLCHAIN=go1.26.5 go test ./...`、定向配置/身份/main 测试和 Linux amd64 CGO-free 构建通过。其固定 JWKS verifier 对无 Token 和非受信 issuer 均返回 HTTP 401；使用一次性、无业务数据技术烟测 OACT 调用 `system.capability.list` 返回 HTTP 200 / `succeeded`。验证仅发生本地 JWKS 验签，不调用 Keycloak。
+- 尚未执行真实用户 + 已开通 Semattice 公司租户的正向验收：生产中无 `PROVISIONED` binding，唯一历史 binding 为 `FAILED`，因此不得将技术烟测表述为真实业务租户上线验收。
+
 - ECS `115.29.222.70` 已安装 Keycloak `26.7.0`（Amazon Corretto 21、PostgreSQL 16 独立 `keycloak` 数据库/role、非特权 `keycloak` systemd、loopback `8180/9000`）并通过 `systemctl` 重启后启动。
 - `https://sso.agentcici.com/realms/agentcici/.well-known/openid-configuration` 与 JWKS cert endpoint 均 HTTPS 200，证书校验成功；管理控制台重定向正常。
 - 本机 `/health/live` 与 `/health/ready` 均为 `UP`；公网 `/health`、`/metrics` 均为 404；Nginx `nginx -t` 通过。
