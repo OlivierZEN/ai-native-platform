@@ -24,6 +24,7 @@ last_run_status: passed
 - Semattice release `20260724T094721Z-keycloak-jwks` 已运行。全量 `GOTOOLCHAIN=go1.26.5 go test ./...`、定向配置/身份/main 测试和 Linux amd64 CGO-free 构建通过。其固定 JWKS verifier 对无 Token 和非受信 issuer 均返回 HTTP 401；使用一次性、无业务数据技术烟测 OACT 调用 `system.capability.list` 返回 HTTP 200 / `succeeded`。验证仅发生本地 JWKS 验签，不调用 Keycloak。
 - 初始发布阶段没有 `PROVISIONED` binding，因此技术烟测不作为真实业务租户验收；随后按本报告下一条完成了用户选择公司的受控开户恢复与两端绑定确认。
 - 后续真实公司验收：用户选择 `org2sva14i4udjmi2t4s`。定位到 Semattice 的 AgentCiCi 回调域名 `onechat.agentcici.com` 无法在 ECS 解析，导致 reservation 返回 `FAILED_PRECONDITION`；改为 `https://x.agentcici.com` 后，以既有幂等键安全重试，签名 `POST /internal/v1/company-provisionings` 返回 HTTP 200 / `active`。AgentCiCi binding 与 Semattice `tenant_registry` 均确认 tenant `93ff0c87-a626-529e-b8cf-195825df2488`、公司 `org2sva14i4udjmi2t4s`、状态 `PROVISIONED/active`。
+- 最终真实主体 OACT 验收：该公司有两名有效成员已映射 Keycloak `sub`。在不输出成员身份、密码、Token 或私钥的前提下，以其中一名真实 `sub`、该 tenant UUID、公司 ID、`aud=semattice-api` 和 `scope=system.capability.read` 构造 120 秒 RS256 OACT。公网 Semattice API 返回 HTTP 200，`system.capability.list` 状态为 `succeeded`；无 Token/非受信 issuer 的对照请求仍返回 401。该验证证明真实公司、真实已映射主体、AgentCiCi JWKS 和 Semattice 本地验签绑定一致，且没有逐请求 IdP 回调。
 
 - ECS `115.29.222.70` 已安装 Keycloak `26.7.0`（Amazon Corretto 21、PostgreSQL 16 独立 `keycloak` 数据库/role、非特权 `keycloak` systemd、loopback `8180/9000`）并通过 `systemctl` 重启后启动。
 - `https://sso.agentcici.com/realms/agentcici/.well-known/openid-configuration` 与 JWKS cert endpoint 均 HTTPS 200，证书校验成功；管理控制台重定向正常。
