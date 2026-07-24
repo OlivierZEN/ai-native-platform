@@ -1,13 +1,19 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-24T13:30:08Z
-updated_by: release-agent after CodeUp publication gates
-last_run_at: 2026-07-24T13:30:08Z
+updated_at: 2026-07-24T15:33:52Z
+updated_by: release-agent after Streamable HTTP MCP edge route verification
+last_run_at: 2026-07-24T15:33:52Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-24 TASK-024 Streamable HTTP MCP 线上路由验证
+
+- 变更前公网 `GET /mcp` 落入静态首页（200），`POST /mcp` 由 Nginx 返回 405；服务器 loopback `POST http://127.0.0.1:8080/mcp` 已返回 401，确认问题仅在边缘路由。
+- 已备份 `/etc/nginx/conf.d/semattice.conf` 到 `.backup.20260724T153300Z`，新增精确 `/mcp` 代理、Authorization 透传和禁用 buffering/cache；`nginx -t` 通过后 reload Nginx，并重启 Semattice。
+- 变更后 Nginx 与 Semattice 均为 `active`；公网 `POST https://semattice.agentcici.com/mcp` 返回 401，`/healthz` 返回 200。该验证未使用或输出生产 Token；带有效 Bearer JWT 的真实 MCP 客户端工具发现留给客户端接入验证。
 
 ## 2026-07-24 TASK-030 CodeUp 发布门禁
 

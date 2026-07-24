@@ -7,8 +7,8 @@ owner_role: release-agent
 task_ids: TASK-022
 related_decisions: ADR-007, ADR-008, ADR-012
 related_issues: none
-updated_at: 2026-07-23T07:06:06Z
-updated_by: ai after verified capability matrix deployment
+updated_at: 2026-07-24T15:33:52Z
+updated_by: release-agent after Streamable HTTP MCP edge route deployment
 ---
 
 # FEAT-022 - CloudCC Semattice 单节点 HTTPS 部署
@@ -20,14 +20,14 @@ updated_by: ai after verified capability matrix deployment
 - 静态产品与调用说明首页；
 - 经 Nginx TLS 终止和反向代理的 Capability API；
 - 可下载的 Linux amd64 CLI 二进制；
-- CLI 与 MCP stdio 的准确配置示例。
+- CLI、MCP stdio 与认证 Streamable HTTP MCP 的准确配置示例。
 - 从运行时 Capability Contract 派生的平台能力介绍与完整能力矩阵。
 
 ## 边界
 
 - 本任务只授权目标 ECS，不扩展到其他云资源、生产数据库、Agent CC 或统一运营控制面。
 - PostgreSQL、Go API 只监听 `127.0.0.1`；公网只开放 Nginx 的 80/443。
-- MCP 当前只支持 stdio，由 MCP 客户端在受信主机启动二进制；不宣称远程 HTTP MCP 已实现。
+- MCP 同时支持受信主机的 stdio 和认证 Streamable HTTP；公网 `/mcp` 只经 Nginx 443 反向代理到 loopback 应用，并关闭代理 buffering。
 - CLI 是同一进程内 Capability 入口，不直接充当远程 API 客户端。
 - TLS 私钥、JWT HMAC key 和数据库密码只保存在服务器受限配置中，不进入仓库、日志、网页或项目状态。
 - 当前为单节点验证部署，不提供 HA、备份恢复、自动续证或生产 SLA 承诺。
@@ -41,6 +41,7 @@ Internet
        /                 static usage guide
        /downloads/       Semattice Linux CLI
        /v1/              127.0.0.1:8080 Capability API
+       /mcp              127.0.0.1:8080 authenticated Streamable HTTP MCP
   -> Semattice systemd service
   -> PostgreSQL 16 on 127.0.0.1:5432
 ```
@@ -62,6 +63,7 @@ Internet
 - [x] 域名首页返回 200，并包含 API、CLI、MCP stdio 的可复制示例。
 - [x] 使用五分钟短期 smoke JWT 经公网 HTTPS 调用 `system.capability.list` 成功并发现 49 项能力。
 - [x] 未授权 API 调用返回 401。
+- [x] 公网未认证 `POST /mcp` 返回 401，确认 Nginx `/mcp` 精确代理已到达认证 MCP handler。
 - [x] CLI 与 MCP stdio 在服务器使用短期令牌完成能力发现和真实工具调用验证。
 - [x] 服务重启后 HTTPS 与 edge health 继续成功。
 - [x] 部署命令、服务路径、日志与排障信息写回 `.claw/devops.md`。

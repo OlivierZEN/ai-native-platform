@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -168,7 +169,7 @@ func TestAuthenticatedStreamableHTTPUsesVerifiedIdentity(t *testing.T) {
 		t.Fatalf("verified identity did not bind invocation: %#v", invoker.Audits())
 	}
 
-	request, err := http.NewRequest(http.MethodPost, httpServer.URL, nil)
+	request, err := http.NewRequest(http.MethodPost, httpServer.URL, strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"system_capability_list","arguments":{"request_id":"req-without-token","input":{}}}}`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -184,6 +185,92 @@ func TestAuthenticatedStreamableHTTPUsesVerifiedIdentity(t *testing.T) {
 	}
 }
 
+func TestStreamableHTTPAllowsAnonymousDiscoveryButNotToolInvocation(t *testing.T) {
+	invoker := capability.NewInvoker(capability.NewRegistry(capability.SystemCapabilityDefinitions()), 1)
+	principal := capability.TrustedPrincipal{
+		TenantID:  "22222222-2222-4222-8222-222222222222",
+		CompanyID: "orgbbbbbbbbbbbbbbbbb",
+		Actor:     capability.Actor{ID: "agent-discovery", Scopes: []string{"system.capability.read"}},
+		Source:    "jwt",
+	}
+	verifierCalls := 0
+	handler := mcpserver.NewAuthenticatedStreamableHTTPHandler(invoker, func(_ context.Context, token string) (capability.TrustedPrincipal, time.Time, error) {
+		verifierCalls++
+		if token != "valid-token" {
+			return capability.TrustedPrincipal{}, time.Time{}, errors.New("identity token is invalid")
+		}
+		return principal, time.Now().Add(time.Hour), nil
+	})
+	httpServer := httptest.NewServer(handler)
+	defer httpServer.Close()
+
+	transport := &optionalBearerTransport{}
+	client := mcp.NewClient(&mcp.Implementation{Name: "anonymous-discovery-client", Version: "v1"}, nil)
+	session, err := client.Connect(context.Background(), &mcp.StreamableClientTransport{
+		Endpoint:   httpServer.URL,
+		HTTPClient: &http.Client{Transport: transport},
+	}, nil)
+	if err != nil {
+		t.Fatalf("anonymous initialize: %v", err)
+	}
+	defer session.Close()
+
+	tools, err := session.ListTools(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("anonymous tools/list: %v", err)
+	}
+	if verifierCalls != 0 {
+		t.Fatalf("discovery verifier calls = %d, want 0", verifierCalls)
+	}
+	if len(tools.Tools) == 0 {
+		t.Fatal("anonymous tools/list returned no published tools")
+	}
+	schema, ok := tools.Tools[0].InputSchema.(map[string]any)
+	if !ok {
+		t.Fatalf("tool input schema = %T, want object", tools.Tools[0].InputSchema)
+	}
+	required, ok := schema["required"].([]any)
+	if !ok || len(required) != 2 || required[0] != "request_id" || required[1] != "input" {
+		t.Fatalf("anonymous discovery exposed an unexpected invocation schema: %#v", schema)
+	}
+
+	transport.token = "valid-token"
+	result, err := session.CallTool(context.Background(), &mcp.CallToolParams{
+		Name: "system_capability_list",
+		Arguments: map[string]any{
+			"request_id": "req-after-anonymous-discovery",
+			"input":      map[string]any{},
+		},
+	})
+	if err != nil || result.IsError {
+		t.Fatalf("authenticated tool call after anonymous discovery result=%#v err=%v", result, err)
+	}
+	if verifierCalls == 0 {
+		t.Fatal("authenticated tools/call did not verify its bearer token")
+	}
+	if len(invoker.Audits()) != 1 || invoker.Audits()[0].TenantID != principal.TenantID || invoker.Audits()[0].ActorID != principal.Actor.ID {
+		t.Fatalf("authenticated tool call did not bind the request principal: %#v", invoker.Audits())
+	}
+
+	request, err := http.NewRequest(http.MethodPost, httpServer.URL, strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"system_capability_list","arguments":{"request_id":"req-without-token","input":{}}}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	request.Header.Set("Accept", "application/json, text/event-stream")
+	request.Header.Set("Content-Type", "application/json")
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("anonymous tools/call status=%d, want %d", response.StatusCode, http.StatusUnauthorized)
+	}
+	if len(invoker.Audits()) != 1 {
+		t.Fatalf("anonymous tools/call created audits: %#v", invoker.Audits())
+	}
+}
+
 type bearerTransport struct {
 	token string
 }
@@ -191,6 +278,18 @@ type bearerTransport struct {
 func (transport bearerTransport) RoundTrip(request *http.Request) (*http.Response, error) {
 	clone := request.Clone(request.Context())
 	clone.Header.Set("Authorization", "Bearer "+transport.token)
+	return http.DefaultTransport.RoundTrip(clone)
+}
+
+type optionalBearerTransport struct {
+	token string
+}
+
+func (transport *optionalBearerTransport) RoundTrip(request *http.Request) (*http.Response, error) {
+	clone := request.Clone(request.Context())
+	if transport.token != "" {
+		clone.Header.Set("Authorization", "Bearer "+transport.token)
+	}
 	return http.DefaultTransport.RoundTrip(clone)
 }
 

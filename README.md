@@ -8,7 +8,7 @@
 
 In all requirements, discussions, design documents, and delivery notes for this project, **“数据平台” (data platform)** means this system only: **CloudCC Semattice (语义格)**, whose repository is `/Volumes/AISpace/codehouse/AI-Native-Platform`. Agent CC / AgentCiCi and CloudCC CRM are external applications or integration parties; neither may be called “数据平台”. Historical protocol names such as `Native Platform` and `ai-native-platform` continue to refer to this same system as defined by ADR-012.
 
-The Phase 0 Go implementation is a headless agent platform: every published atomic capability is projected from one registry/invoker into a functional HTTP API, authenticated MCP Tool, and non-interactive JSON CLI. The current core includes:
+The Phase 0 Go implementation is a headless agent platform: every published atomic capability is projected from one registry/invoker into a functional HTTP API, MCP Tool, and non-interactive JSON CLI. The current core includes:
 
 - Go 1.26.5, structured `slog`, env-only configuration, pgxpool, and checksum-protected explicit migrations.
 - PostgreSQL 16 control tables, 128 tenant buckets, FORCE RLS, typed transaction-scoped TenantContext, and same-tenant relation constraints.
@@ -17,7 +17,7 @@ The Phase 0 Go implementation is a headless agent platform: every published atom
 - Metadata-driven business-record create/get/update/delete/query, optimistic revisions, soft delete, durable write idempotency, relation edges, and bucket-partitioned typed indexes for bounded Agent queries.
 - Changeset validation/simulation/approval/activation/cancel/status/restricted rollback, candidate-version write projection, resumable backfill and coverage gates, unique/reference validation, purge/tombstone, and versioned JSONB/field/index governance limits.
 
-With database roles configured, the registry currently publishes 49 atomic capabilities. Each is projected to the functional API, authenticated MCP Tool, and non-interactive JSON CLI from the same definition. MCP is available both as local `mcp stdio` and, when the service is running, as an authenticated Streamable HTTP endpoint at `/mcp`; the existing capability API remains under `/v1/capabilities/*`.
+With database roles configured, the registry currently publishes 49 atomic capabilities. Each is projected to the functional API, MCP Tool, and non-interactive JSON CLI from the same definition. MCP is available both as local `mcp stdio` and, when the service is running, as a Streamable HTTP endpoint at `/mcp`: `initialize` and `tools/list` are public discovery operations while every tool call requires a verified Bearer JWT. The existing capability API remains under `/v1/capabilities/*`.
 
 Local verification uses an isolated PostgreSQL container bound only to `127.0.0.1:55432`:
 

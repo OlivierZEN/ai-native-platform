@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-24T13:30:08Z
-updated_by: release-agent after initial CodeUp publication
+updated_at: 2026-07-24T15:33:52Z
+updated_by: release-agent after Streamable HTTP MCP edge route deployment
 verification_status: passed
 ---
 
@@ -53,6 +53,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - AgentCiCi 受控开户回调固定为 `AI_NATIVE_AGENTCICI_BASE_URL=https://x.agentcici.com`。不得使用当前无法解析的历史 `onechat.agentcici.com`；修改该值后须重启 `semattice` 并执行签名 reservation/complete smoke。
 - systemd unit：`/etc/systemd/system/semattice.service`；仓库模板为 `deploy/semattice/semattice.service`。
 - Nginx server block：`/etc/nginx/conf.d/semattice.conf`；仓库模板为 `deploy/semattice/nginx.conf`。
+- Streamable HTTP MCP：Nginx `location = /mcp` 代理至 `127.0.0.1:8080`，必须透传 `Authorization` 且关闭 `proxy_buffering`、`proxy_request_buffering`、`proxy_cache`；当前远程配置备份为 `/etc/nginx/conf.d/semattice.conf.backup.20260724T153300Z`。
 - 静态说明：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。
 - 当前静态说明 release：`20260723T0658Z`；发布前的 HTML/CSS/JS 备份位于 `/var/www/semattice-backups/20260723T0658Z`。
 - Keycloak 当前 release：`/opt/keycloak/releases/keycloak-26.7.0`，当前链接为 `/opt/keycloak/current`；systemd unit 为 `/etc/systemd/system/keycloak.service`，Nginx vhost 为 `/etc/nginx/conf.d/sso.agentcici.com.conf`。受控安装前备份在 `/root/keycloak-backups/20260724T083102Z-before-keycloak`。
@@ -82,7 +83,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - HTTP：`GET http://semattice.agentcici.com/`，预期 301 到 HTTPS。
 - API 未鉴权：调用 Capability invoke，预期 401。
 - 应用真实检查：使用统一身份服务签发的短期 JWT 调用 `POST /v1/capabilities/system.capability.list/invoke`，预期 `status=succeeded`。
-- MCP 是 stdio，不存在远程 HTTP health endpoint；通过受信主机启动 `/usr/local/bin/semattice mcp stdio` 并执行 initialize/tools/list/tool call 验证。
+- MCP Streamable HTTP：未认证 `POST https://semattice.agentcici.com/mcp` 预期 401；使用有效短期 Bearer JWT 的客户端执行 initialize、tools/list、tool call 验证。MCP stdio 仍可通过受信主机启动 `/usr/local/bin/semattice mcp stdio` 使用。
 - Keycloak：`GET https://sso.agentcici.com/realms/agentcici/.well-known/openid-configuration` 与 `/protocol/openid-connect/certs` 均应 HTTPS 200；公网 `/health` 和 `/metrics` 必须为 404，本机 `/health/ready` 必须为 UP。
 - 官方 OACT：Semattice 环境变量 `AI_NATIVE_IDENTITY_TRUSTED_ISSUERS` 固定为 `official_access|https://x.agentcici.com|semattice-api|https://x.agentcici.com/.well-known/agentcici-oact-jwks.json`；不得接受 Token 自带的 issuer、audience 或 JWKS URL。JWKS 缓存 5 分钟、未知 `kid` 仅刷新一次。
 

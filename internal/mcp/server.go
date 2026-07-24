@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/OlivierZEN/ai-native-platform/internal/capability"
@@ -30,11 +32,11 @@ type toolInput struct {
 }
 
 func NewServer(invoker *capability.Invoker) *mcp.Server {
-	return newServer(invoker, nil)
+	return newServer(invoker, nil, false)
 }
 
 func NewServerAs(invoker *capability.Invoker, principal capability.TrustedPrincipal) *mcp.Server {
-	return newServer(invoker, &principal)
+	return newServer(invoker, &principal, false)
 }
 
 // NewAuthenticatedStreamableHTTPHandler exposes the MCP Streamable HTTP
@@ -46,23 +48,18 @@ func NewAuthenticatedStreamableHTTPHandler(invoker *capability.Invoker, verify B
 		panic("authenticated streamable MCP handler requires an identity verifier")
 	}
 
-	streamable := mcp.NewStreamableHTTPHandler(func(request *http.Request) *mcp.Server {
-		tokenInfo := auth.TokenInfoFromContext(request.Context())
-		if tokenInfo == nil {
-			return nil
-		}
-		principal, ok := tokenInfo.Extra[trustedPrincipalTokenInfoKey].(capability.TrustedPrincipal)
-		if !ok {
-			return nil
-		}
-		return NewServerAs(invoker, principal)
+	streamable := mcp.NewStreamableHTTPHandler(func(*http.Request) *mcp.Server {
+		// An unauthenticated session is permitted for MCP discovery only. Tool
+		// handlers independently require a verified principal from RequestExtra,
+		// so possession of a discovery session ID grants no invocation rights.
+		return newServer(invoker, nil, true)
 	}, &mcp.StreamableHTTPOptions{SessionTimeout: 5 * time.Minute})
 
 	// Streamable HTTP must reject cross-origin browser requests. The Go standard
 	// library guard validates Origin/Fetch Metadata while the SDK additionally
 	// rejects localhost DNS rebinding through an invalid Host header.
 	protected := http.NewCrossOriginProtection().Handler(streamable)
-	return auth.RequireBearerToken(func(ctx context.Context, rawToken string, _ *http.Request) (*auth.TokenInfo, error) {
+	return methodScopedBearer(protected, func(ctx context.Context, rawToken string, _ *http.Request) (*auth.TokenInfo, error) {
 		principal, expiresAt, err := verify(ctx, rawToken)
 		if err != nil {
 			return nil, fmt.Errorf("%w: %v", auth.ErrInvalidToken, err)
@@ -76,23 +73,87 @@ func NewAuthenticatedStreamableHTTPHandler(invoker *capability.Invoker, verify B
 			UserID:     principal.TenantID + "\x00" + principal.Actor.ID,
 			Extra:      map[string]any{trustedPrincipalTokenInfoKey: principal},
 		}, nil
-	}, nil)(protected)
+	})
 }
 
-func newServer(invoker *capability.Invoker, principal *capability.TrustedPrincipal) *mcp.Server {
+// methodScopedBearer permits only the protocol discovery calls without a
+// bearer token. Any other MCP method, including tools/call, must carry a token
+// and is verified on that individual HTTP request. If a caller supplies a
+// token for discovery it is still verified, preserving authenticated clients'
+// session-binding protections.
+func methodScopedBearer(next http.Handler, verify auth.TokenVerifier) http.Handler {
+	authenticated := auth.RequireBearerToken(verify, nil)(next)
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		required, err := bearerRequiredForMCPRequest(request)
+		if err != nil {
+			http.Error(writer, err.Error(), http.StatusRequestEntityTooLarge)
+			return
+		}
+		if required || strings.TrimSpace(request.Header.Get("Authorization")) != "" {
+			authenticated.ServeHTTP(writer, request)
+			return
+		}
+		next.ServeHTTP(writer, request)
+	})
+}
+
+// bearerRequiredForMCPRequest allowlists only metadata discovery. It restores
+// the body after inspecting it because the Streamable HTTP SDK consumes the
+// same JSON-RPC request body later.
+func bearerRequiredForMCPRequest(request *http.Request) (bool, error) {
+	if request.Method != http.MethodPost {
+		return true, nil
+	}
+	body, err := io.ReadAll(io.LimitReader(request.Body, (1<<20)+1))
+	if err != nil {
+		return false, err
+	}
+	if len(body) > 1<<20 {
+		return false, fmt.Errorf("MCP request body exceeds 1 MiB")
+	}
+	_ = request.Body.Close()
+	request.Body = io.NopCloser(bytes.NewReader(body))
+
+	var batch []struct {
+		Method string `json:"method"`
+	}
+	if err := json.Unmarshal(body, &batch); err == nil {
+		for _, message := range batch {
+			if !anonymousDiscoveryMethod(message.Method) {
+				return true, nil
+			}
+		}
+		return false, nil
+	}
+	var message struct {
+		Method string `json:"method"`
+	}
+	if err := json.Unmarshal(body, &message); err != nil {
+		// Fail closed: an unparseable request must not accidentally be treated as
+		// a discovery request.
+		return true, nil
+	}
+	return !anonymousDiscoveryMethod(message.Method), nil
+}
+
+func anonymousDiscoveryMethod(method string) bool {
+	return method == "initialize" || method == "notifications/initialized" || method == "tools/list"
+}
+
+func newServer(invoker *capability.Invoker, principal *capability.TrustedPrincipal, requireRequestPrincipal bool) *mcp.Server {
 	server := mcp.NewServer(&mcp.Implementation{Name: "ai-native-platform", Version: "v0.1.0"}, nil)
 	for _, definition := range invoker.RegistryDefinitions() {
-		addCapabilityTool(server, invoker, definition, principal)
+		addCapabilityTool(server, invoker, definition, principal, requireRequestPrincipal)
 	}
 	return server
 }
 
-func addCapabilityTool(server *mcp.Server, invoker *capability.Invoker, definition capability.Definition, principal *capability.TrustedPrincipal) {
+func addCapabilityTool(server *mcp.Server, invoker *capability.Invoker, definition capability.Definition, principal *capability.TrustedPrincipal, requireRequestPrincipal bool) {
 	descriptor := definition.Descriptor
 	server.AddTool(&mcp.Tool{
 		Name:         capability.MCPToolName(descriptor.ID),
 		Description:  descriptor.Description,
-		InputSchema:  invocationInputSchema(descriptor.InputSchema, principal != nil),
+		InputSchema:  invocationInputSchema(descriptor.InputSchema, principal != nil || requireRequestPrincipal),
 		OutputSchema: invocationOutputSchema(descriptor.OutputSchema),
 	}, func(ctx context.Context, request *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 		input, response := decodeToolInput(descriptor.ID, request.Params.Arguments)
@@ -112,8 +173,16 @@ func addCapabilityTool(server *mcp.Server, invoker *capability.Invoker, definiti
 			IdempotencyKey: input.IdempotencyKey,
 			Input:          rawInput,
 		}
-		if principal != nil {
-			bound, stableErr := capability.BindTrustedPrincipal(invocation, *principal)
+		verifiedPrincipal := principal
+		if requireRequestPrincipal {
+			var stableErr *capability.StableError
+			verifiedPrincipal, stableErr = principalFromToolRequest(request)
+			if stableErr != nil {
+				return responseResult(failedToolResponse(descriptor.ID, input.RequestID, stableErr.Code, stableErr.Message)), nil
+			}
+		}
+		if verifiedPrincipal != nil {
+			bound, stableErr := capability.BindTrustedPrincipal(invocation, *verifiedPrincipal)
 			if stableErr != nil {
 				return responseResult(failedToolResponse(descriptor.ID, input.RequestID, stableErr.Code, stableErr.Message)), nil
 			}
@@ -123,6 +192,17 @@ func addCapabilityTool(server *mcp.Server, invoker *capability.Invoker, definiti
 		result := invoker.Invoke(ctx, invocation)
 		return responseResult(result), nil
 	})
+}
+
+func principalFromToolRequest(request *mcp.CallToolRequest) (*capability.TrustedPrincipal, *capability.StableError) {
+	if request == nil || request.Extra == nil || request.Extra.TokenInfo == nil {
+		return nil, &capability.StableError{Code: capability.CodeUnauthenticated, Message: "valid bearer authentication is required for tool calls"}
+	}
+	principal, ok := request.Extra.TokenInfo.Extra[trustedPrincipalTokenInfoKey].(capability.TrustedPrincipal)
+	if !ok {
+		return nil, &capability.StableError{Code: capability.CodeUnauthenticated, Message: "verified bearer identity is incomplete"}
+	}
+	return &principal, nil
 }
 
 func decodeToolInput(capabilityID string, raw json.RawMessage) (toolInput, *capability.Response) {

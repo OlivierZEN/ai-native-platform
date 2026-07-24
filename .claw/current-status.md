@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-24T13:30:08Z
-updated_by: release-agent after initial CodeUp publication
+updated_at: 2026-07-24T15:33:52Z
+updated_by: release-agent after Streamable HTTP MCP edge route verification
 phase: cross-product-identity-live
 active_task: "TASK-027"
 next_action: "Keycloak identity and its AgentCiCi login theme are live; continue the independently authorized usage-metering task without widening production scope."
@@ -49,7 +49,7 @@ read_next:
 
 - TASK-026：受控开户代码、HMAC/Nginx 路由和 Linux 制品已完成本地全量、race、vet、module 与构建验证。ECS 试发布确认 AgentCiCi reservation/completion 双向 HMAC 均可达，但生产 schema 仍停在 migration 1–12，缺少 migration 13 的 `company_id` 列导致本地 projection 返回 500；新制品、Nginx 与环境已原子回滚至上一健康 release。运行配置不保存 migrator URL，必须由专用 `semattice_migrator` 显式执行 migration 后再发布。
 - TASK-023 已完成：首页新增平台能力介绍、7 域能力矩阵和全部 49 项原子 Capability 的 ID、用途、scope 与风险等级；矩阵逐项来自已部署 Runtime Registry，桌面/移动布局和展开交互已通过公网浏览器验证。
-- TASK-024 已完成（仅当前工作树、本地验证）：`serve` 进程新增认证的 Streamable HTTP MCP `/mcp` endpoint。每个请求走既有 Bearer JWT 校验，session 绑定 `tenant_id + subject` 并有 Origin/DNS-rebinding 防护；MCP SDK 客户端真实调用和无 token 拒绝均已测试。授权 ECS 上当前制品尚未包含该端点，不能据此宣称已上线。
+- TASK-024 已完成：`serve` 进程提供认证的 Streamable HTTP MCP `/mcp` endpoint。每个请求走既有 Bearer JWT 校验，session 绑定 `tenant_id + subject` 并有 Origin/DNS-rebinding 防护；MCP SDK 客户端真实调用和无 token 拒绝均已测试。2026-07-24 已在授权 ECS 增加无缓冲 Nginx `/mcp` 代理并重启服务；公网未认证 POST 返回 401，证明端点已上线。真实工具发现仍要求客户端注入有效短期 Bearer JWT。
 - TASK-025 已完成（仅当前工作树、本地验证）：统一运营开户的全局身份改为 `company_id`；migration 13 无损重命名 `tenant_registry` 列和约束，旧 `org_id` 请求/JWT claim fail closed。租户内 RBAC/共享 `organization_id` 组织树未改动，既有 20 位编号值也未重键。授权 ECS 仍运行 migration 1–12 的旧制品，尚未升级。
 - Checker 轮次：第一轮发现 control/runtime 单 pool 与许可清单问题；第二轮发现 control 多余读取 `shard_registry`；两轮问题均已修复。第三轮从 fresh PostgreSQL 16.13 空库执行 migrations 1/2/3 后明确 `PASS`。
 

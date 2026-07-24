@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-24T13:30:08Z
-updated_by: release-agent after initial CodeUp publication
+updated_at: 2026-07-24T15:49:11Z
+updated_by: backend-agent after starting public MCP discovery delivery
 board_status: active
 ---
 
@@ -27,6 +27,34 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-031 - Permit public MCP discovery while authenticating tool invocation
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-024-streamable-http-mcp.md`
+- depends_on: `TASK-024, TASK-029`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `internal/mcp Streamable HTTP handler, MCP tests, endpoint contract documentation, production release evidence`
+- branch: `agent/go-capability-platform-baseline`
+- pr_url: `n/a`
+
+#### Done When
+
+- Anonymous MCP clients can initialize and list the published tool descriptors without a token.
+- Every tool invocation is authenticated and derives tenant, subject and scopes only from the JWT verified for that request.
+- Unit/full regression, main-branch merge and production smoke evidence are recorded.
+
+#### Next Action
+
+- Run repository validation, commit the handler and contract changes, merge to CodeUp `main`, then deploy the signed release artifact to the authorized ECS.
+
+#### Handoff Note
+
+- A discovery session ID is never an authorization grant. Keep the anonymous allowlist limited to `initialize`, `notifications/initialized` and `tools/list`; all other methods fail closed without Bearer authentication.
 
 ### TASK-026 - Enforce AgentCiCi-controlled company provisioning
 
@@ -296,7 +324,7 @@ board_status: active
 
 #### Next Action
 
-- 已完成本地验证。远程 ECS 部署、Nginx streaming 代理和 MCP OAuth resource metadata 需要独立授权和部署任务。
+- 2026-07-24 已在授权 ECS 配置并验证 Nginx Streamable HTTP `/mcp` 代理；公网未认证 POST 返回 401。后续只需由支持 Bearer header 的客户端携带有效短期 JWT 做真实工具发现；MCP OAuth resource metadata 仍需独立任务。
 
 #### Handoff Note
 
