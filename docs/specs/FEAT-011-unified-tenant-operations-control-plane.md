@@ -275,12 +275,12 @@ Agent CC 和 Native 开通是对等、独立、可按任意顺序发生的 opera
 - 外部接入项：运营控制面的产品无关 v2 接口改造和 Agent CC 存量 UUID 回填属于其他仓库；本仓库没有越权写入。它们是部署前集成任务，不影响 Native v1 port 和投影代码的完成状态。
 - 授权边界：允许本机专用 Docker PostgreSQL PoC 与当前仓库 adapter/identity/TenantContext 源码和测试；不允许生产或共享远程系统访问、真实租户数据、其他仓库写入、部署或远端发布。
 
-### Agent CC 现状差异（只读盘点）
+### Agent CC 身份契约状态
 
-2026-07-19 对 Agent CC 仓库做了只读核对，未修改任何文件：
+2026-07-24 已在 Agent CC 实施 V94 顶层身份统一：
 
-- 当前开户入口为 `POST /platform/tenants`，服务通过 `PlatformTenantLifecycleService.createTenant` 调用 `AuthService.createOrg`；返回 `orgId/orgName/status/ownerMemberId/ownerAccountId/reusedExistingAccount`。
-- 当前新 `company_id` 约束为 `^org[a-z0-9]{17}$`，共 20 位；现有契约尚无全局 UUID `tenant_id`、`product_code`、`product_revision`、`operation_id` 或 Native 产品 adapter。
+- 当前开户入口为 `POST /platform/tenants`，服务通过 `PlatformTenantLifecycleService.createTenant` 调用 `AuthService.createCompany`；返回 `companyId/companyName/status/ownerMemberId/ownerAccountId/reusedExistingAccount`。
+- 顶层身份字段、JWT claim 和开发态 Header 已统一为 `company_id` / `companyId` / `X-Company-Id`。旧 `org_id` / `orgId` 输入不兼容且 fail closed；现有编号值继续采用 `^org[a-z0-9]{17}$` 的 20 位格式，不重键。
 - 当前成员 JWT 以 HMAC 签名，含 `sub/company_id/member_id/account_id/roles/iat/exp`；平台 token 使用 `typ=platform/platform_account_id/roles` 且没有租户。当前实现未提供 Native 所需的独立 issuer/audience/global `tenant_id` 约束。
 - 当前 TenantContext 从 Bearer JWT 提取 `company_id/member_id/roles`，部分部署可允许 header context。Native 不得继承“普通 header 即受信上下文”的模式。
 
