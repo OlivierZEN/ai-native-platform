@@ -49,12 +49,12 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 ## 部署与发布
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- 当前 release 目录：`/opt/semattice/releases/20260725T024148Z-console`；当前链接：`/opt/semattice/current`。上一可回滚应用 release `20260724T230626Z-console` 仍存在。
+- 当前 release 目录：`/opt/semattice/releases/20260725T025439Z-console`；当前链接：`/opt/semattice/current`。上一可回滚应用 release `20260725T025333Z-console` 仍存在。
 - AgentCiCi 受控开户回调固定为 `AI_NATIVE_AGENTCICI_BASE_URL=https://x.agentcici.com`。不得使用当前无法解析的历史 `onechat.agentcici.com`；修改该值后须重启 `semattice` 并执行签名 reservation/complete smoke。
 - systemd unit：`/etc/systemd/system/semattice.service`；仓库模板为 `deploy/semattice/semattice.service`。
 - Nginx server block：`/etc/nginx/conf.d/semattice.conf`；仓库模板为 `deploy/semattice/nginx.conf`。
 - Streamable HTTP MCP：Nginx `location = /mcp` 代理至 `127.0.0.1:8080`，必须透传 `Authorization`、将上游 `Host` 固定为 `127.0.0.1`，并关闭 `proxy_buffering`、`proxy_request_buffering`、`proxy_cache`。这使 SDK loopback DNS-rebinding 防护继续有效；当前远程配置备份为 `/etc/nginx/conf.d/semattice.conf.backup.20260724T153300Z` 与 `.backup.20260724T155400Z-mcp-host`。
-- 静态说明与控制台：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。本次发布前静态站备份位于 `/var/www/semattice-backups/20260725T024148Z-console`。
+- 静态说明与控制台：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。控制台根页和静态资产均以 `Cache-Control: no-store` 发送，HTML 通过带版本的 CSS/JS URL 防止客户端复用旧样式。本次发布前静态站备份位于 `/var/www/semattice-backups/20260725T025439Z-console`。
 - 管理中心：`https://semattice.agentcici.com/console/`。`GET /console/session` 无 Cookie 返回 200 的公开 `authenticated:false` 状态；所有 `/console/api/*` 必须为短时签名 Cookie，匿名为 401。`POST /console/session` 仅接收 OACT Bearer，伪造/过期 Token 为 401。顶栏产品菜单回到 `https://x.agentcici.com/admin`，不传递或持久化 OACT。运行环境必须配置独立的 `AI_NATIVE_CONSOLE_SESSION_HMAC_KEY`，不得输出其值。
 - Keycloak 当前 release：`/opt/keycloak/releases/keycloak-26.7.0`，当前链接为 `/opt/keycloak/current`；systemd unit 为 `/etc/systemd/system/keycloak.service`，Nginx vhost 为 `/etc/nginx/conf.d/sso.agentcici.com.conf`。受控安装前备份在 `/root/keycloak-backups/20260724T083102Z-before-keycloak`。
 - Keycloak 登录主题源码为 `deploy/keycloak/themes/agentcici`；在 Keycloak 主机上以 root 运行 `deploy/keycloak/apply-agentcici-login-theme.sh <theme-source>`。脚本会备份现有主题和 realm 的 `loginTheme` 字段、原子替换 `/opt/keycloak/current/themes/agentcici`、设置 `agentcici` Realm 的 theme/中文 locale 并重启 Keycloak。主题只改变浏览器外观，绝不复制或输出密码、Token、client secret 或数据库配置。

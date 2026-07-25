@@ -19,6 +19,7 @@ last_run_status: passed
 - 生产 smoke：`/console/` 标题为“Semattice 管理中心”；`GET /console/session` 无 Cookie 为 200 `authenticated:false`；无 Cookie 的 `/console/api/overview` 为 401；伪造 OACT 的 `POST /console/session` 为 401；`/healthz` 为 200，`semattice` active，`nginx -t` 成功。真实浏览器无登录入口为 `0 errors / 0 warnings`。
 - 回滚证据：上一应用 release `20260724T155000Z-mcp-public-discovery`、静态站备份 `/var/www/semattice-backups/20260724T230626Z-console` 与 Nginx 备份 `/etc/nginx/conf.d/semattice.conf.backup.20260724T230626Z-console` 均存在。未读取、打印或持久化 OACT、私钥或其他 secret。
 - `product-switch` 热修复：`node --check deploy/semattice/www/console/console.js`、`GOTOOLCHAIN=go1.26.5 go test ./...`、`go vet ./...`、`go mod verify` 和 `git diff --check` 通过。控制台顶栏可展开当前 Semattice / AgentCiCi 管理端菜单，回跳只使用固定 `https://x.agentcici.com/admin`。release `/opt/semattice/releases/20260725T024148Z-console` 已上线；`semattice` active、`nginx -t` 与 `/healthz` 通过，匿名 `/console/api/overview` 为预期 401，公网静态页包含两端菜单文本与回跳地址。
+- `asset-cache` 修复：控制台根页和静态资源均返回 `Cache-Control: no-store`，HTML 将 CSS/JS 引用更新为 `?v=20260725-03`。发布后的浏览器在无真实会话的安全门页中临时显示壳体以验证纯视觉结构，触发器为 96×30px，展开菜单为 224×116px，菜单项和 14px SVG 图标均正常；未伪造会话、Token 或治理数据。当前线上 release 为 `/opt/semattice/releases/20260725T025439Z-console`，控制台根页为 200、匿名治理 API 为 401、服务 active、Nginx 校验通过。
 
 ## 2026-07-24 TASK-031 公开 MCP 发现与认证调用发布验证
 
