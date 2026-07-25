@@ -18,6 +18,7 @@ last_run_status: passed
 - Linux amd64 静态构建、`bash -n scripts/release-console.sh` 通过；发布时脚本在服务器校验上传二进制 SHA-256、`nginx -t` 和 `/healthz`，并原子切换至 `/opt/semattice/releases/20260724T230626Z-console`。
 - 生产 smoke：`/console/` 标题为“Semattice 管理中心”；`GET /console/session` 无 Cookie 为 200 `authenticated:false`；无 Cookie 的 `/console/api/overview` 为 401；伪造 OACT 的 `POST /console/session` 为 401；`/healthz` 为 200，`semattice` active，`nginx -t` 成功。真实浏览器无登录入口为 `0 errors / 0 warnings`。
 - 回滚证据：上一应用 release `20260724T155000Z-mcp-public-discovery`、静态站备份 `/var/www/semattice-backups/20260724T230626Z-console` 与 Nginx 备份 `/etc/nginx/conf.d/semattice.conf.backup.20260724T230626Z-console` 均存在。未读取、打印或持久化 OACT、私钥或其他 secret。
+- `product-switch` 热修复：`node --check deploy/semattice/www/console/console.js`、`GOTOOLCHAIN=go1.26.5 go test ./...`、`go vet ./...`、`go mod verify` 和 `git diff --check` 通过。控制台顶栏可展开当前 Semattice / AgentCiCi 管理端菜单，回跳只使用固定 `https://x.agentcici.com/admin`。release `/opt/semattice/releases/20260725T024148Z-console` 已上线；`semattice` active、`nginx -t` 与 `/healthz` 通过，匿名 `/console/api/overview` 为预期 401，公网静态页包含两端菜单文本与回跳地址。
 
 ## 2026-07-24 TASK-031 公开 MCP 发现与认证调用发布验证
 

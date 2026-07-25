@@ -186,7 +186,7 @@ board_status: active
 
 #### Next Action
 
-- 已完成：使用用户提供的授权 ECS 身份发布 `/opt/semattice/releases/20260724T230626Z-console`。Nginx 与服务均 active，匿名会话状态为 200、治理 API 无 Cookie 为 401、伪造 OACT 为 401，真实浏览器无登录入口为 0 errors / 0 warnings；旧应用 release、静态站和 Nginx 配置备份均已保留。
+- 已完成：使用用户提供的授权 ECS 身份发布 `/opt/semattice/releases/20260725T024148Z-console`。顶栏产品菜单可返回 AgentCiCi 管理端且不传递 OACT；Nginx 与服务均 active，匿名会话状态为 200、治理 API 无 Cookie 为 401，静态页与回跳地址均已 smoke；旧应用 release、静态站和 Nginx 配置备份均已保留。
 
 #### Handoff Note
 
