@@ -14,6 +14,7 @@ import (
 	"github.com/OlivierZEN/ai-native-platform/internal/capability"
 	"github.com/OlivierZEN/ai-native-platform/internal/cli"
 	"github.com/OlivierZEN/ai-native-platform/internal/config"
+	consoleapp "github.com/OlivierZEN/ai-native-platform/internal/console"
 	"github.com/OlivierZEN/ai-native-platform/internal/database"
 	"github.com/OlivierZEN/ai-native-platform/internal/database/migrate"
 	"github.com/OlivierZEN/ai-native-platform/internal/identity"
@@ -127,12 +128,16 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		if !cfg.Provisioning.Enabled() {
 			return writeStartupFailure(out, capability.CodeValidationFailed, "AgentCiCi-controlled provisioning configuration is required")
 		}
+		if len(cfg.ConsoleSessionKey) < 32 {
+			return writeStartupFailure(out, capability.CodeValidationFailed, "console session configuration is required")
+		}
 		routes := http.NewServeMux()
 		if tenantService == nil {
 			return writeStartupFailure(out, capability.CodeValidationFailed, "controlled provisioning requires application database roles")
 		}
 		routes.Handle("/internal/v1/company-provisionings", internalprovisioning.NewHandler(tenantService, cfg.Provisioning))
 		routes.Handle("/mcp", mcpserver.NewAuthenticatedStreamableHTTPHandler(invoker, verifier.VerifyWithExpiration))
+		routes.Handle("/console/", consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey))
 		routes.Handle("/", api.NewAuthenticatedHandler(invoker, verifier))
 		return serve(ctx, args[1:], routes, cfg.HTTPListen, logger, out)
 	}

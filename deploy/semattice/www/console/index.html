@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Semattice 企业管理中心">
+  <title>Semattice 管理中心</title>
+  <link rel="icon" href="/console/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/console/console.css">
+  <script defer src="/console/console.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#console-main">跳至主要内容</a>
+  <div class="console-shell" id="console-shell" hidden>
+    <aside class="sidebar" aria-label="管理中心导航">
+      <a class="brand" href="#overview" aria-label="Semattice 管理中心首页"><span class="brand-mark">S</span><span>Semattice <b>管理中心</b></span></a>
+      <nav class="primary-nav" aria-label="主要导航">
+        <button data-page="overview" class="nav-item" aria-current="page"><span>⌂</span>概览</button>
+        <p>身份与组织</p>
+        <button data-page="members" class="nav-item"><span>◉</span>成员与角色</button>
+        <button data-page="organizations" class="nav-item"><span>⌘</span>组织架构</button>
+        <p>语义治理</p>
+        <button data-page="objects" class="nav-item"><span>▦</span>对象与字段</button>
+        <p>运行与安全</p>
+        <button data-page="audit" class="nav-item"><span>◷</span>运行审计</button>
+        <button data-page="settings" class="nav-item"><span>⚙</span>系统配置</button>
+      </nav>
+      <div class="sidebar-foot"><span class="dot"></span>演示环境<br><small>模拟治理数据</small></div>
+    </aside>
+    <section class="workspace">
+      <header class="topbar"><div><span class="crumb">企业管理 /</span> <strong id="topbar-title">概览</strong></div><div class="topbar-right"><div class="product-switch" id="product-switch"><button id="product-switch-trigger" class="product-switch__trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="product-switch-menu"><span>Semattice</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></button><div id="product-switch-menu" class="product-switch__menu" role="menu" aria-label="切换管理端" hidden><div class="product-switch__item is-current"><span><strong>Semattice 管理端</strong><small>当前管理端</small></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.5 8 2.8 2.8 6.2-6.2"/></svg></div><button id="return-agentcici" class="product-switch__item" type="button" role="menuitem"><span><strong>AgentCiCi 管理端</strong><small>组织、应用与运行配置</small></span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5"/></svg></button></div></div><span class="environment"><i></i>演示环境</span><span id="session-subject" class="subject"></span><button id="logout" class="text-button">退出</button></div></header>
+      <main id="console-main" tabindex="-1"><div id="page-content" class="page-content" aria-live="polite"></div></main>
+    </section>
+  </div>
+  <main class="gate" id="gate" aria-live="polite"><div class="gate-card"><span class="brand-mark">S</span><p class="eyebrow">SEMATTICE / ADMINISTRATION</p><h1>企业管理中心</h1><p>此控制台仅向具备当前管理权限的企业系统管理员开放。请从 AgentCiCi 的应用入口安全跳转。</p><div id="gate-status" class="gate-status">正在验证管理中心会话…</div><a class="return-link" href="https://x.agentcici.com">返回 AgentCiCi</a></div></main>
+</body>
+</html>

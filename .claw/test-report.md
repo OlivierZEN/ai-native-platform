@@ -1,13 +1,23 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-24T15:54:00Z
-updated_by: release-agent after public MCP discovery production verification
-last_run_at: 2026-07-24T15:54:00Z
+updated_at: 2026-07-25T01:15:00Z
+updated_by: root after console production smoke verification
+last_run_at: 2026-07-25T01:15:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-25 TASK-032 Semattice 企业管理中心验证与上线
+
+- `GOTOOLCHAIN=go1.26.5 go test -race ./...`、`GOTOOLCHAIN=go1.26.5 go vet ./...`、`go mod verify`、状态 validator 与 `git diff --check` 全部通过。
+- `internal/console` 定向测试覆盖匿名 fixture 401、有效 OACT 交换为 Secure/HttpOnly 会话、管理 scope 访问和缺少管理 scope 的 403。fixture 仅在内存返回，不连接或写入 PostgreSQL。
+- 演示 fixture 已与页面概览一致：12 个对象、84 个字段、8 位成员、6 个组织节点、24 条审计与 10 项系统配置；所有记录均明确为模拟治理数据。
+- Playwright 桌面验收：对象与字段导航、对象选择、字段矩阵和对象检查器可用，浏览器控制台为 `0 errors / 0 warnings`；本地验收截图未提交。
+- Linux amd64 静态构建、`bash -n scripts/release-console.sh` 通过；发布时脚本在服务器校验上传二进制 SHA-256、`nginx -t` 和 `/healthz`，并原子切换至 `/opt/semattice/releases/20260724T230626Z-console`。
+- 生产 smoke：`/console/` 标题为“Semattice 管理中心”；`GET /console/session` 无 Cookie 为 200 `authenticated:false`；无 Cookie 的 `/console/api/overview` 为 401；伪造 OACT 的 `POST /console/session` 为 401；`/healthz` 为 200，`semattice` active，`nginx -t` 成功。真实浏览器无登录入口为 `0 errors / 0 warnings`。
+- 回滚证据：上一应用 release `20260724T155000Z-mcp-public-discovery`、静态站备份 `/var/www/semattice-backups/20260724T230626Z-console` 与 Nginx 备份 `/etc/nginx/conf.d/semattice.conf.backup.20260724T230626Z-console` 均存在。未读取、打印或持久化 OACT、私钥或其他 secret。
 
 ## 2026-07-24 TASK-031 公开 MCP 发现与认证调用发布验证
 

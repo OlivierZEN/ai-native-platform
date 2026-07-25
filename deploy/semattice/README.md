@@ -15,9 +15,12 @@ Controlled provisioning is mandatory for `semattice serve`. The same protected e
 AI_NATIVE_AGENTCICI_BASE_URL=https://onechat.agentcici.com
 AI_NATIVE_AGENTCICI_HMAC_KEY=<Semattice-to-AgentCiCi HMAC key>
 AI_NATIVE_PROVISIONING_CALLER_KEYS=agentcici=<AgentCiCi-to-Semattice HMAC key>[;trusted-system=<key>]
+AI_NATIVE_CONSOLE_SESSION_HMAC_KEY=<independent 32+ character browser-session HMAC key>
 ```
 
 The first key must equal AgentCiCi's `APP_NATIVE_AGENTCICI_INTERNAL_HMAC_KEY`; the `agentcici` caller key must equal AgentCiCi's `APP_SEMATTICE_INTERNAL_HMAC_KEY`. Use independently generated 32+ character secrets. A missing, partial, or invalid configuration makes `serve` fail closed; there is no public/JWT/CLI fallback for company provisioning.
+
+`AI_NATIVE_CONSOLE_SESSION_HMAC_KEY` is separate from provisioning and identity keys. It signs only the short-lived, HttpOnly Semattice management-console cookie after an OACT has been verified; never reuse an existing HMAC key for it.
 
 The current executable source remains `cmd/ai-native-platform`; release packaging names the Linux binary `semattice` according to ADR-012.
 

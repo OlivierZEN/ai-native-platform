@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-24T15:54:00Z
-updated_by: release-agent after public MCP discovery production verification
+updated_at: 2026-07-25T01:15:00Z
+updated_by: root after Semattice console production release
 board_status: active
 ---
 
@@ -163,6 +163,34 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-032 - Semattice 企业管理中心第一版
+
+- status: `done`
+- priority: `critical`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-030-semattice-administration-console.md`
+- depends_on: `TASK-029`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `console browser session, console read APIs, static administration UI, demo fixtures, tests, deployment assets and verification evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 企业系统管理员能以已验证的 OACT 安全跳转至 `/console/`，并只在拥有管理 scope 时查看演示治理数据。
+- 六个只读页面、对象字段三栏检查器、模拟数据、无权/加载/空/错误状态和桌面浏览器验收完成。
+- 应用与静态页面通过质量门并发布到授权线上环境，保留可恢复的上一 release 与真实 smoke 证据。
+
+#### Next Action
+
+- 已完成：使用用户提供的授权 ECS 身份发布 `/opt/semattice/releases/20260724T230626Z-console`。Nginx 与服务均 active，匿名会话状态为 200、治理 API 无 Cookie 为 401、伪造 OACT 为 401，真实浏览器无登录入口为 0 errors / 0 warnings；旧应用 release、静态站和 Nginx 配置备份均已保留。
+
+#### Handoff Note
+
+- 不能使用 query 参数、localStorage、sessionStorage 或日志保存 OACT；不得改变 AgentCiCi 租户运营职责或创建任何业务记录。
 
 ### TASK-031 - Permit public MCP discovery while authenticating tool invocation
 

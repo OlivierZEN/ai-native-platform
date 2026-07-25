@@ -19,6 +19,7 @@ type Config struct {
 	RuntimeDatabaseURL string
 	Log                Log
 	Identity           Identity
+	ConsoleSessionKey  string
 	Provisioning       Provisioning
 }
 
@@ -91,6 +92,7 @@ func Load(getenv func(string) string) (Config, error) {
 			Token:          getenv("AI_NATIVE_IDENTITY_TOKEN"),
 			TrustedIssuers: nil,
 		},
+		ConsoleSessionKey: getenv("AI_NATIVE_CONSOLE_SESSION_HMAC_KEY"),
 		Provisioning: Provisioning{
 			AgentCiCiBaseURL: strings.TrimRight(getenv("AI_NATIVE_AGENTCICI_BASE_URL"), "/"),
 			AgentCiCiHMACKey: getenv("AI_NATIVE_AGENTCICI_HMAC_KEY"),
@@ -145,6 +147,9 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	if err := validateIdentity(cfg.Identity); err != nil {
 		return Config{}, err
+	}
+	if cfg.ConsoleSessionKey != "" && len(cfg.ConsoleSessionKey) < 32 {
+		return Config{}, fmt.Errorf("console session key is too short")
 	}
 	if err := validateProvisioning(cfg.Provisioning); err != nil {
 		return Config{}, err
