@@ -36,7 +36,7 @@ board_status: active
 - claimed_by: `project-manager`
 - spec_path: `docs/specs/FEAT-033-unified-principal-projection.md`
 - depends_on: `TASK-026, AgentCiCi FEAT-145`
-- blocked_by: `Keycloak SMTP before human-invitation production activation`
+- blocked_by: `Keycloak SMTP、OACT 签名配置和受权 service client 凭据后执行真实人类/机器端到端验收`
 - related_issues: `none`
 - scope_files: `identity verifier, capability principal, official OACT contract, tests, migrations and production validation`
 - branch: `main`
@@ -50,7 +50,7 @@ board_status: active
 
 #### Next Action
 
-- 扩展身份 claim 与 TrustedPrincipal，先完成 token 契约及 API/MCP/CLI 回归；随后与 AgentCiCi OACT 签发契约同步。
+- 已完成 Principal claim、API/MCP/CLI 回归和生产兼容发布；等待 AgentCiCi 新版上线后，以真实受权机器账户执行 OACT exchange、owner 失效和撤销投影验收。
 
 ### TASK-026 - Enforce AgentCiCi-controlled company provisioning
 

@@ -9,6 +9,13 @@ last_run_status: passed
 
 # 测试报告
 
+## 2026-07-27 TASK-033 Semattice Principal 投影发布验证
+
+- `GOTOOLCHAIN=go1.26.5 go test ./...`、`go vet ./...`、`go mod verify`、Linux amd64 CGO-free 构建和 `git diff --check` 均通过；release binary SHA-256 为 `a8ef0f16af2f4c7944c69b77d29bbb75f48ab646dcce29e1a8bdf229cf95242d`。
+- OACT parser 定向覆盖新 HUMAN/SERVICE principal claim、sub 与 principal_id 不一致、HUMAN 携带 service-only claim、无效 owner UUID/client_id 等负例；API、MCP、CLI 都通过 TrustedPrincipal 绑定同一 Actor，不接受 raw Keycloak service token。
+- 已按不可变发布流程切换至 `/opt/semattice/releases/20260727T151437Z-console`；服务为 active，`https://semattice.agentcici.com/healthz` 返回 200，匿名 `/console/api/overview` 和未授权 capability invoke 均返回预期 401，Nginx 配置检查通过。旧 release 保留可回滚。
+- 未执行真实机器 OACT 调用：AgentCiCi service-token-exchange 与受控开户仍保持关闭，等待 SMTP、OACT 签名配置和受权 service client 凭据后进行，不伪造 token 或读取 secret。
+
 ## 2026-07-25 TASK-032 Semattice 企业管理中心验证与上线
 
 - `GOTOOLCHAIN=go1.26.5 go test -race ./...`、`GOTOOLCHAIN=go1.26.5 go vet ./...`、`go mod verify`、状态 validator 与 `git diff --check` 全部通过。

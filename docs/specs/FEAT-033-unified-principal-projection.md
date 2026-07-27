@@ -1,7 +1,7 @@
 ---
 kind: feature-spec
 id: FEAT-033
-status: in_implementation
+status: released_with_controlled_activation_pending
 title: Semattice 统一 Principal 投影与官方机器主体认证
 ---
 
@@ -50,6 +50,13 @@ Semattice 接受由 AgentCiCi 官方 issuer 签发、受现有 JWKS 信任的 RS
 2. 扩展 AgentCiCi OACT 签发：由人类 Keycloak session 或 Service Account client credentials 经 AgentCiCi 控制面换取短期 Semattice token；Semattice 不直接验 Keycloak client token。
 3. 引入控制面 principal projection upsert/suspend 契约，消费人类成员与机器 owner 生命周期事件。
 4. 在真实测试租户执行人类 OACT、机器 OACT、失效 owner、错误 audience 和撤销投影负向验收。
+
+## 已实现与发布状态
+
+- Stage 1 已实现并发布：TrustedPrincipal、JWT parser、API/MCP/CLI 传播均支持 HUMAN 与 SERVICE OACT；旧 human OACT 继续兼容。
+- Stage 2 已完成两端代码契约：AgentCiCi 在受控 feature flag 下以 Keycloak client-credentials token 交换 10 分钟 Semattice OACT；Semattice 不直接接受 Keycloak token。
+- Semattice 已于 2026-07-27 发布 release 20260727T151437Z-console，匿名边界 smoke 为通过。
+- Stage 3/4 的真实 service client 验收仍等待 Keycloak SMTP、OACT 签名配置和受权凭据；所有功能开关关闭时 fail closed。
 
 ## 安全与回滚
 
