@@ -42,11 +42,15 @@ type Actor struct {
 }
 
 type TrustedPrincipal struct {
-	TenantID  string
-	CompanyID string
-	Actor     Actor
-	Approvals []string
-	Source    string
+	TenantID         string
+	CompanyID        string
+	PrincipalID      string
+	PrincipalType    string
+	OwnerPrincipalID string
+	ClientID         string
+	Actor            Actor
+	Approvals        []string
+	Source           string
 }
 
 type Request struct {

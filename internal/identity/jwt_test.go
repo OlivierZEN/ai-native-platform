@@ -158,6 +158,46 @@ func TestVerifierRejectsUnconfiguredJWKSIssuer(t *testing.T) {
 	}
 }
 
+func TestPrincipalClaimsRequireExactHumanOrResponsibleServiceIdentity(t *testing.T) {
+	base := Claims{
+		TenantID: "11111111-1111-4111-8111-111111111111", CompanyID: "orgaaaaaaaaaaaaaaaaa", Scope: "record.read",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer: "https://identity.example.test", Subject: "22222222-2222-4222-8222-222222222222",
+			Audience: jwt.ClaimStrings{"native-platform"}, IssuedAt: jwt.NewNumericDate(time.Now().Add(-time.Minute)), ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		},
+	}
+	verifier, err := NewVerifier(config.Identity{Issuer: "https://identity.example.test", Audience: "native-platform", Algorithm: "HS256", HMACKey: testIdentityKey})
+	if err != nil {
+		t.Fatalf("NewVerifier: %v", err)
+	}
+	human := base
+	human.PrincipalID = human.Subject
+	human.PrincipalType = "HUMAN"
+	principal, err := verifier.Verify(context.Background(), signToken(t, human, testIdentityKey))
+	if err != nil || principal.Actor.ID != human.PrincipalID || principal.PrincipalType != "HUMAN" {
+		t.Fatalf("human principal=%#v err=%v", principal, err)
+	}
+	service := base
+	service.PrincipalID = service.Subject
+	service.PrincipalType = "SERVICE"
+	service.OwnerPrincipalID = "33333333-3333-4333-8333-333333333333"
+	service.ClientID = "agentcici-semattice-worker"
+	principal, err = verifier.Verify(context.Background(), signToken(t, service, testIdentityKey))
+	if err != nil || principal.PrincipalType != "SERVICE" || principal.OwnerPrincipalID != service.OwnerPrincipalID || principal.ClientID != service.ClientID {
+		t.Fatalf("service principal=%#v err=%v", principal, err)
+	}
+	for _, invalid := range []Claims{
+		mutateClaims(human, func(claims *Claims) { claims.PrincipalID = "44444444-4444-4444-8444-444444444444" }),
+		mutateClaims(human, func(claims *Claims) { claims.OwnerPrincipalID = "33333333-3333-4333-8333-333333333333" }),
+		mutateClaims(service, func(claims *Claims) { claims.OwnerPrincipalID = "not-a-principal" }),
+		mutateClaims(service, func(claims *Claims) { claims.ClientID = "UPPERCASE" }),
+	} {
+		if _, err := verifier.Verify(context.Background(), signToken(t, invalid, testIdentityKey)); err == nil {
+			t.Fatalf("invalid principal claims accepted: %#v", invalid)
+		}
+	}
+}
+
 func bigEndian(value int) []byte {
 	if value == 0 {
 		return []byte{0}

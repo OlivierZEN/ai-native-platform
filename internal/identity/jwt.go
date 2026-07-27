@@ -23,11 +23,15 @@ import (
 var companyIDPattern = regexp.MustCompile("^org[a-z0-9]{17}$")
 
 type Claims struct {
-	TenantID  string   `json:"tenant_id"`
-	CompanyID string   `json:"company_id"`
-	Scopes    []string `json:"scopes"`
-	Scope     string   `json:"scope"`
-	Approvals []string `json:"approvals,omitempty"`
+	TenantID         string   `json:"tenant_id"`
+	CompanyID        string   `json:"company_id"`
+	PrincipalID      string   `json:"principal_id,omitempty"`
+	PrincipalType    string   `json:"principal_type,omitempty"`
+	OwnerPrincipalID string   `json:"owner_principal_id,omitempty"`
+	ClientID         string   `json:"client_id,omitempty"`
+	Scopes           []string `json:"scopes"`
+	Scope            string   `json:"scope"`
+	Approvals        []string `json:"approvals,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -155,11 +159,56 @@ func principalFromClaims(claims Claims, source string) (capability.TrustedPrinci
 	if err != nil || tenantID == uuid.Nil || !companyIDPattern.MatchString(claims.CompanyID) || strings.TrimSpace(claims.Subject) == "" || len(scopes) == 0 {
 		return capability.TrustedPrincipal{}, time.Time{}, fmt.Errorf("identity claims are incomplete")
 	}
+	principalID := strings.TrimSpace(claims.PrincipalID)
+	principalType := strings.TrimSpace(claims.PrincipalType)
+	ownerPrincipalID := strings.TrimSpace(claims.OwnerPrincipalID)
+	clientID := strings.TrimSpace(claims.ClientID)
+	if principalID == "" && principalType == "" && ownerPrincipalID == "" && clientID == "" {
+		// Existing OACTs remain valid during the controlled migration. Their subject is
+		// intentionally treated as the compatibility human principal identifier.
+		principalID = claims.Subject
+		principalType = "HUMAN"
+	} else {
+		if principalID == "" || principalID != claims.Subject || !validPrincipalID(principalID) {
+			return capability.TrustedPrincipal{}, time.Time{}, fmt.Errorf("identity principal claims are invalid")
+		}
+		switch principalType {
+		case "HUMAN":
+			if ownerPrincipalID != "" || clientID != "" {
+				return capability.TrustedPrincipal{}, time.Time{}, fmt.Errorf("human identity has service claims")
+			}
+		case "SERVICE":
+			if !validPrincipalID(ownerPrincipalID) || !validClientID(clientID) {
+				return capability.TrustedPrincipal{}, time.Time{}, fmt.Errorf("service identity claims are incomplete")
+			}
+		default:
+			return capability.TrustedPrincipal{}, time.Time{}, fmt.Errorf("identity principal type is invalid")
+		}
+	}
 	return capability.TrustedPrincipal{
 		TenantID: tenantID.String(), CompanyID: claims.CompanyID,
-		Actor:     capability.Actor{ID: claims.Subject, Scopes: scopes},
+		PrincipalID: principalID, PrincipalType: principalType,
+		OwnerPrincipalID: ownerPrincipalID, ClientID: clientID,
+		Actor:     capability.Actor{ID: principalID, Scopes: scopes},
 		Approvals: append([]string(nil), claims.Approvals...), Source: source,
 	}, claims.ExpiresAt.Time, nil
+}
+
+func validPrincipalID(value string) bool {
+	parsed, err := uuid.Parse(value)
+	return err == nil && parsed != uuid.Nil
+}
+
+func validClientID(value string) bool {
+	if value == "" || len(value) > 128 {
+		return false
+	}
+	for _, character := range value {
+		if !(character >= 'a' && character <= 'z') && !(character >= '0' && character <= '9') && character != '-' {
+			return false
+		}
+	}
+	return true
 }
 
 func (issuer *jwksIssuer) key(ctx context.Context, keyID string) (*rsa.PublicKey, error) {
