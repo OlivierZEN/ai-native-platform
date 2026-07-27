@@ -4,8 +4,8 @@ version: 3
 updated_at: 2026-07-25T02:56:50Z
 updated_by: root after console asset-cache correction and browser verification
 phase: cross-product-identity-live
-active_task: "TASK-026"
-next_action: "TASK-032 已完成上线；后续按独立授权处理 TASK-026 的生产 migration 与受控开户验收。"
+active_task: "TASK-033"
+next_action: "实现 Semattice 官方 OACT Principal 投影，并与已发布的 AgentCiCi FEAT-145 对齐；Keycloak SMTP 配置前不启用自动人类邀请。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-033 / FEAT-033 已启动：AgentCiCi `2.8.20` 已发布统一 Principal 基座和机器责任模型，但 Semattice 当前仅把官方 OACT `sub` 直接作为 actor，尚未承载 `principal_id` / `principal_type`。本任务将保持 OACT/JWKS 本地验签，拒绝 Keycloak Service Account token 直连，并将新官方 human/service OACT 映射为数据平台本地 Principal。Keycloak Realm 尚未配置 SMTP，自动人类邀请不提前启用。
 
 - 术语边界已确认并写入项目规范：后续“数据平台”始终且仅指本仓库的 CloudCC Semattice（语义格，`/Volumes/AISpace/codehouse/AI-Native-Platform`）；Agent CC / AgentCiCi 与 CloudCC CRM 均是外部应用或集成方，不得混称。规范来源为根目录 `README.md` 与 `AGENTS.md`。
 - `TASK-032` Semattice 企业管理中心第一版已上线：当前 release 为 `/opt/semattice/releases/20260725T025439Z-console`。12 对象/84 字段/8 成员/24 审计/10 配置的模拟治理 fixture 仅在受会话保护的内存 API 中返回，不写 PostgreSQL。顶栏产品菜单明确当前 Semattice 管理端，并可直接回到 `https://x.agentcici.com/admin`，不传递或储存 OACT。控制台 HTML、CSS 与 JS 均使用 no-store 响应，且 HTML 引用带版本资源，避免结构更新后复用旧样式。生产 smoke 确认控制台静态页 200、匿名会话状态 200、匿名治理 API 为 401、`semattice` active、`nginx -t` 成功；浏览器复核触发器为 96×30px、菜单为 224×116px。上一应用 release、Nginx 配置和静态站备份均已保留。规格见 `docs/specs/FEAT-030-semattice-administration-console.md`。

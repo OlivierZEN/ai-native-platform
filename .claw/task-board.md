@@ -28,6 +28,30 @@ board_status: active
 
 ## Active Tasks
 
+### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `project-manager`
+- spec_path: `docs/specs/FEAT-033-unified-principal-projection.md`
+- depends_on: `TASK-026, AgentCiCi FEAT-145`
+- blocked_by: `Keycloak SMTP before human-invitation production activation`
+- related_issues: `none`
+- scope_files: `identity verifier, capability principal, official OACT contract, tests, migrations and production validation`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Semattice maps new official OACT `principal_id` / `principal_type` locally without accepting raw Keycloak service tokens.
+- Service OACT requires AgentCiCi-issued owner evidence and all API/MCP/CLI entrypoints bind the same Principal.
+- Human compatibility, negative validation, local JWKS caching and production smoke evidence are recorded.
+
+#### Next Action
+
+- 扩展身份 claim 与 TrustedPrincipal，先完成 token 契约及 API/MCP/CLI 回归；随后与 AgentCiCi OACT 签发契约同步。
+
 ### TASK-026 - Enforce AgentCiCi-controlled company provisioning
 
 - status: `in_progress`
