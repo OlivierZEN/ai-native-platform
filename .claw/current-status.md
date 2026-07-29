@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-25T02:56:50Z
-updated_by: root after console asset-cache correction and browser verification
+updated_at: 2026-07-29T12:35:14Z
+updated_by: root after documenting and publishing Semattice skill v0.1.1
 phase: cross-product-identity-live
 active_task: "TASK-033"
-next_action: "实现 Semattice 官方 OACT Principal 投影，并与已发布的 AgentCiCi FEAT-145 对齐；Keycloak SMTP 配置前不启用自动人类邀请。"
+next_action: "等待 AgentCiCi 新版上线后，以真实受权机器账户执行 OACT exchange、owner 失效和撤销投影验收。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,12 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-036 已完成：技能 README 现已固化“项目内开发副本 → 独立发布仓库”的版本准备、dry-run 同步、发布前校验、原子推送和发布后验证流程。项目内技能目录仍不初始化 `.git`；独立仓库已发布 `v0.1.1`，远程 `main` 与 tag peeled commit 均为 `228f6f7`。
+
+- TASK-035 已完成：`semattice-customization-expert-universal` 采用根目录 `VERSION` + SemVer + `v<version>` Git 标签管理升级，首发版本为 `0.1.0`，并包含用户要求的 README。独立仓库已发布到 `https://github.com/CloudCCAI/semattice-customization-expert-universal`；远程 `main` 与 annotated tag `v0.1.0` 均指向提交 `93c2701`，公开页面、远程 VERSION 和 README 已验证。
+
+- TASK-034 已完成：仓库内在制技能已从 `semattice-operator` 重命名为 `semattice-customization-expert-universal`，目录、SKILL frontmatter、文档标题、UI 显示名和默认 `$skill` 调用名保持一致；API 约束、参考资料和脚本功能未改动。
 
 - TASK-033 / FEAT-033 已启动：AgentCiCi `2.8.20` 已发布统一 Principal 基座和机器责任模型，但 Semattice 当前仅把官方 OACT `sub` 直接作为 actor，尚未承载 `principal_id` / `principal_type`。本任务将保持 OACT/JWKS 本地验签，拒绝 Keycloak Service Account token 直连，并将新官方 human/service OACT 映射为数据平台本地 Principal。Keycloak Realm 尚未配置 SMTP，自动人类邀请不提前启用。
 
@@ -79,6 +85,10 @@ read_next:
 
 ## 已验证事实
 
+- 2026-07-29 TASK-036 发布流程固化与 `v0.1.1` 发布完成：同步 dry-run 只包含 README/VERSION，官方技能校验、YAML、Python 语法、CLI help、无 Token dry-run、SemVer 一致性、缓存/私钥扫描和 diff 检查均通过。原子 push 后，本地 HEAD、远程 main 和 `v0.1.1^{}` 均为 `228f6f737b53ce41cc3f51126ca58498d33a3f47`；仓库页面 HTTP 200，远程 VERSION 为 `0.1.1`。
+- 2026-07-29 TASK-036 项目状态 validator 另行复验；仅被既有 `FEAT-033` 缺少 `feature_id` / `updated_at` / `updated_by` 和非标准 status 阻断，TASK-036 新增状态记录未产生新错误。
+- 2026-07-29 TASK-035 发布完成：官方 `quick_validate.py`、`agents/openai.yaml` YAML、SemVer/目录结构、Python 语法、CLI help 和无 Token dry-run 均通过；独立仓库以原子 push 发布 `main + v0.1.0`。本地 HEAD、远程 main 和 tag peeled commit 均为 `93c270124c7992612100380676cecf4affc31b5d`，默认分支为 main，公开页面 HTTP 200，远程 VERSION 为 `0.1.0`，README 标题和版本引用验证通过。
+- 2026-07-29 TASK-034：`skill-creator` 的 `quick_validate.py` 返回 `Skill is valid!`；技能目录名与 frontmatter 名称一致（40 字符），技能目录内旧名称零残留，Python 辅助脚本语法与技能目录空白检查通过。项目状态 validator 另被既有 `FEAT-033` frontmatter 缺字段和非标准状态值阻断，本次未修改该无关规格。
 - 2026-07-24 CodeUp 首次发布：空仓库认证和 `HEAD -> main` 推送成功；发布前全量 test、vet、module verify、状态 validator、差异、常见密钥、受跟踪敏感扩展名和 10 MiB 大文件门禁均通过。
 - 2026-07-23 产品命名治理：用户正式确认 CloudCC Semattice（语义格）；ADR-012、README、goals、FEAT-009/011/020 和兼容命名边界已更新。状态 validator、`git diff --check`、品牌存在性与旧标题冲突检索均通过；本次未修改或重新验证运行时代码。
 - 2026-07-23 TASK-022：授权 ECS 的 PostgreSQL 16.13、12 个 migration、三数据库身份、Nginx TLS、Semattice systemd、首页与下载已部署。公网 HTTPS 200、HTTP 301、未授权 API 401、短期 JWT API 200、CLI/MCP 三入口 49 能力、MCP 工具调用、制品 checksum、服务重启和 secret mode 均通过。

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Semattice 通用定制专家"
+  short_description: "通过统一能力 API 安全操作 Semattice 平台"
+  default_prompt: "使用 $semattice-customization-expert-universal 查看当前租户的元数据对象，并说明可安全执行的下一步。"

@@ -1,13 +1,39 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-25T01:15:00Z
-updated_by: root after console production smoke verification
-last_run_at: 2026-07-25T01:15:00Z
+updated_at: 2026-07-29T12:35:14Z
+updated_by: root after documenting and publishing Semattice skill v0.1.1
+last_run_at: 2026-07-29T12:35:14Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-29 TASK-036 Semattice 技能发布流程与 v0.1.1 验证
+
+- README 已记录项目内开发副本不包含 `.git`、独立发布仓库边界、SemVer 准备、`rsync --dry-run` 同步、发布前校验、annotated tag、原子 push 和发布后验证流程。
+- 同步 dry-run 只报告 `README.md` 和 `VERSION`；实际同步后 `diff -qr --exclude=.git` 无差异。
+- `VERSION=0.1.1`；官方 `skill-creator/scripts/quick_validate.py` 返回 `Skill is valid!`；`agents/openai.yaml` YAML 与默认 `$skill` 名称、Python AST 语法、CLI help、无 Token `system.capability.list` dry-run、SemVer/README 一致性、Python 缓存、常见私钥/Token 模式和 `git diff --check` 均通过。
+- 独立仓库在 `main` 创建提交 `228f6f737b53ce41cc3f51126ca58498d33a3f47` 和 annotated tag `v0.1.1`，通过 `git push --atomic origin main v0.1.1` 推送，未使用 force push。
+- 本地 HEAD、`origin/main` 与 `v0.1.1^{}` 均为 `228f6f737b53ce41cc3f51126ca58498d33a3f47`；远程 HEAD 指向 main，仓库页面 HTTP 200，raw VERSION 为 `0.1.1`，README 的当前版本、安装标签、升级标签和发布流程标题已验证，发布仓库工作树 clean。
+- 项目状态 validator 已实际运行，仅因既有 `docs/specs/FEAT-033-unified-principal-projection.md` 缺少 `feature_id`、`updated_at`、`updated_by` 且使用非标准 status 而失败；TASK-036 的任务数量、归档和状态引用未产生新错误。
+- 项目仓库提交前复验官方技能校验、YAML、Python 语法、CLI help、无 Token dry-run、常见凭据模式、敏感扩展名、10 MiB 大文件、嵌套 `.git` 与全量 `git diff --check`，均通过。
+
+## 2026-07-29 TASK-035 Semattice 技能 v0.1.0 发布验证
+
+- `VERSION` 为合法 SemVer `0.1.0`，README 版本引用和目标 Git 标签 `v0.1.0` 一致；官方 `skill-creator/scripts/quick_validate.py` 返回 `Skill is valid!`，`agents/openai.yaml` YAML 与技能目录穽白检查通过。
+- `semattice_api.py --help`、Python AST 语法检查和 `system.capability.list` HTTPS dry-run 通过；dry-run 未使用或输出 Token。
+- 独立本地仓库 `/Users/xuhm/Documents/semattice-customization-expert-universal` 已在 `main` 创建 root commit `93c2701` 和 annotated tag `v0.1.0`，工作树 clean。
+- SSH 配置 `github-cloudcc-admin` 使用专用 ED25519 密钥，GitHub 返回 `Hi CloudCCAI!`。远程仓库创建后，以 `git push --atomic -u origin main v0.1.0` 同时发布分支与标签；未使用 force push。
+- 本地 HEAD、远程 `refs/heads/main` 与远程 `refs/tags/v0.1.0^{}` 均为 `93c270124c7992612100380676cecf4affc31b5d`，远程 HEAD 指向 main；本地 main 已跟踪 origin/main 且工作树 clean。
+- `https://github.com/CloudCCAI/semattice-customization-expert-universal` 返回 HTTP 200；raw `VERSION` 为 `0.1.0`，README 标题和 `v0.1.0` 安装/升级引用验证通过。
+
+## 2026-07-29 TASK-034 Semattice 技能重命名验证
+
+- `skill-creator/scripts/quick_validate.py skill/semattice-customization-expert-universal` 返回 `Skill is valid!`；临时 `PyYAML` 依赖仅安装于自动清理的一次性目录，未修改项目或全局依赖。
+- 技能目录名与 `SKILL.md` frontmatter 名称完全一致，名称长度为 40；技能目录检索旧名 `semattice-operator` 为零结果。
+- `scripts/semattice_api.py` Python 语法检查和技能目录尾随空白检查通过；references 与脚本 SHA-256 和重命名前一致，功能内容未改变。
+- 项目状态 validator 已实际运行，但因既有 `docs/specs/FEAT-033-unified-principal-projection.md` 缺少 `feature_id`、`updated_at`、`updated_by` 且使用非标准状态值而失败；本次 TASK-034 新增状态记录未产生 validator 错误。
 
 ## 2026-07-27 TASK-033 Semattice Principal 投影发布验证
 

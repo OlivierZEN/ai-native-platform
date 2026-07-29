@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-25T01:15:00Z
-updated_by: root after Semattice console production release
+updated_at: 2026-07-29T12:35:14Z
+updated_by: root after documenting and publishing Semattice skill v0.1.1
 board_status: active
 ---
 
@@ -187,6 +187,90 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-036 - Document and exercise the Semattice skill release workflow
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-035`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/semattice-customization-expert-universal/README.md, VERSION, /Users/xuhm/Documents/semattice-customization-expert-universal, CloudCCAI GitHub repository, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- README 固化开发副本与发布仓库边界、SemVer、同步、校验、提交、标签、推送和远程验证流程
+- 开发副本与独立仓库内容一致，且项目内技能目录不包含 `.git`
+- `v0.1.1` 通过发布前校验并以原子 push 发布，远程分支、标签、VERSION 和 README 均经验证
+
+#### Next Action
+
+- 已完成；后续修改技能时，按 README 的“维护与发布流程”执行，每次创建新的不可变 `v<version>` 标签。
+
+#### Handoff Note
+
+- 项目内开发源为 `skill/semattice-customization-expert-universal`，不含 `.git`；独立发布仓库为 `/Users/xuhm/Documents/semattice-customization-expert-universal`。`v0.1.1` 对应提交 `228f6f737b53ce41cc3f51126ca58498d33a3f47`，禁止 force push 或移动已发布标签。
+
+### TASK-035 - Version and publish the Semattice customization skill
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/semattice-customization-expert-universal, /Users/xuhm/Documents/semattice-customization-expert-universal, CloudCCAI GitHub repository, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 根目录 `VERSION` 是唯一版本源，README 说明安装、使用、SemVer 和升级流程
+- 独立仓库首次提交和 `v0.1.0` 标签通过技能与 CLI 校验
+- `CloudCCAI/semattice-customization-expert-universal` 公开仓库存在，远程 `main`、标签和 README 均已验证
+
+#### Next Action
+
+- 已完成；后续升级先更新 `VERSION` 和内容、通过技能校验，再提交并创建新的不可变 `v<version>` 标签。
+
+#### Handoff Note
+
+- 远程仓库为 `https://github.com/CloudCCAI/semattice-customization-expert-universal`。本地独立仓库位于 `/Users/xuhm/Documents/semattice-customization-expert-universal`；main 与 `v0.1.0` 均发布提交 `93c2701`。禁止 force push 或移动已发布标签。
+
+### TASK-034 - Rename the Semattice customization skill
+
+- status: `done`
+- priority: `medium`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/semattice-customization-expert-universal, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 技能目录、SKILL frontmatter 和默认 `$skill` 调用名统一为 `semattice-customization-expert-universal`
+- UI 显示名与新技能名称一致，功能说明、参考资料和脚本行为不变
+- 官方技能校验、旧名称残留和脚本语法检查通过
+
+#### Next Action
+
+- 已完成；后续安装或调用必须使用 `$semattice-customization-expert-universal`。
+
+#### Handoff Note
+
+- 本次仅重命名技能身份和显示标题，不改变 Capability API 操作边界。
 
 ### TASK-032 - Semattice 企业管理中心第一版
 
@@ -658,65 +742,6 @@ board_status: active
 #### Handoff Note
 
 - 五项 `runtime.record.*` 能力、migration 4、五类 640 typed partitions、durable write idempotency 和真实 bounded query planner 已通过本地 maker 验证。100 万记录为单机物理路径证据；50 并发与 8/16 GiB 容量仍由 TASK-019 验收。
-
-### TASK-020 - Implement the pure-Agent capability contract PoC
-
-- status: `done`
-- priority: `critical`
-- owner_role: `shared`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-020-pure-agent-capability-contract.md`
-- depends_on: `TASK-010` (user-authorized narrow L2 exception for the Go PoC only)
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `capability registry, API gateway, MCP server, non-interactive CLI, contract tests`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 每个已发布原子能力从统一 Capability Contract 派生 API、MCP Tool 与 CLI
-- CLI 仅支持结构化输入和 JSON/JSON Lines 输出，无菜单、提示或终端状态依赖
-- 三入口通过等价性、权限、幂等、审计和错误码契约测试
-
-#### Next Action
-
-- 已完成受限 L2 PoC；后续 PostgreSQL、租户控制面与身份集成已由用户另行扩大授权，必须转入 `TASK-010/011/012` 的独立规格与检查点，不在本任务继续追加源码。
-
-#### Handoff Note
-
-- `system.capability.list` 通过同一 Go Registry/Invoker 暴露 API、MCP 和无交互 CLI，独立 checker 已验证 test/race/vet/module verify、四目标纯 Go cross-build、无 TTY、MCP stdout 和 denylist。本任务完成时尚未授权数据库与身份集成；后续扩大授权以 `current-status.md` 为准。生产部署、CI、发布仍未授权，高风险异步 `operation_id`、持久审计与通用输出 Schema 校验仍未实现。
-
-### TASK-021 - Establish the Phase 0 Loop Engineering controls
-
-- status: `done`
-- priority: `critical`
-- owner_role: `project-manager`
-- claimed_by: `root`
-- spec_path: `none`
-- depends_on: `none`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `LOOP.md, STATE.md, loop-constraints.md, loop-budget.md, loop-run-log.md, .claw/`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- L1 loop state, budget, constraints and append-only run log are present and internally consistent
-- Five-hour local automation ran with no remote-write or source-edit permission
-- Initial readiness audit and project-state validation have real recorded results
-- Five-hour handoff identifies the L2 promotion gate and next verified action
-
-#### Next Action
-
-- 已完成；不要恢复该 L1 bootstrap。后续 L2 授权和任务状态以 `current-status.md` 与活跃任务卡为准。
-
-#### Handoff Note
-
-- This was the L1 report-only bootstrap. Its original source-code gate has since been satisfied and expanded by the user; do not reuse this completed task as the current authorization record.
-- Local L1 evidence is ahead of `origin/main` and deliberately unpushed; publishing remains a human-approved action.
-- Five-hour handoff: state validation passed; 23 pre-handoff logs were monotonic, L1-only, with zero source actions. This line records the historical gate at handoff; subsequent approvals, Go evidence and expanded L2 scope are recorded in `current-status.md` and later task cards.
 
 ## 维护规则
 
