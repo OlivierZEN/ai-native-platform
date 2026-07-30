@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-29T12:35:14Z
-updated_by: root after TASK-036 completion exceeded active-board retention
+updated_at: 2026-07-29T13:19:07Z
+updated_by: root after TASK-037 completion exceeded active-board retention
 archive_status: active
 ---
 
@@ -70,6 +70,34 @@ archive_status: active
 #### Handoff Note
 
 - `system.capability.list` 通过同一 Go Registry/Invoker 暴露 API、MCP 和无交互 CLI，独立 checker 已验证 test/race/vet/module verify、四目标纯 Go cross-build、无 TTY、MCP stdout 和 denylist。本任务完成时尚未授权数据库与身份集成；后续扩大授权以 `current-status.md` 为准。生产部署、CI、发布仍未授权，高风险异步 `operation_id`、持久审计与通用输出 Schema 校验仍未实现。
+
+### TASK-009 - Review the greenfield architecture baseline
+
+- status: `done`
+- priority: `high`
+- owner_role: `shared`
+- claimed_by: `human + root`
+- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md, .claw/goals.md, .claw/decisions.md`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 绿地边界、目标架构、阶段路线和验收标准已完成架构评审
+- 评审结论和架构修订均已写回 feature spec 与 ADR
+- Phase 0 核心编码前置决策已明确；后置组件选型不阻塞开工
+
+#### Next Action
+
+- 已完成。后续从 `TASK-010` 开始执行 Phase 0，不重新打开本任务；架构变更通过对应 feature spec 和 ADR 管理。
+
+#### Handoff Note
+
+- 用户于 2026-07-18 正式批准 `FEAT-009`，规格状态已改为 `approved`，ADR-003 已接受。Event Bus、Search/OLAP、Wasm/流程、数据驻留和计费仍为独立后置 ADR，不阻塞 `TASK-010`。
 
 ## 维护规则
 

@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-29T12:35:14Z
-updated_by: root after documenting and publishing Semattice skill v0.1.1
+updated_at: 2026-07-29T13:19:07Z
+updated_by: root after publishing cloudcc-semattice v1.0.0
 board_status: active
 ---
 
@@ -188,6 +188,34 @@ board_status: active
 
 ## Completed Tasks
 
+### TASK-037 - Rename the skill to cloudcc-semattice
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-036`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `AGENTS.md, skill/cloudcc-semattice, /Users/xuhm/Documents/cloudcc-semattice-skill, CloudCCAI GitHub repository, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 技能目录、SKILL frontmatter、README、UI 显示名和默认调用名统一为 `cloudcc-semattice`
+- 不兼容的调用名变更以 `1.0.0` 管理，旧调用名不保留兼容别名
+- 项目内开发副本、独立发布仓库、GitHub 仓库名称与 `v1.0.0` 发布结果均已验证
+
+#### Next Action
+
+- 已完成；后续版本从项目内 `skill/cloudcc-semattice` 开发副本按根 `AGENTS.md` 流程同步、校验并发布。
+
+#### Handoff Note
+
+- GitHub 仓库为 `https://github.com/CloudCCAI/cloudcc-semattice`；`main` 和 annotated tag `v1.0.0` 均指向提交 `5b156c057af7517c81f5892d1f8123ec74f00ea6`。本地独立发布仓库位于 `/Users/xuhm/Documents/cloudcc-semattice-skill`，项目内开发副本不含 `.git`。禁止 force push 或移动已发布标签。
+
 ### TASK-036 - Document and exercise the Semattice skill release workflow
 
 - status: `done`
@@ -198,23 +226,23 @@ board_status: active
 - depends_on: `TASK-035`
 - blocked_by: `none`
 - related_issues: `none`
-- scope_files: `skill/semattice-customization-expert-universal/README.md, VERSION, /Users/xuhm/Documents/semattice-customization-expert-universal, CloudCCAI GitHub repository, .claw/`
+- scope_files: `AGENTS.md, skill/semattice-customization-expert-universal/README.md, VERSION, /Users/xuhm/Documents/semattice-customization-expert-universal, CloudCCAI GitHub repository, .claw/`
 - branch: `main`
 - pr_url: `n/a`
 
 #### Done When
 
-- README 固化开发副本与发布仓库边界、SemVer、同步、校验、提交、标签、推送和远程验证流程
+- 项目根 `AGENTS.md` 固化开发副本与发布仓库边界、SemVer、同步、校验、提交、标签、推送和远程验证流程；技能 README 不包含这些内部维护步骤
 - 开发副本与独立仓库内容一致，且项目内技能目录不包含 `.git`
 - `v0.1.1` 通过发布前校验并以原子 push 发布，远程分支、标签、VERSION 和 README 均经验证
 
 #### Next Action
 
-- 已完成；后续修改技能时，按 README 的“维护与发布流程”执行，每次创建新的不可变 `v<version>` 标签。
+- 已完成文档边界纠正；后续修改技能时，只按项目根 `AGENTS.md` 的发布流程执行，每次创建新的不可变 `v<version>` 标签。当前本地 README 纠正未提交或推送。
 
 #### Handoff Note
 
-- 项目内开发源为 `skill/semattice-customization-expert-universal`，不含 `.git`；独立发布仓库为 `/Users/xuhm/Documents/semattice-customization-expert-universal`。`v0.1.1` 对应提交 `228f6f737b53ce41cc3f51126ca58498d33a3f47`，禁止 force push 或移动已发布标签。
+- 内部发布流程的唯一来源是项目根 `AGENTS.md`。项目内开发源为 `skill/semattice-customization-expert-universal`，不含 `.git`；独立发布仓库为 `/Users/xuhm/Documents/semattice-customization-expert-universal`。`v0.1.1` 对应提交 `228f6f737b53ce41cc3f51126ca58498d33a3f47`，禁止 force push 或移动已发布标签。
 
 ### TASK-035 - Version and publish the Semattice customization skill
 
@@ -549,34 +577,6 @@ board_status: active
 #### Handoff Note
 
 - 已完成并由本地 PostgreSQL 证据验证。Profile 不进入业务授权模型；组织树只计算数据范围与记录共享，禁止 `record × user` ACL 物化。规则投影只存 record-to-group 边且未 ready 时 fail closed；构建结束会检查缺边，access group disabled 会撤销其共享路径；组织合并不物理删除。通用自动运行/告警与完整容量验收已明确拆分至 TASK-017/TASK-019。
-
-### TASK-009 - Review the greenfield architecture baseline
-
-- status: `done`
-- priority: `high`
-- owner_role: `shared`
-- claimed_by: `human + root`
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `none`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md, .claw/goals.md, .claw/decisions.md`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 绿地边界、目标架构、阶段路线和验收标准已完成架构评审
-- 评审结论和架构修订均已写回 feature spec 与 ADR
-- Phase 0 核心编码前置决策已明确；后置组件选型不阻塞开工
-
-#### Next Action
-
-- 已完成。后续从 `TASK-010` 开始执行 Phase 0，不重新打开本任务；架构变更通过对应 feature spec 和 ADR 管理。
-
-#### Handoff Note
-
-- 用户于 2026-07-18 正式批准 `FEAT-009`，规格状态已改为 `approved`，ADR-003 已接受。Event Bus、Search/OLAP、Wasm/流程、数据驻留和计费仍为独立后置 ADR，不阻塞 `TASK-010`。
 
 ### TASK-010 - Define the technology stack and repository baseline
 

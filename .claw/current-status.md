@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-29T12:35:14Z
-updated_by: root after documenting and publishing Semattice skill v0.1.1
+updated_at: 2026-07-29T13:19:07Z
+updated_by: root after publishing cloudcc-semattice v1.0.0
 phase: cross-product-identity-live
 active_task: "TASK-033"
 next_action: "等待 AgentCiCi 新版上线后，以真实受权机器账户执行 OACT exchange、owner 失效和撤销投影验收。"
@@ -19,7 +19,9 @@ read_next:
 
 ## 快照
 
-- TASK-036 已完成：技能 README 现已固化“项目内开发副本 → 独立发布仓库”的版本准备、dry-run 同步、发布前校验、原子推送和发布后验证流程。项目内技能目录仍不初始化 `.git`；独立仓库已发布 `v0.1.1`，远程 `main` 与 tag peeled commit 均为 `228f6f7`。
+- TASK-037 已完成：技能 ID、项目内目录、标题、UI 显示名和调用名已统一为 `cloudcc-semattice` / `CloudCC Semattice（语义格）` / `$cloudcc-semattice`。不兼容调用名变更以 `1.0.0` 发布到 `https://github.com/CloudCCAI/cloudcc-semattice`；远端 `main` 与 annotated tag `v1.0.0` 均指向提交 `5b156c057af7517c81f5892d1f8123ec74f00ea6`，远端 VERSION、README、标签页面和安装示例均已验证。
+
+- TASK-036 已按用户纠正：项目根 `AGENTS.md` 是“项目内开发副本 → 独立发布仓库”内部流程的唯一维护入口；技能 README 只保留面向安装者的介绍、安装、使用和版本升级说明。项目内技能目录仍不初始化 `.git`；独立仓库的本地 README 已同步但未提交或推送，远程已发布版本仍为 `v0.1.1`。
 
 - TASK-035 已完成：`semattice-customization-expert-universal` 采用根目录 `VERSION` + SemVer + `v<version>` Git 标签管理升级，首发版本为 `0.1.0`，并包含用户要求的 README。独立仓库已发布到 `https://github.com/CloudCCAI/semattice-customization-expert-universal`；远程 `main` 与 annotated tag `v0.1.0` 均指向提交 `93c2701`，公开页面、远程 VERSION 和 README 已验证。
 
@@ -85,6 +87,8 @@ read_next:
 
 ## 已验证事实
 
+- 2026-07-29 TASK-037 发布验证：项目内目录 basename、`SKILL.md` frontmatter、README 标题/安装路径、`agents/openai.yaml` 显示名与默认 `$cloudcc-semattice` 调用名一致；当前文件旧技能身份零残留。官方技能校验、YAML、Python 语法、CLI help、无 Token dry-run、版本/README 一致性、两目录一致性和 diff 检查均通过。`main + v1.0.0` 已原子推送到 `CloudCCAI/cloudcc-semattice`，三方提交均为 `5b156c057af7517c81f5892d1f8123ec74f00ea6`，远端页面与发布内容已回读验证。项目状态 validator 仅保留既有 `FEAT-033` 错误。
+- 2026-07-29 TASK-036 文档边界纠正：项目内与独立发布副本的技能 README 均已删除内部维护/同步/推送步骤，完整流程只存在于项目根 `AGENTS.md`。官方技能校验、YAML、Python 语法、CLI help、无 Token dry-run、两目录一致性和 diff 检查均通过；本次未提交、打标签或推送。
 - 2026-07-29 TASK-036 发布流程固化与 `v0.1.1` 发布完成：同步 dry-run 只包含 README/VERSION，官方技能校验、YAML、Python 语法、CLI help、无 Token dry-run、SemVer 一致性、缓存/私钥扫描和 diff 检查均通过。原子 push 后，本地 HEAD、远程 main 和 `v0.1.1^{}` 均为 `228f6f737b53ce41cc3f51126ca58498d33a3f47`；仓库页面 HTTP 200，远程 VERSION 为 `0.1.1`。
 - 2026-07-29 TASK-036 项目状态 validator 另行复验；仅被既有 `FEAT-033` 缺少 `feature_id` / `updated_at` / `updated_by` 和非标准 status 阻断，TASK-036 新增状态记录未产生新错误。
 - 2026-07-29 TASK-035 发布完成：官方 `quick_validate.py`、`agents/openai.yaml` YAML、SemVer/目录结构、Python 语法、CLI help 和无 Token dry-run 均通过；独立仓库以原子 push 发布 `main + v0.1.0`。本地 HEAD、远程 main 和 tag peeled commit 均为 `93c270124c7992612100380676cecf4affc31b5d`，默认分支为 main，公开页面 HTTP 200，远程 VERSION 为 `0.1.0`，README 标题和版本引用验证通过。

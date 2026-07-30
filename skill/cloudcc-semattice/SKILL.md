@@ -1,9 +1,9 @@
 ---
-name: semattice-customization-expert-universal
+name: cloudcc-semattice
 description: 通过统一 HTTPS Capability API 操作 CloudCC Semattice。当 AI 需要发现平台能力，理解对象、字段、关系、记录、租户、用量、授权、组织和共享资源，或者通过 API 查看及修改这些资源时使用。只允许调用已发布的 `/v1/capabilities/{capability-id}/invoke` 接口；禁止依赖 MCP、直连数据库、调用内部租户开通接口，或绕过 OAuth、RBAC、租户隔离、审批、幂等和审计。
 ---
 
-# Semattice 通用定制专家
+# CloudCC Semattice（语义格）
 
 只通过 Semattice 统一 HTTPS Capability API 操作平台。使用 `scripts/semattice_api.py` 发送请求，不依赖 MCP，不直接访问数据库，也不把只读演示控制台当作业务接口。
 
