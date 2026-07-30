@@ -1,4 +1,4 @@
 interface:
   display_name: "CloudCC Semattice（语义格）"
-  short_description: "安全操作面向智能体的业务数据与语义运行底座"
-  default_prompt: "使用 $cloudcc-semattice 查看当前租户的元数据对象，并说明可安全执行的下一步。"
+  short_description: "快速理解 Semattice 功能定位并安全设计、实施业务数据与语义模型"
+  default_prompt: "使用 $cloudcc-semattice 先说明产品定位并设计客户对象模型，在我确认后再给出安全实施步骤。"

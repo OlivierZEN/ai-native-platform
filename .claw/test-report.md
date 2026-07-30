@@ -1,13 +1,30 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-29T13:19:07Z
-updated_by: root after publishing and verifying cloudcc-semattice v1.0.0
-last_run_at: 2026-07-29T13:19:07Z
+updated_at: 2026-07-30T06:52:23Z
+updated_by: root after publishing and verifying cloudcc-semattice v1.1.0 on GitHub
+last_run_at: 2026-07-30T06:52:23Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-30 TASK-039 cloudcc-semattice 1.1.0 GitHub 发布验证
+
+- 开发副本与本机安装目录、独立发布仓库逐文件一致；同步前两个 `rsync --dry-run --delete` 均无删除项，独立仓库仅包含 6 个预期发布文件变化。
+- 开发副本和独立发布仓库的官方 `quick_validate.py` 均返回 `Skill is valid!`；VERSION/README `1.1.0`、YAML、Markdown 链接、CLI help、无 Token dry-run、缓存/私钥/常见 Token 扫描与 diff check 均通过。
+- 独立仓库创建 release commit `3ac29afc34366d66a2e9320975dc3be498d55181` 和 annotated tag `v1.1.0`，通过 `git push --atomic -u origin main v1.1.0` 同时发布，未使用 force push。
+- 本地 HEAD、`origin/main` 与 `v1.1.0^{}` 均为 `3ac29afc34366d66a2e9320975dc3be498d55181`；远程 HEAD 指向 main，仓库页和标签页 HTTP 200，raw VERSION 为 `1.1.0`，README 的标题、安装标签、升级示例和 `product-guide.md` 入口均已验证。
+
+## 2026-07-30 TASK-038 cloudcc-semattice 1.1.0 本地指南验证
+
+- 产品定位和模块场景以 `README.md`、`.claw/goals.md`、ADR-012 与 FEAT-009 为依据；当前可执行操作继续以运行时代码、51 项 API 能力目录和资源模型为依据。
+- 新增 `references/product-guide.md`，覆盖产品定位、五类核心问题、非目标、业务需求映射、14 个模块/资源场景、客户与联系人对象示例和 AI 设计输出要求。
+- `SKILL.md` 已区分理解设计、实施调用和设计后实施；`capability-workflows.md` 已增加元数据版本、对象、字段、关系的创建/读取/修改/删除或退役矩阵，并明确空候选草稿、稳定 ID、不支持对象/关系删除以及字段 purge/tombstone 边界。
+- 官方 `skill-creator/scripts/quick_validate.py` 对开发副本和本地安装副本均返回 `Skill is valid!`；`agents/openai.yaml` YAML 有效且短描述长度满足约束，Markdown 文件链接、`git diff --check` 和无 Token `metadata.object.upsert` dry-run 均通过。
+- `rsync --dry-run --delete` 只显示 6 项预期更新和新增 `product-guide.md`，没有删除项；同步后开发副本与 `/Users/xuhm/.codex/skills/cloudcc-semattice` 的 `diff -qr --exclude=.git` 无差异，安装版本为 `1.1.0`。
+- 远程 `v1.1.0` 标签不存在；本次未同步独立发布仓库、未提交、未创建标签或推送，最新远程已发布版本仍为 `v1.0.0`。
+- 项目状态 validator 在归档最旧的 `TASK-010` 后只报告既有 `FEAT-033` 缺少 `feature_id` / `updated_at` / `updated_by` 及非标准 status；TASK-038、完成卡数量和本次归档未产生新错误。
 
 ## 2026-07-29 TASK-037 cloudcc-semattice 1.0.0 发布验证
 

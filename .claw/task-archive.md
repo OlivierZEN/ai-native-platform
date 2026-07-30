@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-29T13:19:07Z
-updated_by: root after TASK-037 completion exceeded active-board retention
+updated_at: 2026-07-30T06:31:23Z
+updated_by: root after TASK-038 completion exceeded active-board retention
 archive_status: active
 ---
 
@@ -70,6 +70,33 @@ archive_status: active
 #### Handoff Note
 
 - `system.capability.list` 通过同一 Go Registry/Invoker 暴露 API、MCP 和无交互 CLI，独立 checker 已验证 test/race/vet/module verify、四目标纯 Go cross-build、无 TTY、MCP stdout 和 denylist。本任务完成时尚未授权数据库与身份集成；后续扩大授权以 `current-status.md` 为准。生产部署、CI、发布仍未授权，高风险异步 `operation_id`、持久审计与通用输出 Schema 校验仍未实现。
+
+### TASK-010 - Define the technology stack and repository baseline
+
+- status: `done`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-010-go-engineering-baseline.md`
+- depends_on: `TASK-009`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `go.mod, go.sum, cmd/**, internal/config/**, internal/observability/**, internal/database/**, scripts/**, docs/**`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Go 工程、配置、结构化日志、pgx 连接、显式 checksum migration runner 和测试目录基线可执行
+- migrator/control/runtime 三种连接身份分离，26 个外部模块许可和 checksum 已审计
+
+#### Next Action
+
+- 已完成；后续任务复用同一配置、日志、连接池和迁移 runner，新增依赖继续执行许可门禁。
+
+#### Handoff Note
+
+- Go 1.26.5 单运行时、CGO-free 四目标构建和 PostgreSQL 16 基线已由 maker 与独立 checker 验证。生产 CI、发布、SBOM/provenance/signature 和部署仍不在本任务授权范围。
 
 ### TASK-009 - Review the greenfield architecture baseline
 

@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-29T13:19:07Z
-updated_by: root after publishing cloudcc-semattice v1.0.0
+updated_at: 2026-07-30T06:52:23Z
+updated_by: root after publishing TASK-039 skill release to GitHub
 board_status: active
 ---
 
@@ -27,6 +27,35 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-039 - Publish Semattice guidance update to CodeUp and GitHub
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-038`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `project repository, skill/cloudcc-semattice, /Users/xuhm/Documents/cloudcc-semattice-skill, CodeUp origin, GitHub CloudCCAI/cloudcc-semattice, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- The project guidance changes and release evidence are committed and pushed as a fast-forward to the Alibaba CodeUp `main` branch.
+- The development skill is synchronized to the clean independent release repository after an inspected rsync dry-run.
+- Skill validation, version consistency, secret/cache checks and release-repository diff checks pass.
+- GitHub `main` and the new immutable annotated tag `v1.1.0` point to the same release commit and remote README/VERSION are verified.
+
+#### Next Action
+
+- GitHub `main + v1.1.0` is published and verified. Commit the project guidance and release evidence, then push the project fast-forward to Alibaba CodeUp `main`.
+
+#### Handoff Note
+
+- GitHub release commit is `3ac29afc34366d66a2e9320975dc3be498d55181`; local HEAD, remote main and `v1.1.0^{}` match. The project `origin` is Alibaba CodeUp. Do not force push or move an existing tag.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
@@ -187,6 +216,35 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-038 - Separate Semattice product guidance from execution guidance
+
+- status: `done`
+- priority: `high`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-037`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/cloudcc-semattice product positioning, business module scenarios, metadata operation workflows, local skill installation and project state`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- AI can distinguish Semattice product/design questions from authorized API execution requests.
+- Every current public capability domain is connected to its business problem, representative scenario and implementation entrypoint.
+- Objects, fields and relations have explicit create/read/update/delete or evolution boundaries without inventing unsupported APIs.
+- The skill validates successfully and the local installed copy matches the project development copy.
+
+#### Next Action
+
+- Completed locally as development version `1.1.0`; subsequent GitHub release is tracked by `TASK-039`.
+
+#### Handoff Note
+
+- Product positioning is grounded in goals, ADR-012 and FEAT-009. API availability remains grounded in the runtime registry and API catalog. The installed copy is `/Users/xuhm/.codex/skills/cloudcc-semattice`; `TASK-039` subsequently published immutable `v1.1.0`.
 
 ### TASK-037 - Rename the skill to cloudcc-semattice
 
@@ -577,33 +635,6 @@ board_status: active
 #### Handoff Note
 
 - 已完成并由本地 PostgreSQL 证据验证。Profile 不进入业务授权模型；组织树只计算数据范围与记录共享，禁止 `record × user` ACL 物化。规则投影只存 record-to-group 边且未 ready 时 fail closed；构建结束会检查缺边，access group disabled 会撤销其共享路径；组织合并不物理删除。通用自动运行/告警与完整容量验收已明确拆分至 TASK-017/TASK-019。
-
-### TASK-010 - Define the technology stack and repository baseline
-
-- status: `done`
-- priority: `critical`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-010-go-engineering-baseline.md`
-- depends_on: `TASK-009`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `go.mod, go.sum, cmd/**, internal/config/**, internal/observability/**, internal/database/**, scripts/**, docs/**`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- Go 工程、配置、结构化日志、pgx 连接、显式 checksum migration runner 和测试目录基线可执行
-- migrator/control/runtime 三种连接身份分离，26 个外部模块许可和 checksum 已审计
-
-#### Next Action
-
-- 已完成；后续任务复用同一配置、日志、连接池和迁移 runner，新增依赖继续执行许可门禁。
-
-#### Handoff Note
-
-- Go 1.26.5 单运行时、CGO-free 四目标构建和 PostgreSQL 16 基线已由 maker 与独立 checker 验证。生产 CI、发布、SBOM/provenance/signature 和部署仍不在本任务授权范围。
 
 ### TASK-011 - Integrate the unified tenant operations control plane
 

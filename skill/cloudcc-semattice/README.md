@@ -1,11 +1,13 @@
 # CloudCC Semattice（语义格）
 
-当前版本：[`1.0.0`](VERSION)
+当前版本：[`1.1.0`](VERSION)
 
-`cloudcc-semattice` 是通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它帮助 AI 发现平台能力，理解资源模型，并在租户、元数据、记录、用量、授权、组织和共享等领域执行受控操作。
+`cloudcc-semattice` 是帮助 AI 理解、设计并通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它先说明产品定位、业务模块和资源模型，再在用户授权后执行租户、元数据、记录、用量、授权、组织和共享等受控操作。
 
 ## 能力范围
 
+- 说明 Semattice 是什么、解决什么问题，以及各功能模块适用的业务场景。
+- 把业务需求设计为对象、字段、关系、记录、权限、数据范围和共享方案。
 - 发现线上已发布的 Capability、scope、风险等级和输入 Schema。
 - 查看和演进对象、字段、关系及元数据版本。
 - 查询、创建、更新和软删除业务记录。
@@ -28,7 +30,7 @@
 
 ```bash
 git clone \
-  --branch v1.0.0 \
+  --branch v1.1.0 \
   --depth 1 \
   https://github.com/CloudCCAI/cloudcc-semattice.git \
   ~/.codex/skills/cloudcc-semattice
@@ -78,10 +80,12 @@ python3 scripts/semattice_api.py \
 ```bash
 cd ~/.codex/skills/cloudcc-semattice
 git fetch --tags
-git checkout v1.0.0
+git checkout v1.1.0
 ```
 
 `1.0.0` 将技能 ID 和调用名统一为 `cloudcc-semattice`。从 `0.x` 升级时，请安装到新目录并将调用名改为 `$cloudcc-semattice`；确认新技能可用后再移除旧目录。
+
+`1.1.0` 增加产品定位、业务模块场景、设计/实施双模式，以及对象、字段和关系的操作边界。
 
 ## 目录结构
 
@@ -94,6 +98,7 @@ git checkout v1.0.0
 │   ├── api-catalog.md
 │   ├── api-contract.md
 │   ├── capability-workflows.md
+│   ├── product-guide.md
 │   └── resource-model.md
 └── scripts/semattice_api.py
 ```
