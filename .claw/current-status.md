@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-30T06:52:23Z
-updated_by: root after publishing cloudcc-semattice v1.1.0 to GitHub
+updated_at: 2026-07-30T06:54:07Z
+updated_by: root after publishing TASK-039 to CodeUp and GitHub
 phase: cross-product-identity-live
 active_task: "TASK-033"
 next_action: "等待 AgentCiCi 新版上线后，以真实受权机器账户执行 OACT exchange、owner 失效和撤销投影验收。"
@@ -19,7 +19,7 @@ read_next:
 
 ## 快照
 
-- TASK-039 正在完成发布收尾：独立技能仓库已将 `main + v1.1.0` 原子推送至 `https://github.com/CloudCCAI/cloudcc-semattice`，release commit 为 `3ac29afc34366d66a2e9320975dc3be498d55181`。本地 HEAD、`origin/main` 和 `v1.1.0^{}` 一致，远程 HEAD 指向 main，仓库页和标签页 HTTP 200，raw VERSION/README 回读通过。下一步提交当前项目并推送阿里云 CodeUp `main`。
+- TASK-039 已完成：项目技能与发布证据以提交 `a55d71d773446902598b28fb525c7562003f351b` 快进推送至阿里云 CodeUp `main`，远端分支回读一致。独立技能仓库将 `main + v1.1.0` 原子推送至 `https://github.com/CloudCCAI/cloudcc-semattice`，release commit 为 `3ac29afc34366d66a2e9320975dc3be498d55181`；本地 HEAD、`origin/main` 和 `v1.1.0^{}` 一致，远程 HEAD 指向 main，仓库页、标签页及 raw VERSION/README 均验证通过。未使用 force push，未移动历史标签。
 
 - TASK-038 已完成：`cloudcc-semattice` 本地开发版本升至 `1.1.0`，新增产品定位与业务模块指南，并把技能入口拆分为“理解与设计 / 实施与调用 / 设计后实施”三种模式。对象、字段和关系现在具有明确的创建、读取、修改、删除或退役边界；已发布元数据演进明确要求完整复制定义到空候选草稿并保持稳定 ID。官方技能校验、YAML、链接、无 Token dry-run、本地安装目录一致性均通过。TASK-038 完成时仅同步本机安装目录；后续 GitHub 正式发布由 TASK-039 记录。
 

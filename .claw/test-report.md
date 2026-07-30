@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-30T06:52:23Z
-updated_by: root after publishing and verifying cloudcc-semattice v1.1.0 on GitHub
-last_run_at: 2026-07-30T06:52:23Z
+updated_at: 2026-07-30T06:54:07Z
+updated_by: root after verifying TASK-039 CodeUp and GitHub publication
+last_run_at: 2026-07-30T06:54:07Z
 last_run_status: passed
 ---
 
@@ -15,6 +15,7 @@ last_run_status: passed
 - 开发副本和独立发布仓库的官方 `quick_validate.py` 均返回 `Skill is valid!`；VERSION/README `1.1.0`、YAML、Markdown 链接、CLI help、无 Token dry-run、缓存/私钥/常见 Token 扫描与 diff check 均通过。
 - 独立仓库创建 release commit `3ac29afc34366d66a2e9320975dc3be498d55181` 和 annotated tag `v1.1.0`，通过 `git push --atomic -u origin main v1.1.0` 同时发布，未使用 force push。
 - 本地 HEAD、`origin/main` 与 `v1.1.0^{}` 均为 `3ac29afc34366d66a2e9320975dc3be498d55181`；远程 HEAD 指向 main，仓库页和标签页 HTTP 200，raw VERSION 为 `1.1.0`，README 的标题、安装标签、升级示例和 `product-guide.md` 入口均已验证。
+- 项目内容与上述发布证据提交为 `a55d71d773446902598b28fb525c7562003f351b`，通过普通 `git push origin main` 快进推送至阿里云 CodeUp；本地 HEAD、tracking ref 和远程 `refs/heads/main` 回读一致，未使用 force push。
 
 ## 2026-07-30 TASK-038 cloudcc-semattice 1.1.0 本地指南验证
 

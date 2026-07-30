@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-30T06:31:23Z
-updated_by: root after TASK-038 completion exceeded active-board retention
+updated_at: 2026-07-30T06:54:07Z
+updated_by: root after TASK-039 completion exceeded active-board retention
 archive_status: active
 ---
 
@@ -97,6 +97,34 @@ archive_status: active
 #### Handoff Note
 
 - Go 1.26.5 单运行时、CGO-free 四目标构建和 PostgreSQL 16 基线已由 maker 与独立 checker 验证。生产 CI、发布、SBOM/provenance/signature 和部署仍不在本任务授权范围。
+
+### TASK-011 - Integrate the unified tenant operations control plane
+
+- status: `done`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-011-unified-tenant-operations-control-plane.md`
+- depends_on: `TASK-010`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `Native operations port, JWT identity, tenant registry, lifecycle, routing, operation, audit, API/MCP/CLI`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Native 可独立开户；与 Agent CC 绑定时复用运营控制面提供的 UUIDv4 `tenant_id + 20 位 company_id`
+- 生命周期、修订、幂等、失败恢复、审计与可信身份负向测试通过
+- 六个租户能力由同一 Registry/Invoker 投影为 authenticated API、MCP 和无交互 CLI
+
+#### Next Action
+
+- 已完成当前仓库 Native 适配器与契约；未来跨仓库接入须由运营端实现版本化 `operations.Port`，不在本任务伪造完成。
+
+#### Handoff Note
+
+- `ai_native_control` 是非 owner、非 superuser、非 BYPASSRLS 的独立跨租户身份，仅在 tenant registry/operation/audit 三表获得精确权限；真实 main 双连接接线测试通过。
 
 ### TASK-009 - Review the greenfield architecture baseline
 
