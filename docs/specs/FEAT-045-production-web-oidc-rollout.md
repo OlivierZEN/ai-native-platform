@@ -2,13 +2,13 @@
 kind: feature-spec
 feature_id: FEAT-045
 title: Deploy Semattice web Keycloak login
-status: in_implementation
+status: verified
 owner_role: release-agent
 task_ids: TASK-046
 related_decisions: ADR-014
 related_issues: ISSUE-001
-updated_at: 2026-07-31T07:40:48Z
-updated_by: root after user authorized commit and production deployment
+updated_at: 2026-07-31T07:49:52Z
+updated_by: root after committed production rollout and real browser acceptance
 ---
 
 # FEAT-045 - Semattice 网站 Keycloak 登录生产发布
@@ -41,3 +41,13 @@ updated_by: root after user authorized commit and production deployment
 - `/healthz`为200，匿名`/console/api/overview`为401，`/auth/oidc/login`为303并跳转精确Keycloak authorization endpoint。
 - 真实浏览器登录成功后进入`/console/`，Session Cookie为Secure/HttpOnly/SameSite=Lax且不含Keycloak Token。
 - 回滚所需上一release、环境备份、Nginx备份和静态站备份均存在。
+
+## 实施结果
+
+- 代码提交：`dcf2b811b7ec88d0685938f6d6564c818ba24314`。
+- 生产 release：`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`。
+- Linux amd64二进制 SHA-256：`d000e922e0231d39cca9040821bc42cdfa7b96411ad782d5b679bd083db93b87`。
+- 现有`semattice-web` Client Secret仅在服务器内从Keycloak读取并写入`/etc/semattice/secrets/semattice-web-client-secret`，未重新生成、未进入终端输出或项目文件。
+- Semattice、Nginx、PostgreSQL和Keycloak均active；Nginx配置、健康检查、匿名401负例及OIDC 303/S256 PKCE参数验证通过。
+- 真实Chrome验收从匿名登录页进入Keycloak并成功回到`/console/`；页面显示企业管理中心、当前租户和退出按钮，控制台错误数为0。
+- 上一应用release、环境备份、Nginx备份和静态站备份均保留，可执行原子回滚。

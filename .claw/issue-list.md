@@ -1,8 +1,8 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-07-31T05:09:53Z
-updated_by: root after merging production feature histories
+updated_at: 2026-07-31T07:49:52Z
+updated_by: root after verifying combined production release
 ---
 
 # 问题追踪列表
@@ -14,17 +14,16 @@ updated_by: root after merging production feature histories
 
 ## 活跃问题
 
-### ISSUE-001 - 当前生产 release 尚未包含合并后的控制台与登录组合
-
-- severity: `medium`
-- status: `open`
-- evidence: 当前生产 release `/opt/semattice/releases/20260731T045751Z-standalone-auth` 在远端 TASK-040 真实治理控制台源码合入本地 `main` 前构建；合并后的仓库源码已同时包含 TASK-040 与 TASK-043。
-- root_cause: `verified`；两个功能从分叉的本地/远端历史分别发布，生产认证 release 的构建输入不含后来合并的控制台提交。
-- next_action: 本次 CodeUp 推送完成后，从同一合并 HEAD 构建新的不可变生产 release；依次验证真实控制台读取、Keycloak PKCE、`/v1/auth/token`、OACT Capability 调用、匿名负例和回滚证据。
+- 暂无活跃问题。
 
 ## 已解决问题
 
-- 暂无已解决问题。
+### ISSUE-001 - 当前生产 release 尚未包含合并后的控制台与登录组合
+
+- severity: `medium`
+- status: `closed`
+- resolution: 提交`dcf2b811b7ec88d0685938f6d6564c818ba24314`构建并发布为`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`，同一制品同时包含真实治理控制台、Semattice CLI自有登录和网站OIDC登录。
+- evidence: 服务、健康、匿名负例、OIDC 303/S256 PKCE参数与真实Chrome登录均通过；登录后回到`/console/`并显示当前租户和退出按钮，浏览器控制台错误数为0。
 
 ## 维护规则
 

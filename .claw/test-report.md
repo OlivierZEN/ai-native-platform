@@ -1,13 +1,23 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T07:34:17Z
-updated_by: root after Semattice web Keycloak login verification
-last_run_at: 2026-07-31T07:34:17Z
+updated_at: 2026-07-31T07:49:52Z
+updated_by: root after production web OIDC deployment verification
+last_run_at: 2026-07-31T07:49:52Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 TASK-046 Semattice网站Keycloak登录生产验收
+
+- 完整实现以提交`dcf2b811b7ec88d0685938f6d6564c818ba24314`构建，Linux amd64二进制SHA-256为`d000e922e0231d39cca9040821bc42cdfa7b96411ad782d5b679bd083db93b87`，发布目录为`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`。
+- 发布前全量`go test -race ./... -count=1`、`go vet ./...`、`go mod verify`、Linux amd64构建、16项Skill Python测试、官方Skill校验、无Token dry-run、JS/HTML、Shell和diff门禁通过。
+- 现有`semattice-web` Client Secret仅在服务器内读取并写入`/etc/semattice/secrets/semattice-web-client-secret`；Secret目录为`root:semattice 0750`，文件和环境文件为`root:semattice 0640`。未重新生成、打印或提交Secret。
+- Semattice、Nginx、PostgreSQL 16和Keycloak均active，Semattice重启计数为0，Nginx配置有效，近期服务错误计数为0；`/healthz`和`/console/`为200，匿名治理API与`POST /v1/auth/token`为401。
+- `/auth/oidc/login`为303，精确跳转Keycloak realm authorization endpoint；`client_id=semattice-web`、callback、S256 PKCE、state、nonce及`openid organization`均正确，查询参数不含Client Secret。状态Cookie限定`Path=/auth/oidc`并具有`Secure; HttpOnly; SameSite=Lax`。
+- 真实Chrome从匿名登录页点击“使用 Keycloak 登录”，经Keycloak成功回到`https://semattice.agentcici.com/console/`；页面显示企业管理中心、当前租户和退出按钮，浏览器控制台错误数为0。
+- 环境备份`/etc/semattice/semattice.env.backup.20260731T074537Z-before-web-oidc`、上一应用release、Nginx备份和静态站备份均保留。ISSUE-001据此关闭。
 
 ## 2026-07-31 TASK-045 Semattice网站Keycloak登录本地验收
 

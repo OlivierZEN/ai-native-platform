@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T07:40:48Z
-updated_by: root after user authorized production web OIDC rollout
+updated_at: 2026-07-31T07:49:52Z
+updated_by: root after verified production web OIDC rollout
 phase: cross-product-identity-live
-active_task: "TASK-046"
-next_action: "审查并提交当前完整工作树，从该提交构建不可变制品；在服务器内安全读取现有semattice-web Client Secret并写入受保护文件，配置环境、原子发布并执行真实网页登录验收。"
+active_task: "TASK-033"
+next_action: "等待AgentCiCi新版、Keycloak SMTP、OACT签名配置和受权service client凭据后，执行真实机器主体的OACT exchange、owner失效与撤销投影验收。"
 read_next:
   goals: true
   decisions: true
@@ -19,15 +19,15 @@ read_next:
 
 ## 快照
 
-- TASK-046 / FEAT-045 已获用户明确授权：提交当前完整代码并部署Semattice网站Keycloak登录。发布只读取现有`semattice-web` Secret且不重新生成或输出；服务器Secret文件固定`root:semattice 0640`，部署从提交SHA构建并保留应用、环境、Nginx和静态站回滚点。
+- TASK-046 / FEAT-045 已完成：提交`dcf2b811b7ec88d0685938f6d6564c818ba24314`已发布为`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`，二进制SHA-256为`d000e922e0231d39cca9040821bc42cdfa7b96411ad782d5b679bd083db93b87`。现有`semattice-web` Secret只在服务器内写入受保护文件；服务、Nginx、健康与匿名负例、OIDC 303/S256 PKCE均通过。真实Chrome登录成功回到企业管理中心，显示当前租户和退出按钮且浏览器控制台零错误。上一release与环境、Nginx、静态站备份均保留。
 
-- TASK-045 / FEAT-044 本地实现已完成：保留`semattice-cli`，新增`semattice-web` confidential OIDC网站登录。`/auth/oidc/login`使用state/nonce/S256 PKCE，回调以client_secret_basic换码并验证access/ID token、subject、唯一Organization和active tenant，成功后只创建最长15分钟且不含Keycloak Token的签名安全Cookie。Nginx路由和匿名登录按钮已加入；全量Go race、vet、module、Linux构建、JS/HTML、Shell和diff门禁通过。未读取生产Secret、修改Keycloak、部署、提交或推送；线上启用仍需单独发布。
+- TASK-045 / FEAT-044 已随TASK-046上线：保留`semattice-cli`，新增`semattice-web` confidential OIDC网站登录。`/auth/oidc/login`使用state/nonce/S256 PKCE，回调以client_secret_basic换码并验证access/ID token、subject、唯一Organization和active tenant，成功后只创建最长15分钟且不含Keycloak Token的签名安全Cookie。
 
 - TASK-044 / FEAT-043 已完成：`cloudcc-semattice` `1.3.0` 默认请求当前51项公开Capability所需的全部26个唯一scope，旧v2登录缓存fail closed并要求重新登录；开发副本与本机安装副本一致。生产 `AI_NATIVE_OACT_ALLOWED_SCOPES` 已扩展为同一集合，备份为 `/etc/semattice/semattice.env.backup.20260731T052514Z-all-capability-scopes`。真实PKCE登录返回26个scope；线上能力发现为51项/26个scope且零差异，`tenant.get-status`只读调用成功。scope不替代Principal/RBAC、RLS、审批、幂等或审计，验收未执行业务写操作。
 
-- ISSUE-001：当前生产 release `20260731T045751Z-standalone-auth` 是在本次合并远端 TASK-040 源码之前构建的；当前仓库合并结果同时包含真实治理控制台与 Semattice 自有登录，但仍需另行从推送后的同一 main HEAD 构建并部署组合制品，才能声明两项功能处于同一线上版本。
+- ISSUE-001 已关闭：当前生产release从同一提交构建，已同时包含真实治理控制台、Semattice CLI自有登录和网站OIDC登录，并完成真实浏览器验收。
 
-- TASK-043 / FEAT-042 已完成：当前 production release 为 `/opt/semattice/releases/20260731T045751Z-standalone-auth`，SHA-256 为 `73c552daffcf3ee2dcc203a009f08acc7b8effe3754e9a1d69267a690b3074f0`；旧 release `/opt/semattice/releases/20260731T012059Z-console`、Semattice环境备份和 Keycloak `semattice-cli` 配置备份均保留。旧 AgentCiCi 开户环境变量已移除，`semattice-api` audience mapper唯一，Organization scope仍为 optional。真实 PKCE登录已将 `orgx2x8awt02djpp5xdp` 映射到 active tenant `ce85dabd-68be-503d-9d1b-9b63c536fa78`，短期 OACT调用 `system.capability.list` 返回 succeeded / 51 项能力。TASK-043完成时allowlist仅开放 `system.capability.read`，后续已由TASK-044扩展为全部26个公开能力scope；未创建租户/Principal/RBAC、未改其他 Keycloak数据、未发布独立Skill release。
+- TASK-043 / FEAT-042 已完成：历史独立认证release为`/opt/semattice/releases/20260731T045751Z-standalone-auth`，现已由TASK-046组合release取代并保留回滚。旧AgentCiCi开户环境变量已移除，`semattice-api` audience mapper唯一，Organization scope仍为optional。真实PKCE登录已将`orgx2x8awt02djpp5xdp`映射到active tenant `ce85dabd-68be-503d-9d1b-9b63c536fa78`，短期OACT调用`system.capability.list`返回succeeded / 51项能力。TASK-043完成时allowlist仅开放`system.capability.read`，后续已由TASK-044扩展为全部26个公开能力scope；未创建租户/Principal/RBAC、未改其他Keycloak数据、未发布独立Skill release。
 
 - TASK-042 / FEAT-041 本地实现已完成：Semattice新增 `POST /v1/auth/token`，固定验证 Keycloak RS256 issuer/audience/JWKS、`azp=semattice-cli` 和唯一 Organization alias，再映射 active `tenant_registry.company_id` 并使用 Semattice自有 HS256 identity key签发短期 OACT。Skill/CLI删除 AgentCiCi base URL、公司目录和外部 mint调用，缓存升至 v2；`serve`删除 AgentCiCi开户启动门禁、HMAC路由和 reservation/complete代码。Skill升至 `1.2.2` 并同步本机安装目录。14 项 Python测试、全量 Go race、vet、module/build、技能/YAML/bash/diff/secret检查通过。现有 Keycloak Realm/域名作为基础设施标识保留。
 

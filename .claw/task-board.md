@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T07:40:48Z
-updated_by: root after starting production web OIDC rollout
+updated_at: 2026-07-31T07:49:52Z
+updated_by: root after completing production web OIDC rollout
 board_status: active
 ---
 
@@ -27,35 +27,6 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
-
-### TASK-046 - Deploy Semattice web Keycloak login
-
-- status: `in_progress`
-- priority: `critical`
-- owner_role: `release-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-045-production-web-oidc-rollout.md`
-- depends_on: `TASK-040, TASK-043, TASK-045`
-- blocked_by: `none`
-- related_issues: `ISSUE-001`
-- scope_files: `current repository commit, protected server secret/config, immutable Semattice release, static console, Nginx and production verification evidence`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- The complete verified worktree is committed without credentials.
-- The existing `semattice-web` Client Secret is stored only in the protected server file and referenced by exact environment configuration.
-- One immutable release from the committed SHA serves the combined console, CLI access context and web OIDC login.
-- Service, public negative checks, real browser login and rollback evidence pass.
-
-#### Next Action
-
-- Run final repository gates, commit the complete worktree, configure the protected production Secret without output, deploy the committed SHA and perform real browser acceptance.
-
-#### Handoff Note
-
-- User explicitly authorized commit and deployment on 2026-07-31. Do not regenerate or print the existing Keycloak Client Secret; do not change users, Organizations, tenants or business data.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 

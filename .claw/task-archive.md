@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-31T07:34:17Z
-updated_by: root after archiving locally verified Semattice web Keycloak login
+updated_at: 2026-07-31T07:49:52Z
+updated_by: root after archiving verified production web OIDC rollout
 archive_status: active
 ---
 
@@ -11,6 +11,35 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-046 - Deploy Semattice web Keycloak login
+
+- status: `done`
+- priority: `critical`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-045-production-web-oidc-rollout.md`
+- depends_on: `TASK-040, TASK-043, TASK-045`
+- blocked_by: `none`
+- related_issues: `ISSUE-001`
+- scope_files: `committed repository release, protected server secret/config, immutable Semattice release, static console, Nginx and production verification evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- The complete verified worktree is committed without credentials.
+- The existing `semattice-web` Client Secret is stored only in the protected server file and referenced by exact environment configuration.
+- One immutable release from the committed SHA serves the combined console, CLI access context and web OIDC login.
+- Service, public negative checks, real browser login and rollback evidence pass.
+
+#### Next Action
+
+- Completed. Keep the existing protected Secret file and exact callback URI when rotating or rebuilding the web client; use a new immutable release for future changes.
+
+#### Handoff Note
+
+- Commit `dcf2b811b7ec88d0685938f6d6564c818ba24314` was deployed as `/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`. Real Chrome login returned to the authenticated console with zero browser-console errors. The Secret was never regenerated or printed.
 
 ### TASK-045 - Add Keycloak login to the Semattice website
 
