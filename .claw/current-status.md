@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T10:17:51Z
-updated_by: root after local fieldless object regression verification
+updated_at: 2026-07-31T10:35:02Z
+updated_by: root after TASK-050 production rollout and server smoke
 phase: cross-product-identity-live
 active_task: "TASK-050"
-next_action: "提交TASK-050修复，按不可变release流程部署生产并在真实Chrome登录态复测对象与字段页。"
+next_action: "等待用户在已打开的Keycloak页面完成登录，然后在真实Chrome复测对象与字段页并关闭ISSUE-002。"
 read_next:
   goals: true
   decisions: true
@@ -19,7 +19,7 @@ read_next:
 
 ## 快照
 
-- TASK-050 / ISSUE-002 本地修复已通过：控制台reader现在将零字段对象稳定编码为`fields: []`，前端将非数组字段集合归一为空数组，静态资源版本已更新。定向Go测试、前端零字段行为、全仓race/vet/module、Linux amd64构建、脚本语法和diff检查均通过；待提交、生产部署和真实Chrome复测。
+- TASK-050 / ISSUE-002 修复提交`36e1c0a32b2ed0e00755a6b2fd857969868e586c`已发布为`/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e`，二进制SHA-256为`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`。四项服务active、Nginx和健康/匿名负例通过、错误日志为0，线上静态契约包含新归一逻辑。真实Chrome旧Session已过期，Keycloak未保留前台SSO，页面已交回用户登录；登录后仍需最终点击验收。
 
 - CodeUp `origin/main` 已通过普通快进从`27020e3`发布至`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`，包含网站OIDC、租户名称顶栏、生产发布证据和联系人草稿验证共5个提交；本地HEAD、tracking ref与远端分支回读一致，未使用force push。
 

@@ -1,21 +1,23 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T10:17:51Z
-updated_by: root after local fieldless object regression verification
-last_run_at: 2026-07-31T10:17:51Z
+updated_at: 2026-07-31T10:35:02Z
+updated_by: root after TASK-050 production server smoke
+last_run_at: 2026-07-31T10:35:02Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-## 2026-07-31 TASK-050 无字段对象控制台修复本地验证
+## 2026-07-31 TASK-050 无字段对象控制台修复验证
 
 - 根因回归测试确认nil字段集合经JSON编码为`fields: []`，并确认已有字段原样保留；`GOTOOLCHAIN=go1.26.5 go test ./internal/console -count=1`通过。
 - Node行为测试以`fields: null`调用真实`objectPage`函数，确认不抛异常且响应对象被归一为长度0的数组；`node --check deploy/semattice/www/console/console.js`通过。
 - `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`和`go mod verify`全部通过。
 - Linux amd64 CGO-free发布构建通过，验证制品SHA-256为`25f9f08d0b92baa9d4ce00b5567f57fcd194e5a87c602711d806d16907ed98d4`；`bash -n scripts/release-console.sh`与`git diff --check`通过。
-- 生产部署和真实Chrome登录态验收待执行，不在本地结果中提前标记完成。
+- 提交`36e1c0a32b2ed0e00755a6b2fd857969868e586c`已原子发布为`/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e`，生产二进制SHA-256为`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`；上一release和静态站/Nginx备份均由发布脚本保留。
+- Semattice、Nginx、PostgreSQL 16和Keycloak均为active，Semattice重启计数为0，Nginx配置有效，`/healthz`与`/console/`为200，匿名对象API和匿名换票为401，近10分钟Semattice错误日志为0。
+- 线上HTML引用`console.js?v=20260731-03`，线上JavaScript包含`Array.isArray(item.fields)`归一逻辑。真实Chrome旧管理会话已过期且Keycloak前台SSO未保留，已停在官方登录页等待用户登录；未输入或读取凭据，登录后页面验收仍待执行。
 
 ## 2026-07-31 生产元数据首版本发布验收
 

@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T10:17:51Z
-updated_by: root after local fieldless object regression verification
+updated_at: 2026-07-31T10:35:02Z
+updated_by: root after TASK-050 production rollout and server smoke
 board_status: active
 ---
 
@@ -50,7 +50,7 @@ board_status: active
 
 #### Next Action
 
-- Local regression is complete. Commit the clean release candidate, deploy through the immutable console release workflow, and verify both objects in the authenticated production console.
+- Release `20260731T101946Z-web-oidc-36e1c0a32b2e` is live and server smoke passed. Wait for the user to complete Keycloak login in the handed-off Chrome tab, then verify both objects and zero browser errors.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
