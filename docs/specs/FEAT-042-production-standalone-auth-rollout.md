@@ -67,5 +67,6 @@ Semattice `POST /v1/auth/token` 获取短期 OACT。
 - 真实 PKCE登录把 Organization alias `orgx2x8awt02djpp5xdp` 映射到 active tenant
   `ce85dabd-68be-503d-9d1b-9b63c536fa78`，OACT 调用
   `system.capability.list` 成功并发现 51 项能力。
-- 生产 allowlist当前只开放 `system.capability.read`，用于安全完成登录和能力发现；
-  业务读写 scope须在 Principal/RBAC授予模型明确后单独扩展。
+- TASK-043发布时生产allowlist只开放`system.capability.read`，用于安全完成登录和能力
+  发现；后续已由[FEAT-043](FEAT-043-skill-all-capability-scopes.md)按用户要求扩展为
+  全部公开能力scope，Principal/RBAC、RLS、审批和审计边界保持不变。

@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -37,6 +39,56 @@ func TestLoadDefaultsAndOverrides(t *testing.T) {
 	}
 	if cfg.Identity.Issuer == "" || cfg.Identity.HMACKey == "" {
 		t.Fatalf("identity config not loaded: %#v", cfg.Identity)
+	}
+}
+
+func TestLoadConsoleOIDCAndProtectedSecretFile(t *testing.T) {
+	values := map[string]string{
+		"AI_NATIVE_IDENTITY_ISSUER":                 "https://semattice.example.test",
+		"AI_NATIVE_IDENTITY_AUDIENCE":               "semattice-api",
+		"AI_NATIVE_IDENTITY_ALGORITHM":              "HS256",
+		"AI_NATIVE_IDENTITY_HMAC_KEY":               "semattice-signing-key-material-that-is-long-enough",
+		"AI_NATIVE_KEYCLOAK_ISSUER":                 "https://sso.example.test/realms/example",
+		"AI_NATIVE_KEYCLOAK_AUDIENCE":               "semattice-api",
+		"AI_NATIVE_KEYCLOAK_JWKS_URL":               "https://sso.example.test/realms/example/protocol/openid-connect/certs",
+		"AI_NATIVE_KEYCLOAK_CLIENT_ID":              "semattice-cli",
+		"AI_NATIVE_OACT_ALLOWED_SCOPES":             "authorization.read",
+		"AI_NATIVE_CONSOLE_OIDC_CLIENT_ID":          "semattice-web",
+		"AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE": "/etc/semattice/secrets/semattice-web-client-secret",
+		"AI_NATIVE_CONSOLE_OIDC_REDIRECT_URI":       "https://semattice.example.test/auth/oidc/callback",
+	}
+	cfg, err := Load(func(key string) string { return values[key] })
+	if err != nil || !cfg.ConsoleOIDC.Enabled() {
+		t.Fatalf("valid console OIDC config rejected: cfg=%#v err=%v", cfg.ConsoleOIDC, err)
+	}
+	for _, key := range []string{
+		"AI_NATIVE_CONSOLE_OIDC_CLIENT_ID",
+		"AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE",
+		"AI_NATIVE_CONSOLE_OIDC_REDIRECT_URI",
+	} {
+		invalid := map[string]string{}
+		for name, value := range values {
+			invalid[name] = value
+		}
+		delete(invalid, key)
+		if _, err := Load(func(name string) string { return invalid[name] }); err == nil {
+			t.Fatalf("partial console OIDC config accepted without %s", key)
+		}
+	}
+
+	path := filepath.Join(t.TempDir(), "client-secret")
+	if err := os.WriteFile(path, []byte("protected-client-secret-value\n"), 0640); err != nil {
+		t.Fatalf("WriteFile: %v", err)
+	}
+	secret, err := ReadSecretFile(path)
+	if err != nil || secret != "protected-client-secret-value" {
+		t.Fatalf("ReadSecretFile secret=%q err=%v", secret, err)
+	}
+	if err := os.Chmod(path, 0644); err != nil {
+		t.Fatalf("Chmod: %v", err)
+	}
+	if _, err := ReadSecretFile(path); err == nil {
+		t.Fatal("world-readable client secret file accepted")
 	}
 }
 

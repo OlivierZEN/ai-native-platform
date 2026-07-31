@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-31T05:09:53Z
-updated_by: release-agent after merging live console and standalone access-context rollout records
+updated_at: 2026-07-31T05:26:40Z
+updated_by: root after all-capability OACT scope rollout
 verification_status: passed
 ---
 
@@ -55,7 +55,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 当前认证 release 在本次合入远端 TASK-040 源码前构建，因此下一次发布必须从推送后的同一 `main` HEAD 构建组合制品，并同时回归真实治理控制台与独立登录；不得把两个历史 release 的分别通过误写成当前单一制品已同时包含两项功能。
 - 当前 Semattice环境备份为 `/etc/semattice/semattice.env.backup.20260731T045751Z-standalone-auth`；Keycloak `semattice-cli` client备份为 `/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - Semattice不再配置或调用 AgentCiCi开户/OACT接口。`/v1/auth/token` 固定验证 Keycloak issuer、`semattice-api` audience、JWKS、`azp=semattice-cli` 和唯一 Organization alias，再映射 active `tenant_registry.company_id` 并签发 Semattice短期 OACT。
-- `semattice-cli` 必须保持 public、Authorization Code、PKCE S256、`http://127.0.0.1` redirect；`semattice-api-audience` mapper必须唯一且写入 access token，`organization` client scope必须分配。当前 OACT allowlist仅为 `system.capability.read`，业务读写 scope须经 Principal/RBAC设计和单独发布。
+- `semattice-cli` 必须保持 public、Authorization Code、PKCE S256、`http://127.0.0.1` redirect；`semattice-api-audience` mapper必须唯一且写入 access token，`organization` client scope必须分配。当前OACT allowlist包含51项公开Capability所需的全部26个唯一scope；scope只是入口上限，Principal/RBAC、RLS、审批和审计继续独立执行。TASK-044配置备份为 `/etc/semattice/semattice.env.backup.20260731T052514Z-all-capability-scopes`。
 - systemd unit：`/etc/systemd/system/semattice.service`；仓库模板为 `deploy/semattice/semattice.service`。
 - Nginx server block：`/etc/nginx/conf.d/semattice.conf`；仓库模板为 `deploy/semattice/nginx.conf`。
 - Streamable HTTP MCP：Nginx `location = /mcp` 代理至 `127.0.0.1:8080`，必须透传 `Authorization`、将上游 `Host` 固定为 `127.0.0.1`，并关闭 `proxy_buffering`、`proxy_request_buffering`、`proxy_cache`。这使 SDK loopback DNS-rebinding 防护继续有效；当前远程配置备份为 `/etc/nginx/conf.d/semattice.conf.backup.20260724T153300Z` 与 `.backup.20260724T155400Z-mcp-host`。
@@ -68,7 +68,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 业务 Realm 为 `agentcici`；已登记 `agentcici-bff`、`semattice-api`、`official-access-context`、`followup-worker`。本次只创建非秘密 client 注册，后续应用接入再按最小权限读取并安全分发所需 secret。
 - 更新时先安装新的不可变 release 目录，核对 checksum，再原子切换 `/opt/semattice/current` 并重启 `semattice`。不要覆盖或删除旧 release。
 - 回滚时将 `current` 指回前一 release 并重启；数据库 migration 不自动回滚，数据目录不得删除。
-- 独立登录生产 smoke：匿名 `POST /v1/auth/token` 必须为 401；真实 `semattice-cli` Authorization Code + S256 PKCE 登录只向 Semattice换取短期 OACT，并以最小 `system.capability.read` scope成功调用 Capability API。旧 `/internal/v1/company-provisionings` 已删除，不再作为活动发布门禁。
+- 独立登录生产 smoke：匿名 `POST /v1/auth/token` 必须为401；真实 `semattice-cli` Authorization Code + S256 PKCE登录只向Semattice换取短期OACT，返回scope必须与线上51项公开Capability归并出的26个唯一`required_scope`完全一致，并使用`system.capability.list`与至少一个非发现类只读能力验证。旧 `/internal/v1/company-provisionings` 已删除，不再作为活动发布门禁。
 
 ## 排障
 

@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-31T05:09:53Z
-updated_by: root after merging TASK-040 through TASK-043 histories
+updated_at: 2026-07-31T07:34:17Z
+updated_by: root after archiving locally verified Semattice web Keycloak login
 archive_status: active
 ---
 
@@ -11,6 +11,63 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-045 - Add Keycloak login to the Semattice website
+
+- status: `done`
+- priority: `critical`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-044-semattice-web-keycloak-login.md`
+- depends_on: `TASK-040, TASK-042, TASK-044`
+- blocked_by: `none`
+- related_issues: `ISSUE-001`
+- scope_files: `console OIDC routes and session, identity verifier, runtime configuration, nginx route, console login UI and tests`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- `/auth/oidc/login` starts Authorization Code + S256 PKCE without exposing secrets or tokens.
+- `/auth/oidc/callback` validates state, nonce, Keycloak tokens and active Organization mapping before creating a secure console Cookie.
+- The anonymous console shows a Keycloak login button while the existing CLI/OACT session exchange remains compatible.
+- Local security, configuration, handler, frontend and full repository verification pass.
+
+#### Next Action
+
+- Local implementation is complete. A separate authorized release must create the protected Client Secret file, add the three `AI_NATIVE_CONSOLE_OIDC_*` settings, deploy one combined binary/static/Nginx release, and run a real browser smoke test.
+
+#### Handoff Note
+
+- `semattice-web` is a confidential server-side web client; `semattice-cli` remains an independent public loopback client. No production Secret was read or written and no deployment, commit or push occurred in TASK-045.
+
+### TASK-044 - Enable all published capability scopes for skill login
+
+- status: `done`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-043-skill-all-capability-scopes.md`
+- depends_on: `TASK-042, TASK-043`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill login defaults, production OACT allowlist, authentication tests, deployment guidance and rollout evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Skill login and renewal request all unique scopes required by the 51 published Capability APIs.
+- Production allowlist matches the same scope set without bypassing RBAC, RLS, approval or audit.
+- Local tests and a read-only production login/capability discovery smoke pass.
+
+#### Next Action
+
+- Completed. Continue TASK-033 Principal projection work; future Capability additions must update both the Skill default scope set and production allowlist.
+
+#### Handoff Note
+
+- Skill `1.3.0` and production allowlist contain all 26 scopes required by the 51 published capabilities. The independent GitHub Skill release/tag remains a separate release action.
 
 ### TASK-043 - Deploy Semattice-owned Keycloak access context
 
@@ -39,7 +96,7 @@ archive_status: active
 
 #### Handoff Note
 
-- 当前 production allowlist仅含 `system.capability.read`。不得通过扩大 allowlist代替 Principal、角色、Permission Set、RLS和审批控制。
+- TASK-043完成时 production allowlist仅含 `system.capability.read`；TASK-044随后按用户要求扩展为全部26个公开能力scope。scope仍不替代Principal、角色、Permission Set、RLS和审批控制。
 
 ### TASK-042 - Remove AgentCiCi from Semattice authentication and runtime
 

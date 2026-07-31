@@ -26,7 +26,9 @@ from semattice_auth import (  # noqa: E402
     AuthManager,
     AuthSettings,
     CachedSession,
+    DEFAULT_CAPABILITY_SCOPES,
     JSONHTTPClient,
+    SESSION_CACHE_VERSION,
     SessionCache,
     authorization_url,
     generate_pkce,
@@ -134,7 +136,7 @@ class SematticeAuthenticationTests(unittest.TestCase):
             issuer="https://sso.example.test/realms/example",
             client_id="semattice-cli",
             semattice_base_url="https://semattice.example.test",
-            scopes=("system.capability.read",),
+            scopes=DEFAULT_CAPABILITY_SCOPES,
         )
 
     def test_pkce_authorization_url_uses_s256_and_loopback(self) -> None:
@@ -174,9 +176,26 @@ class SematticeAuthenticationTests(unittest.TestCase):
         with self.assertRaisesRegex(AuthError, "query 或 fragment"):
             AuthSettings.from_values(semattice_base_url="https://semattice.example.test/#token")
 
-    def test_login_defaults_to_minimal_capability_discovery_scope(self) -> None:
+    def test_login_defaults_to_all_published_capability_scopes(self) -> None:
         args = semattice_api.command_parser().parse_args(["login"])
-        self.assertEqual(args.scope, ["system.capability.read"])
+        self.assertEqual(args.scope, list(DEFAULT_CAPABILITY_SCOPES))
+        self.assertEqual(len(args.scope), 26)
+        self.assertEqual(len(set(args.scope)), 26)
+        self.assertIn("runtime.record.create", args.scope)
+        self.assertIn("authorization.manage", args.scope)
+        self.assertNotIn("tenant.provision", args.scope)
+
+    def test_default_scopes_match_all_skill_catalog_capabilities(self) -> None:
+        catalog_path = SCRIPT_DIR.parent / "references" / "api-catalog.md"
+        catalog_scopes: set[str] = set()
+        capability_count = 0
+        for line in catalog_path.read_text(encoding="utf-8").splitlines():
+            columns = [column.strip() for column in line.split("|")]
+            if len(columns) == 8 and columns[1].startswith("`") and columns[2] in {"v1", "v2"}:
+                capability_count += 1
+                catalog_scopes.add(columns[4].strip("`"))
+        self.assertEqual(capability_count, 51)
+        self.assertEqual(catalog_scopes, set(DEFAULT_CAPABILITY_SCOPES))
 
     def test_bearer_redirect_is_rejected_and_error_description_is_redacted(self) -> None:
         destination_requests: list[str | None] = []
@@ -344,7 +363,7 @@ class SematticeAuthenticationTests(unittest.TestCase):
         self.assertEqual(
             self.http.mints[0]["value"],
             {
-                "requested_scopes": ["system.capability.read"],
+                "requested_scopes": list(DEFAULT_CAPABILITY_SCOPES),
             },
         )
         self.assertEqual(
@@ -377,7 +396,7 @@ class SematticeAuthenticationTests(unittest.TestCase):
     def test_cache_rejects_wide_permissions_and_symbolic_links(self) -> None:
         cache = SessionCache(self.cache_path)
         session = CachedSession(
-            version=2,
+            version=SESSION_CACHE_VERSION,
             issuer=self.settings.issuer,
             client_id=self.settings.client_id,
             semattice_base_url=self.settings.semattice_base_url,
@@ -399,12 +418,12 @@ class SematticeAuthenticationTests(unittest.TestCase):
         with self.assertRaisesRegex(AuthError, "符号链接"):
             cache.load()
 
-    def test_cache_rejects_pre_semattice_exchange_version(self) -> None:
+    def test_cache_rejects_pre_all_capability_scope_version(self) -> None:
         self.cache_path.parent.mkdir(mode=0o700, parents=True)
         self.cache_path.write_text(
             json.dumps(
                 {
-                    "version": 1,
+                    "version": 2,
                     "issuer": self.settings.issuer,
                     "client_id": self.settings.client_id,
                     "semattice_base_url": self.settings.semattice_base_url,

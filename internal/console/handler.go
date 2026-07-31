@@ -25,6 +25,7 @@ type Handler struct {
 	reader   Reader
 	key      []byte
 	now      func() time.Time
+	oidc     *OIDCLogin
 }
 
 type session struct {
@@ -43,9 +44,25 @@ func NewHandler(verifier IdentityVerifier, key string, reader Reader) *Handler {
 	return &Handler{verifier: verifier, reader: reader, key: []byte(key), now: time.Now}
 }
 
+func (handler *Handler) EnableOIDC(oidc *OIDCLogin) *Handler {
+	if oidc == nil {
+		panic("console OIDC handler is required")
+	}
+	handler.oidc = oidc
+	return handler
+}
+
 func (handler *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-store")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+	if strings.HasPrefix(r.URL.Path, "/auth/oidc/") {
+		if handler.oidc == nil {
+			http.NotFound(w, r)
+			return
+		}
+		handler.oidc.ServeHTTP(handler, w, r)
+		return
+	}
 	if r.URL.Path == "/console/session" {
 		handler.session(w, r)
 		return
@@ -103,7 +120,7 @@ func (handler *Handler) session(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s := session{TenantID: principal.TenantID, CompanyID: principal.CompanyID, Subject: principal.Actor.ID, Scopes: principal.Actor.Scopes, ID: base64.RawURLEncoding.EncodeToString(id), ExpiresAt: until.Unix()}
-		http.SetCookie(w, &http.Cookie{Name: cookieName, Value: handler.sign(s), Path: "/console", MaxAge: int(time.Until(until).Seconds()), HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode})
+		handler.setSessionCookie(w, s, until.Sub(now))
 		writeJSON(w, http.StatusCreated, publicSession(s))
 	case http.MethodGet:
 		s, ok := handler.currentSession(r)
@@ -123,6 +140,13 @@ func (handler *Handler) session(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Allow", "GET, POST, DELETE")
 		writeError(w, http.StatusMethodNotAllowed, "不支持的会话操作")
 	}
+}
+
+func (handler *Handler) setSessionCookie(w http.ResponseWriter, s session, ttl time.Duration) {
+	http.SetCookie(w, &http.Cookie{
+		Name: cookieName, Value: handler.sign(s), Path: "/console",
+		MaxAge: int(ttl.Seconds()), HttpOnly: true, Secure: true, SameSite: http.SameSiteLaxMode,
+	})
 }
 
 func (handler *Handler) sign(s session) string {
@@ -170,7 +194,7 @@ func bearer(header string) (string, bool) {
 func hasManagementScope(scopes []string) bool {
 	for _, scope := range scopes {
 		switch scope {
-		case "authorization.manage", "organization.manage", "system.manage", "audit.read":
+		case "authorization.read", "authorization.manage", "organization.manage", "system.manage", "audit.read":
 			return true
 		}
 	}

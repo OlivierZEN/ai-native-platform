@@ -18,6 +18,7 @@ from semattice_auth import (
     AuthError,
     AuthManager,
     AuthSettings,
+    DEFAULT_CAPABILITY_SCOPES,
     open_without_redirect,
     validate_service_url,
 )
@@ -77,8 +78,8 @@ def command_parser() -> ChineseArgumentParser:
     login.add_argument(
         "--scope",
         action="append",
-        default=["system.capability.read"],
-        help="请求的 Semattice scope；可重复，默认 system.capability.read",
+        default=list(DEFAULT_CAPABILITY_SCOPES),
+        help="额外请求的 Semattice scope；可重复，默认请求全部已发布能力所需 scope",
     )
     login.add_argument("--credentials-file", type=Path, help="登录缓存路径；默认使用用户配置目录")
     login.add_argument("--login-timeout", type=float, default=180.0, help="等待浏览器回调的秒数")
@@ -255,6 +256,8 @@ def run_login(args: argparse.Namespace) -> int:
                 "company_id": session.company_id,
                 "semattice_base_url": session.semattice_base_url,
                 "oact_expires_at": session.oact_expires_at,
+                "scope_count": len(session.scopes),
+                "scopes": list(session.scopes),
             },
             ensure_ascii=False,
             indent=2,

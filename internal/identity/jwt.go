@@ -43,6 +43,7 @@ type OIDCIdentity struct {
 
 type oidcClaims struct {
 	AuthorizedParty string          `json:"azp"`
+	Nonce           string          `json:"nonce"`
 	Organization    json.RawMessage `json:"organization"`
 	jwt.RegisteredClaims
 }
@@ -129,11 +130,53 @@ func (verifier *Verifier) Verify(ctx context.Context, rawToken string) (capabili
 }
 
 func (verifier *OIDCVerifier) Verify(ctx context.Context, rawToken string) (OIDCIdentity, error) {
+	identity, _, err := verifier.VerifyWithExpiration(ctx, rawToken)
+	return identity, err
+}
+
+func (verifier *OIDCVerifier) VerifyWithExpiration(ctx context.Context, rawToken string) (OIDCIdentity, time.Time, error) {
 	if strings.TrimSpace(rawToken) == "" {
-		return OIDCIdentity{}, fmt.Errorf("OIDC token is required")
+		return OIDCIdentity{}, time.Time{}, fmt.Errorf("OIDC token is required")
 	}
 	claims := &oidcClaims{}
-	token, err := jwt.ParseWithClaims(rawToken, claims, func(token *jwt.Token) (any, error) {
+	token, err := verifier.parseOIDCToken(ctx, rawToken, claims,
+		jwt.WithAudience(verifier.issuer.source.Audience), jwt.WithExpirationRequired(), jwt.WithIssuedAt())
+	if err != nil || token == nil || !token.Valid || claims.AuthorizedParty != verifier.clientID {
+		return OIDCIdentity{}, time.Time{}, fmt.Errorf("OIDC token is invalid")
+	}
+	subject, parseErr := uuid.Parse(claims.Subject)
+	organizations, organizationErr := organizationAliases(claims.Organization)
+	if parseErr != nil || subject == uuid.Nil || organizationErr != nil || len(organizations) == 0 ||
+		claims.ExpiresAt == nil || claims.IssuedAt == nil {
+		return OIDCIdentity{}, time.Time{}, fmt.Errorf("OIDC claims are incomplete")
+	}
+	return OIDCIdentity{Subject: subject.String(), Organizations: organizations}, claims.ExpiresAt.Time, nil
+}
+
+func (verifier *OIDCVerifier) VerifyIDToken(ctx context.Context, rawToken, expectedNonce string) (string, error) {
+	if strings.TrimSpace(rawToken) == "" || strings.TrimSpace(expectedNonce) == "" {
+		return "", fmt.Errorf("OIDC ID token is required")
+	}
+	claims := &oidcClaims{}
+	token, err := verifier.parseOIDCToken(ctx, rawToken, claims,
+		jwt.WithAudience(verifier.clientID), jwt.WithExpirationRequired(), jwt.WithIssuedAt())
+	if err != nil || token == nil || !token.Valid || claims.Nonce != expectedNonce ||
+		(claims.AuthorizedParty != "" && claims.AuthorizedParty != verifier.clientID) {
+		return "", fmt.Errorf("OIDC ID token is invalid")
+	}
+	subject, err := uuid.Parse(claims.Subject)
+	if err != nil || subject == uuid.Nil || claims.ExpiresAt == nil || claims.IssuedAt == nil {
+		return "", fmt.Errorf("OIDC ID token claims are incomplete")
+	}
+	return subject.String(), nil
+}
+
+func (verifier *OIDCVerifier) parseOIDCToken(ctx context.Context, rawToken string, claims jwt.Claims, options ...jwt.ParserOption) (*jwt.Token, error) {
+	options = append([]jwt.ParserOption{
+		jwt.WithValidMethods([]string{"RS256"}),
+		jwt.WithIssuer(verifier.issuer.source.Issuer),
+	}, options...)
+	return jwt.ParseWithClaims(rawToken, claims, func(token *jwt.Token) (any, error) {
 		if token.Method.Alg() != "RS256" {
 			return nil, fmt.Errorf("unexpected signing algorithm")
 		}
@@ -142,17 +185,7 @@ func (verifier *OIDCVerifier) Verify(ctx context.Context, rawToken string) (OIDC
 			return nil, fmt.Errorf("key id is required")
 		}
 		return verifier.issuer.key(ctx, keyID)
-	}, jwt.WithValidMethods([]string{"RS256"}), jwt.WithIssuer(verifier.issuer.source.Issuer),
-		jwt.WithAudience(verifier.issuer.source.Audience), jwt.WithExpirationRequired(), jwt.WithIssuedAt())
-	if err != nil || token == nil || !token.Valid || claims.AuthorizedParty != verifier.clientID {
-		return OIDCIdentity{}, fmt.Errorf("OIDC token is invalid")
-	}
-	subject, parseErr := uuid.Parse(claims.Subject)
-	organizations, organizationErr := organizationAliases(claims.Organization)
-	if parseErr != nil || subject == uuid.Nil || organizationErr != nil || len(organizations) == 0 {
-		return OIDCIdentity{}, fmt.Errorf("OIDC claims are incomplete")
-	}
-	return OIDCIdentity{Subject: subject.String(), Organizations: organizations}, nil
+	}, options...)
 }
 
 func organizationAliases(raw json.RawMessage) ([]string, error) {

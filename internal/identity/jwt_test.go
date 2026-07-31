@@ -184,6 +184,22 @@ func TestOIDCVerifierBindsAudienceClientAndOrganization(t *testing.T) {
 	if identity.Subject != claims.Subject || len(identity.Organizations) != 1 || identity.Organizations[0] != "org2sva14i4udjmi2t4s" {
 		t.Fatalf("identity=%#v", identity)
 	}
+	claims.AuthorizedParty = "semattice-cli"
+	claims.Nonce = "expected-nonce"
+	claims.Audience = jwt.ClaimStrings{"semattice-cli"}
+	idToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	idToken.Header["kid"] = "keycloak-key"
+	rawIDToken, err := idToken.SignedString(privateKey)
+	if err != nil {
+		t.Fatalf("ID token SignedString: %v", err)
+	}
+	if subject, err := verifier.VerifyIDToken(context.Background(), rawIDToken, "expected-nonce"); err != nil || subject != claims.Subject {
+		t.Fatalf("VerifyIDToken subject=%q err=%v", subject, err)
+	}
+	if _, err := verifier.VerifyIDToken(context.Background(), rawIDToken, "wrong-nonce"); err == nil {
+		t.Fatal("wrong ID token nonce was accepted")
+	}
+	claims.Audience = jwt.ClaimStrings{"semattice-api"}
 	claims.AuthorizedParty = "other-client"
 	wrongClient := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	wrongClient.Header["kid"] = "keycloak-key"

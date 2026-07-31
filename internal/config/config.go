@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"strconv"
@@ -17,6 +18,7 @@ type Config struct {
 	Log                Log
 	Identity           Identity
 	ConsoleSessionKey  string
+	ConsoleOIDC        ConsoleOIDC
 	AccessContext      AccessContext
 }
 
@@ -60,6 +62,16 @@ type AccessContext struct {
 	TokenTTL         time.Duration
 }
 
+type ConsoleOIDC struct {
+	ClientID         string
+	ClientSecretFile string
+	RedirectURI      string
+}
+
+func (oidc ConsoleOIDC) Enabled() bool {
+	return oidc.ClientID != "" && oidc.ClientSecretFile != "" && oidc.RedirectURI != ""
+}
+
 func (access AccessContext) Enabled() bool {
 	return access.KeycloakIssuer != "" && access.KeycloakAudience != "" &&
 		access.KeycloakJWKSURL != "" && access.KeycloakClientID != "" &&
@@ -95,6 +107,11 @@ func Load(getenv func(string) string) (Config, error) {
 			TrustedIssuers: nil,
 		},
 		ConsoleSessionKey: getenv("AI_NATIVE_CONSOLE_SESSION_HMAC_KEY"),
+		ConsoleOIDC: ConsoleOIDC{
+			ClientID:         getenv("AI_NATIVE_CONSOLE_OIDC_CLIENT_ID"),
+			ClientSecretFile: getenv("AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE"),
+			RedirectURI:      getenv("AI_NATIVE_CONSOLE_OIDC_REDIRECT_URI"),
+		},
 		AccessContext: AccessContext{
 			KeycloakIssuer:   strings.TrimRight(getenv("AI_NATIVE_KEYCLOAK_ISSUER"), "/"),
 			KeycloakAudience: getenv("AI_NATIVE_KEYCLOAK_AUDIENCE"),
@@ -158,7 +175,38 @@ func Load(getenv func(string) string) (Config, error) {
 	if err := validateAccessContext(cfg.AccessContext, cfg.Identity); err != nil {
 		return Config{}, err
 	}
+	if err := validateConsoleOIDC(cfg.ConsoleOIDC, cfg.AccessContext); err != nil {
+		return Config{}, err
+	}
 	return cfg, nil
+}
+
+func ReadSecretFile(path string) (string, error) {
+	info, err := os.Lstat(path)
+	if err != nil || !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 ||
+		info.Mode().Perm()&0007 != 0 || info.Size() <= 0 || info.Size() > 4096 {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
+	}
+	defer file.Close()
+	openedInfo, err := file.Stat()
+	if err != nil || !os.SameFile(info, openedInfo) {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
+	}
+	raw, err := io.ReadAll(io.LimitReader(file, 4097))
+	if err != nil || len(raw) > 4096 {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
+	}
+	secret := strings.TrimSpace(string(raw))
+	if len(secret) < 16 || strings.IndexFunc(secret, func(character rune) bool {
+		return character == ' ' || character == '\t' || character == '\r' || character == '\n'
+	}) >= 0 {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
+	}
+	return secret, nil
 }
 
 func parseScopes(raw string) []string {
@@ -235,6 +283,28 @@ func validateAccessContext(access AccessContext, identity Identity) error {
 			return fmt.Errorf("duplicate OACT allowed scope")
 		}
 		seen[scope] = struct{}{}
+	}
+	return nil
+}
+
+func validateConsoleOIDC(oidc ConsoleOIDC, access AccessContext) error {
+	present := 0
+	for _, value := range []string{oidc.ClientID, oidc.ClientSecretFile, oidc.RedirectURI} {
+		if value != "" {
+			present++
+		}
+	}
+	if present == 0 {
+		return nil
+	}
+	if present != 3 || !access.Enabled() {
+		return fmt.Errorf("console OIDC configuration must be complete")
+	}
+	redirect, _ := url.Parse(oidc.RedirectURI)
+	if !validScope(oidc.ClientID) || !validHTTPSOrLoopbackURL(oidc.RedirectURI) ||
+		redirect.Path != "/auth/oidc/callback" ||
+		!strings.HasPrefix(oidc.ClientSecretFile, "/") {
+		return fmt.Errorf("console OIDC configuration is invalid")
 	}
 	return nil
 }

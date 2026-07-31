@@ -31,6 +31,35 @@ DEFAULT_ISSUER = "https://sso.agentcici.com/realms/agentcici"
 DEFAULT_CLIENT_ID = "semattice-cli"
 DEFAULT_SEMATTICE_BASE_URL = "https://semattice.agentcici.com"
 DEFAULT_TOKEN_PATH = "/v1/auth/token"
+SESSION_CACHE_VERSION = 3
+DEFAULT_CAPABILITY_SCOPES = (
+    "system.capability.read",
+    "tenant.status.read",
+    "tenant.lifecycle.write",
+    "tenant.entitlement.write",
+    "tenant.decommission",
+    "metadata.version.write",
+    "metadata.definition.write",
+    "metadata.publish",
+    "metadata.read",
+    "metadata.changeset.write",
+    "metadata.changeset.read",
+    "metadata.changeset.approve",
+    "metadata.changeset.publish",
+    "metadata.changeset.execute",
+    "metadata.changeset.purge",
+    "metadata.changeset.rollback",
+    "usage.read",
+    "usage.platform.read",
+    "runtime.record.create",
+    "runtime.record.read",
+    "runtime.record.update",
+    "runtime.record.delete",
+    "authorization.manage",
+    "record.share.manage",
+    "organization.manage",
+    "authorization.read",
+)
 KEYCHAIN_SERVICE = "cloudcc-semattice"
 TOKEN_SKEW_SECONDS = 60
 SAFE_ERROR_CODE = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
@@ -158,7 +187,7 @@ class CachedSession:
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise AuthError("本地登录缓存格式无效，请重新登录") from exc
-        if session.version != 2 or not all(
+        if session.version != SESSION_CACHE_VERSION or not all(
             [session.issuer, session.client_id, session.company_id, session.credential_account, session.oact]
         ):
             raise AuthError("本地登录缓存版本不兼容，请重新登录")
@@ -930,7 +959,7 @@ class AuthManager:
         )
         account = credential_account(settings.issuer, settings.client_id)
         session = CachedSession(
-            version=2,
+            version=SESSION_CACHE_VERSION,
             issuer=settings.issuer,
             client_id=settings.client_id,
             semattice_base_url=settings.semattice_base_url,
@@ -993,6 +1022,8 @@ class AuthManager:
             "semattice_base_url": session.semattice_base_url,
             "oact_expires_at": session.oact_expires_at,
             "oact_remaining_seconds": remaining,
+            "scope_count": len(session.scopes),
+            "scopes": list(session.scopes),
         }
 
     def logout(self, fallback_settings: AuthSettings) -> None:

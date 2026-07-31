@@ -36,7 +36,7 @@ description: 理解、设计和通过统一 HTTPS Capability API 操作 CloudCC 
 
 ## 登录与 API 调用
 
-人类首次使用 CLI 时，通过 Keycloak Authorization Code + PKCE 登录；脚本不接收系统密码：
+人类首次使用 CLI 时，通过 Keycloak Authorization Code + PKCE 登录；脚本不接收系统密码。默认换取的短期 OACT请求当前51项公开Capability所需的全部26个唯一scope，但scope不替代Principal/RBAC、RLS、审批或审计：
 
 ```bash
 ./scripts/semattice login

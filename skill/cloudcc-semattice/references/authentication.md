@@ -11,7 +11,7 @@
 
 ## 人工 CLI 登录
 
-从技能目录执行。默认只请求能力发现所需的 `system.capability.read`；额外 scope 必须用 `--scope` 明确请求，最终权限仍由 Semattice 服务端 allowlist、RBAC 和 RLS 收敛：
+从技能目录执行。默认请求当前51项公开Capability所需的全部26个唯一scope；`--scope`仍可用于追加未来已发布且被服务端允许的scope。scope只是Capability入口上限，最终权限仍由Semattice的Principal/RBAC、RLS、独立审批和审计收敛：
 
 ```bash
 ./scripts/semattice login
@@ -77,7 +77,36 @@ python3 scripts/semattice_api.py \
 `POST /v1/auth/token` 使用 Keycloak access token Bearer，请求：
 
 ```json
-{"requested_scopes":["system.capability.read"]}
+{
+  "requested_scopes": [
+    "system.capability.read",
+    "tenant.status.read",
+    "tenant.lifecycle.write",
+    "tenant.entitlement.write",
+    "tenant.decommission",
+    "metadata.version.write",
+    "metadata.definition.write",
+    "metadata.publish",
+    "metadata.read",
+    "metadata.changeset.write",
+    "metadata.changeset.read",
+    "metadata.changeset.approve",
+    "metadata.changeset.publish",
+    "metadata.changeset.execute",
+    "metadata.changeset.purge",
+    "metadata.changeset.rollback",
+    "usage.read",
+    "usage.platform.read",
+    "runtime.record.create",
+    "runtime.record.read",
+    "runtime.record.update",
+    "runtime.record.delete",
+    "authorization.manage",
+    "record.share.manage",
+    "organization.manage",
+    "authorization.read"
+  ]
+}
 ```
 
 成功响应：
@@ -92,7 +121,7 @@ python3 scripts/semattice_api.py \
 }
 ```
 
-Semattice固定校验 Keycloak issuer、`semattice-api` audience、JWKS签名、`azp=semattice-cli` 和唯一 Organization membership；再以 Organization alias查找现有 active tenant。请求不得接受 `sub`、`principal_id`、任意 `tenant_id`、`company_id` 或调用方声明的最终权限。
+Semattice固定校验 Keycloak issuer、`semattice-api` audience、JWKS签名、`azp=semattice-cli` 和唯一 Organization membership；再以 Organization alias查找现有 active tenant。请求不得接受 `sub`、`principal_id`、任意 `tenant_id`、`company_id` 或调用方声明的最终权限。未公开的 `tenant.provision`不在默认scope集合中；allowlist外scope仍然fail closed。
 
 ## 安全边界
 
@@ -101,7 +130,7 @@ Semattice固定校验 Keycloak issuer、`semattice-api` audience、JWKS签名、
 - 短期 OACT 缓存文件拒绝符号链接，要求当前用户所有且权限为 `0600`；专用目录权限为 `0700`。
 - 缓存中的 JWT `exp` 只用于本地续期时机，不作为验签或授权依据；Semattice仍执行完整 issuer/audience/signature/time/scope/RBAC/RLS校验。
 - raw Keycloak access token只允许发送到 Semattice `/v1/auth/token`，绝不作为 Capability API、MCP或控制台的 Bearer。
-- 旧版登录缓存包含已移除的外部换票字段，当前版本拒绝读取并要求重新登录。
+- 旧版登录缓存不包含完整的默认scope集合或仍含已移除的外部换票字段，当前版本拒绝读取并要求重新登录。
 
 ## 无人服务
 

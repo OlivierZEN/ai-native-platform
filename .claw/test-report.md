@@ -1,13 +1,34 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T05:17:12Z
-updated_by: root after combined source merge regression
-last_run_at: 2026-07-31T05:17:12Z
+updated_at: 2026-07-31T07:34:17Z
+updated_by: root after Semattice web Keycloak login verification
+last_run_at: 2026-07-31T07:34:17Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 TASK-045 Semattice网站Keycloak登录本地验收
+
+- `GET /auth/oidc/login`测试验证精确client/redirect、`openid organization`、随机state/nonce、S256 challenge、安全状态Cookie，且跳转URL不含Client Secret。
+- 回调测试验证`client_secret_basic`、authorization code + PKCE换码、access/ID token双验证、subject一致性、唯一Organization和active tenant映射；成功只创建`Secure; HttpOnly; SameSite=Lax`短期Session Cookie，Cookie和响应不含Keycloak Token。
+- 负例覆盖state伪造、state重放、多Organization和停用tenant，均重定向到固定失败页、不创建Session且不重复调用Token Endpoint。现有OACT `/console/session`回归继续通过。
+- `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`、`go mod verify`和`CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath`：通过。
+- `node --check`、Console HTML解析、`bash -n scripts/release-console.sh`和`git diff --check`：通过。
+- 项目状态validator仅报告早于TASK-045存在的FEAT-033 frontmatter/status问题；FEAT-044、TASK-045归档和本次证据未新增状态错误。
+- 本轮没有读取或写入生产Client Secret，没有修改Keycloak或远端服务，没有部署、提交、推送或修改Skill/CLI。
+
+## 2026-07-31 TASK-044 Skill全部能力Scope与生产验收
+
+- Skill API目录中的51项公开Capability归并为26个唯一`required_scope`；新增测试逐项读取目录并确认默认scope集合完全一致、无重复且不包含未公开的`tenant.provision`。
+- `python3 -B -m unittest discover -s tests -p 'test_*.py' -v`：16项通过；覆盖默认26 scope换票、续期保持scope、v2缓存拒绝、PKCE/loopback、凭据存储、redirect阻断和既有安全负例。
+- 官方`quick_validate.py`通过；全量`go test ./...`、`go test -race ./...`、`go vet ./...`、`go mod verify`、YAML、Python语法、CLI help、无Token dry-run、VERSION/README `1.3.0`和`git diff --check`通过。
+- 开发副本经`rsync --dry-run --delete`确认只更新预期Skill文件后同步到本机安装目录；两目录逐文件一致，安装版本为`1.3.0`。未同步或发布独立GitHub Skill仓库。
+- 生产配置更新前确认服务active、allowlist为1项且环境文件保持`root:semattice 0640`；备份为`/etc/semattice/semattice.env.backup.20260731T052514Z-all-capability-scopes`，只替换allowlist后重启。结果为26项、SHA-256 `93d07dbd42079b2df5a1c44c5732d6a7bcaf9fea72c16fa48be087933d0cfdf1`、健康200、匿名换票401、日志错误计数0。
+- 对`orgx2x8awt02djpp5xdp`完成真实Keycloak Authorization Code + S256 PKCE登录，新会话返回26个scope。线上`system.capability.list`返回`succeeded`、51项能力、26个唯一scope，客户端缺失/多余集合均为空；新增scope保护的`tenant.get-status`只读调用成功且包含审计标识。
+- 全程未输出Token、密码、refresh token或密钥，未调用任何业务写能力，未修改业务数据、元数据、Keycloak或授权资源。scope仍不替代Principal/RBAC、RLS、独立审批、幂等和审计。
+- 项目状态validator仅报告早于TASK-044存在的FEAT-033 frontmatter/status问题；FEAT-043、TASK-044归档和本次证据未新增状态错误。
 
 ## 2026-07-31 TASK-040～TASK-043 合并后组合源码回归
 
@@ -27,7 +48,7 @@ last_run_status: passed
 - Keycloak复核：`semattice-api-audience` mapper恰好一个，类型为 `oidc-audience-mapper`，access token audience为 `semattice-api`；`organization` scope仍为 optional，其 Membership mapper仍写入 access token。
 - `tenant_registry`只读复核确认 `orgx2x8awt02djpp5xdp` 对应 tenant `ce85dabd-68be-503d-9d1b-9b63c536fa78`，global/native均为 active。
 - 使用本机安装的 Skill `1.2.2` 完成真实 Keycloak Authorization Code + S256 PKCE登录；Semattice换票返回 authenticated，随后 OACT调用 `system.capability.list` 返回 `succeeded`、51 项能力，审计标识为 `audit:req-14679929-3ea0-4d06-be34-39e3c053f340`。未输出 Token、密码或密钥，未写业务数据。
-- production OACT allowlist当前仅为 `system.capability.read`；业务读写 scope尚未开放，防止在 Principal/RBAC授予模型完成前把服务端 allowlist误当作用户授权。
+- TASK-043验收时production OACT allowlist仅为`system.capability.read`；后续TASK-044已按用户要求扩展为全部26个公开能力scope，同时保留Principal/RBAC、RLS、审批和审计门禁。
 - 项目状态校验器已用正确的 `.claw` 目录执行；仅报告早于本任务存在的 FEAT-033 frontmatter/status问题，FEAT-042、TASK-043、归档和发布证据未新增状态错误。`git diff --check` 与凭据扫描通过。
 
 ## 2026-07-31 TASK-042 Semattice 自有 Keycloak Organization 换票

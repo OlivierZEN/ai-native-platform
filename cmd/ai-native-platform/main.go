@@ -155,7 +155,31 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		if consoleReader == nil {
 			return writeStartupFailure(out, capability.CodeValidationFailed, "console data reader is required")
 		}
-		routes.Handle("/console/", consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey, consoleReader))
+		consoleHandler := consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey, consoleReader)
+		if cfg.ConsoleOIDC.Enabled() {
+			clientSecret, oidcErr := config.ReadSecretFile(cfg.ConsoleOIDC.ClientSecretFile)
+			if oidcErr != nil {
+				return writeStartupFailure(out, capability.CodeValidationFailed, oidcErr.Error())
+			}
+			webVerifier, oidcErr := identity.NewOIDCVerifier(config.TrustedIssuer{
+				Source: "keycloak",
+				Issuer: cfg.AccessContext.KeycloakIssuer, Audience: cfg.AccessContext.KeycloakAudience,
+				JWKSURL: cfg.AccessContext.KeycloakJWKSURL,
+			}, cfg.ConsoleOIDC.ClientID)
+			if oidcErr != nil {
+				return writeStartupFailure(out, capability.CodeValidationFailed, oidcErr.Error())
+			}
+			webLogin, oidcErr := consoleapp.NewOIDCLogin(consoleapp.OIDCConfig{
+				Issuer: cfg.AccessContext.KeycloakIssuer, ClientID: cfg.ConsoleOIDC.ClientID,
+				ClientSecret: clientSecret, RedirectURI: cfg.ConsoleOIDC.RedirectURI,
+			}, webVerifier, tenantService, cfg.ConsoleSessionKey)
+			if oidcErr != nil {
+				return writeStartupFailure(out, capability.CodeValidationFailed, oidcErr.Error())
+			}
+			consoleHandler.EnableOIDC(webLogin)
+			routes.Handle("/auth/oidc/", consoleHandler)
+		}
+		routes.Handle("/console/", consoleHandler)
 		routes.Handle("/", api.NewAuthenticatedHandler(invoker, verifier))
 		return serve(ctx, args[1:], routes, cfg.HTTPListen, logger, out)
 	}
