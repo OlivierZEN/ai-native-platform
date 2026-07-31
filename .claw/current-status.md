@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-30T06:54:07Z
-updated_by: root after publishing TASK-039 to CodeUp and GitHub
+updated_at: 2026-07-31T05:02:19Z
+updated_by: root after completing TASK-042 production rollout
 phase: cross-product-identity-live
 active_task: "TASK-033"
-next_action: "等待 AgentCiCi 新版上线后，以真实受权机器账户执行 OACT exchange、owner 失效和撤销投影验收。"
+next_action: "登录链路已上线；业务数据读写前继续 TASK-033，明确 Keycloak sub 到 Principal、角色和 OACT scope 的授予边界。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,12 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-042 / FEAT-042 已完成：当前 production release 为 `/opt/semattice/releases/20260731T045751Z-standalone-auth`，SHA-256 为 `73c552daffcf3ee2dcc203a009f08acc7b8effe3754e9a1d69267a690b3074f0`；旧 release `/opt/semattice/releases/20260731T012059Z-console`、Semattice环境备份和 Keycloak `semattice-cli` 配置备份均保留。旧 AgentCiCi 开户环境变量已移除，`semattice-api` audience mapper唯一，Organization scope仍为 optional。真实 PKCE登录已将 `orgx2x8awt02djpp5xdp` 映射到 active tenant `ce85dabd-68be-503d-9d1b-9b63c536fa78`，短期 OACT调用 `system.capability.list` 返回 succeeded / 51 项能力。当前 production allowlist仅开放 `system.capability.read`；未创建租户/Principal/RBAC、未改其他 Keycloak数据、未执行 Git push或 Skill release。
+
+- TASK-041 / FEAT-041 本地实现已完成：Semattice新增 `POST /v1/auth/token`，固定验证 Keycloak RS256 issuer/audience/JWKS、`azp=semattice-cli` 和唯一 Organization alias，再映射 active `tenant_registry.company_id` 并使用 Semattice自有 HS256 identity key签发短期 OACT。Skill/CLI删除 AgentCiCi base URL、公司目录和外部 mint调用，缓存升至 v2；`serve`删除 AgentCiCi开户启动门禁、HMAC路由和 reservation/complete代码。Skill升至 `1.2.2` 并同步本机安装目录。14 项 Python测试、全量 Go race、vet、module/build、技能/YAML/bash/diff/secret检查通过。现有 Keycloak Realm/域名作为基础设施标识保留；未部署生产、修改远程 Keycloak、发布 Git tag或推送。
+
+- TASK-040 / FEAT-040 本地实现已完成：`cloudcc-semattice` `1.2.1` 开发副本新增 `semattice login/status/logout/call`，以 Keycloak Authorization Code + S256 PKCE、本机 `127.0.0.1` 动态端口、Organization Scope、系统凭据库 refresh token和 `0600` 短期 OACT 缓存实现人类登录；AgentCiCi 按当前公司签发 OACT，API 临期或 401 时安全刷新一次，显式 `SEMATTICE_TOKEN` 继续优先。Bearer 请求禁止 redirect，认证错误不输出服务端描述，默认只请求 `system.capability.read`。13 项 Python 测试、全量 Go test、技能/YAML/Keycloak/CLI/diff/secret 门禁通过；项目状态 validator 仅保留既有 FEAT-033 frontmatter/status 错误。未同步发布仓库、打标签、推送、部署或真实登录；AgentCiCi 人类 access-context 端点和生产 client 注册仍是上线前置。
 
 - TASK-039 已完成：项目技能与发布证据以提交 `a55d71d773446902598b28fb525c7562003f351b` 快进推送至阿里云 CodeUp `main`，远端分支回读一致。独立技能仓库将 `main + v1.1.0` 原子推送至 `https://github.com/CloudCCAI/cloudcc-semattice`，release commit 为 `3ac29afc34366d66a2e9320975dc3be498d55181`；本地 HEAD、`origin/main` 和 `v1.1.0^{}` 一致，远程 HEAD 指向 main，仓库页、标签页及 raw VERSION/README 均验证通过。未使用 force push，未移动历史标签。
 

@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-24T15:54:00Z
-updated_by: release-agent after public MCP discovery production verification
+updated_at: 2026-07-31T05:02:19Z
+updated_by: release-agent after standalone Keycloak access-context rollout
 verification_status: passed
 ---
 
@@ -26,7 +26,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 2026-07-24 部署制品 SHA-256：`c1617398e9ddf3b83a942fa8b5852e54f7caf943900771703e8b1bacbf712962`。
+- 当前部署制品 SHA-256：`73c552daffcf3ee2dcc203a009f08acc7b8effe3754e9a1d69267a690b3074f0`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动
@@ -49,8 +49,10 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 ## 部署与发布
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- 当前 release 目录：`/opt/semattice/releases/20260725T025439Z-console`；当前链接：`/opt/semattice/current`。上一可回滚应用 release `20260725T025333Z-console` 仍存在。
-- AgentCiCi 受控开户回调固定为 `AI_NATIVE_AGENTCICI_BASE_URL=https://x.agentcici.com`。不得使用当前无法解析的历史 `onechat.agentcici.com`；修改该值后须重启 `semattice` 并执行签名 reservation/complete smoke。
+- 当前 release 目录：`/opt/semattice/releases/20260731T045751Z-standalone-auth`；当前链接：`/opt/semattice/current`。上一可回滚应用 release `/opt/semattice/releases/20260731T012059Z-console` 仍存在。
+- 当前 Semattice环境备份为 `/etc/semattice/semattice.env.backup.20260731T045751Z-standalone-auth`；Keycloak `semattice-cli` client备份为 `/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
+- Semattice不再配置或调用 AgentCiCi开户/OACT接口。`/v1/auth/token` 固定验证 Keycloak issuer、`semattice-api` audience、JWKS、`azp=semattice-cli` 和唯一 Organization alias，再映射 active `tenant_registry.company_id` 并签发 Semattice短期 OACT。
+- `semattice-cli` 必须保持 public、Authorization Code、PKCE S256、`http://127.0.0.1` redirect；`semattice-api-audience` mapper必须唯一且写入 access token，`organization` client scope必须分配。当前 OACT allowlist仅为 `system.capability.read`，业务读写 scope须经 Principal/RBAC设计和单独发布。
 - systemd unit：`/etc/systemd/system/semattice.service`；仓库模板为 `deploy/semattice/semattice.service`。
 - Nginx server block：`/etc/nginx/conf.d/semattice.conf`；仓库模板为 `deploy/semattice/nginx.conf`。
 - Streamable HTTP MCP：Nginx `location = /mcp` 代理至 `127.0.0.1:8080`，必须透传 `Authorization`、将上游 `Host` 固定为 `127.0.0.1`，并关闭 `proxy_buffering`、`proxy_request_buffering`、`proxy_cache`。这使 SDK loopback DNS-rebinding 防护继续有效；当前远程配置备份为 `/etc/nginx/conf.d/semattice.conf.backup.20260724T153300Z` 与 `.backup.20260724T155400Z-mcp-host`。

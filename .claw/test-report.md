@@ -1,13 +1,44 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-30T06:54:07Z
-updated_by: root after verifying TASK-039 CodeUp and GitHub publication
-last_run_at: 2026-07-30T06:54:07Z
+updated_at: 2026-07-31T05:02:19Z
+updated_by: root after TASK-042 production rollout verification
+last_run_at: 2026-07-31T05:02:19Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 TASK-042 Semattice 自有换票生产发布
+
+- 发布前 `go test ./...`、14 项 Python登录测试、`git diff --check`、Keycloak脚本语法和 Python语法门禁均通过；`linux/amd64` CGO-free制品 SHA-256 为 `73c552daffcf3ee2dcc203a009f08acc7b8effe3754e9a1d69267a690b3074f0`，上传后远端校验和一致。
+- 原子切换至 `/opt/semattice/releases/20260731T045751Z-standalone-auth`；上一 release、受保护环境文件和 Keycloak `semattice-cli` client配置均已备份。环境文件保持 `root:semattice 0640`，release二进制为 `root:root 0755`。
+- `semattice`、`nginx`、`postgresql-16`、`keycloak` 均 active，Semattice `NRestarts=0`；公网 `/healthz` 为 200，匿名 `/v1/auth/token` 为 401 `invalid_token`且 `Cache-Control: no-store`，匿名 Capability invoke为 401。
+- Keycloak复核：`semattice-api-audience` mapper恰好一个，类型为 `oidc-audience-mapper`，access token audience为 `semattice-api`；`organization` scope仍为 optional，其 Membership mapper仍写入 access token。
+- `tenant_registry`只读复核确认 `orgx2x8awt02djpp5xdp` 对应 tenant `ce85dabd-68be-503d-9d1b-9b63c536fa78`，global/native均为 active。
+- 使用本机安装的 Skill `1.2.2` 完成真实 Keycloak Authorization Code + S256 PKCE登录；Semattice换票返回 authenticated，随后 OACT调用 `system.capability.list` 返回 `succeeded`、51 项能力，审计标识为 `audit:req-14679929-3ea0-4d06-be34-39e3c053f340`。未输出 Token、密码或密钥，未写业务数据。
+- production OACT allowlist当前仅为 `system.capability.read`；业务读写 scope尚未开放，防止在 Principal/RBAC授予模型完成前把服务端 allowlist误当作用户授权。
+- 项目状态校验器已用正确的 `.claw` 目录执行；仅报告早于本任务存在的 FEAT-033 frontmatter/status问题，FEAT-042、TASK-042、归档和发布证据未新增状态错误。`git diff --check` 与凭据扫描通过。
+
+## 2026-07-31 TASK-041 Semattice 自有 Keycloak Organization 换票
+
+- `go test -race ./... -count=1`：全量通过。新增覆盖 Keycloak OIDC固定 issuer/audience/RS256/JWKS/`azp`/Organization验证、Organization alias到 active tenant映射、scope allowlist、Semattice自签 OACT与现有 verifier兼容，以及缺 Token、多组织、未映射/停用 tenant和越权 scope负例。
+- `go vet ./...`、`go mod verify`、`CGO_ENABLED=0 go build -trimpath ./cmd/ai-native-platform`：通过。
+- `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py' -v`：14 项通过；登录和续期只调用 Semattice `/v1/auth/token`，Organization alias进入 Keycloak scope，旧 v1缓存 fail closed。
+- 官方 `skill-creator/scripts/quick_validate.py` 对开发副本和本机安装副本均返回 `Skill is valid!`；YAML、bash语法、CLI help/dry-run、VERSION/README `1.2.2`、两目录逐文件一致、`git diff --check` 和常见 Token/私钥扫描通过。
+- 活动 Go/Python登录代码中未检出 AgentCiCi API、`available-tenants`、外部 mint或 `/internal/v1/company-provisionings`；保留的 `sso.agentcici.com` / `semattice.agentcici.com` 是现有 Keycloak与 Semattice基础设施域名，不是应用接口依赖。
+- 项目状态 validator仅保留既有 FEAT-033 frontmatter/status问题；TASK-041/FEAT-041、任务归档和完成任务上限未新增错误。
+- 本轮未读取未跟踪 `.env`，未访问真实用户/租户 Token，未部署生产、修改远程 Keycloak、发布技能仓库、创建 tag或推送 Git。
+
+## 2026-07-30 TASK-040 cloudcc-semattice Keycloak PKCE 登录本地验证
+
+- `python3 -B -m unittest discover -s tests -p 'test_*.py' -v`：13 项通过，覆盖 S256 PKCE、state/authorization code负例、真实本机 loopback listener、默认最小发现 scope、可用公司/OACT 换票、Keycloak refresh token轮换、401 单次同请求重试、显式 `SEMATTICE_TOKEN` 优先、logout、`0600/0700` 缓存权限、符号链接拒绝、URL 凭据/query/fragment拒绝、Bearer redirect阻断、错误描述脱敏和错误响应连接重置。
+- 独立前向使用检查确认流程可发现、新旧 dry-run兼容；检查发现的跨来源 redirect Authorization 转发、服务端错误描述泄密和空默认 scope均已修复并加入回归测试。
+- 官方 `skill-creator/scripts/quick_validate.py` 返回 `Skill is valid!`；`agents/openai.yaml` YAML、Keycloak `semattice-cli` JSON、`bash -n`、新旧 CLI help/dry-run、VERSION/README `1.2.1` 一致性、Organization Scope、常见 secret pattern和 `git diff --check` 均通过。
+- `GOTOOLCHAIN=go1.26.5 go test ./... -count=1` 全量通过；本次未修改 Go 运行时代码。
+- Keycloak 官方文档确认 native app 注册 `http://127.0.0.1` 时允许系统选择动态端口，当前 client不使用全 wildcard、端口 wildcard、Web origin、implicit、password grant或 service account。
+- 项目状态 validator 已运行，仅报告既有 `FEAT-033` 缺 `feature_id` / `updated_at` / `updated_by` 且 status非标准；FEAT-040/TASK-040 未新增状态错误。
+- 本轮没有读取既有未跟踪 `.env`，没有访问真实身份/租户服务，没有浏览器登录、部署、发布仓库同步、提交、标签或远程推送。
 
 ## 2026-07-30 TASK-039 cloudcc-semattice 1.1.0 GitHub 发布验证
 

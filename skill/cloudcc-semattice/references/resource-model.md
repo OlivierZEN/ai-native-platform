@@ -15,13 +15,13 @@
 
 | 资源 | 含义 | 使用范围 |
 |---|---|---|
-| 公司 `company_id` | AgentCiCi 侧的企业边界，格式为 `org` 加 17 位小写字母或数字 | 令牌和租户注册表绑定；请求正文不能切换公司 |
+| 公司 `company_id` | Keycloak Organization alias对应的企业边界，格式为 `org` 加 17 位小写字母或数字 | OACT和租户注册表绑定；请求正文不能切换公司 |
 | 租户 `tenant_id` | Semattice 中的数据、元数据、授权和用量隔离边界 | 所有业务表通过租户字段、复合外键和 RLS 隔离 |
 | 主体 `principal_id` | 发起操作或被授权的人类、服务或组投影 | 角色分配、组成员、团队和共享均引用已投影主体 |
 | 组织 `organization_id` | 租户内层级组织节点 | 用于主体归属、记录数据组织范围、共享规则和组织合并 |
 | 租户状态 | 路由、服务等级、生命周期、版本号和权益的控制面投影 | `tenant.*` 能力只操作当前令牌绑定的租户 |
 
-公开 API 不提供租户创建能力。租户开通只能由受信 AgentCiCi 服务调用内部 HMAC 接口。
+公开 API和登录接口都不提供租户创建能力。Keycloak Organization必须由受信管理员预先映射到 Semattice `tenant_registry.company_id`。
 
 ## 元数据版本
 

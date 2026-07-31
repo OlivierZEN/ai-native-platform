@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-30T06:54:07Z
-updated_by: root after TASK-039 completion exceeded active-board retention
+updated_at: 2026-07-31T05:02:19Z
+updated_by: root after TASK-042 production rollout
 archive_status: active
 ---
 
@@ -11,6 +11,90 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-042 - Deploy Semattice-owned Keycloak access context
+
+- status: `done`
+- priority: `critical`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-042-production-standalone-auth-rollout.md`
+- depends_on: `TASK-041`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `production release binary, /etc/semattice/semattice.env, semattice-cli audience mapper, rollout evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- A new immutable release is active and the previous release plus environment backup are retained.
+- Semattice owns `/v1/auth/token`, old AgentCiCi provisioning environment keys are absent, and the public negative smoke is fail closed.
+- The `semattice-cli` Keycloak token is configured for `semattice-api` audience without changing unrelated applications.
+- Service health, logs, checksums and rollback evidence are recorded.
+
+#### Next Action
+
+- 发布和真实只读登录验收已完成。业务读写前单独设计并批准 Principal 到 OACT scope/RBAC 的授予边界。
+
+#### Handoff Note
+
+- 当前 production allowlist仅含 `system.capability.read`。不得通过扩大 allowlist代替 Principal、角色、Permission Set、RLS和审批控制。
+
+### TASK-041 - Remove AgentCiCi from Semattice authentication and runtime
+
+- status: `done`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-041-semattice-owned-keycloak-access-context.md`
+- depends_on: `TASK-029, TASK-040`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `access-context endpoint, Keycloak verifier, OACT signer, tenant mapping, runtime configuration, cloudcc-semattice skill and tests`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Keycloak Organization membership maps directly to an active Semattice tenant.
+- Semattice signs its own short-lived OACT and the Skill never calls AgentCiCi.
+- AgentCiCi provisioning configuration and route are absent from the active runtime.
+- Go/Python tests, skill validation and local skill installation pass.
+
+#### Next Action
+
+- 本地实现和本机 Skill `1.2.2` 更新已完成；生产发布和真实 PKCE/OACT只读验收已由 TASK-042 完成。
+
+#### Handoff Note
+
+- 已部署的 Keycloak Realm/域名是基础设施兼容标识，本任务没有删除其他应用 client、用户、Organization或会话。旧 `1.2.1` 登录缓存必须重新登录。
+
+### TASK-026 - Enforce AgentCiCi-controlled company provisioning
+
+- status: `canceled`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `project-manager`
+- spec_path: `docs/specs/FEAT-026-agentcici-controlled-company-provisioning.md`
+- depends_on: `TASK-011, TASK-025`
+- blocked_by: `superseded by TASK-041`
+- related_issues: `none`
+- scope_files: `removed AgentCiCi reservation/completion client, HMAC route and provisioning configuration`
+- branch: `agent/go-capability-platform-baseline`
+- pr_url: `n/a`
+
+#### Done When
+
+- Historical AgentCiCi-controlled provisioning is no longer an active Semattice runtime dependency.
+
+#### Next Action
+
+- 不恢复旧 `/internal/v1/company-provisionings`、reservation/complete或 HMAC配置。未来需要新建 tenant时，另开独立、产品中立的管理员控制面规格。
+
+#### Handoff Note
+
+- 2026-07-24 的联调和生产证据保留为历史记录；TASK-041按用户要求删除了对应活动代码和启动门禁。
 
 ### TASK-021 - Establish the Phase 0 Loop Engineering controls
 
@@ -153,6 +237,34 @@ archive_status: active
 #### Handoff Note
 
 - 用户于 2026-07-18 正式批准 `FEAT-009`，规格状态已改为 `approved`，ADR-003 已接受。Event Bus、Search/OLAP、Wasm/流程、数据驻留和计费仍为独立后置 ADR，不阻塞 `TASK-010`。
+
+### TASK-015 - Benchmark object records and typed indexes
+
+- status: `done`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-015-record-runtime-and-typed-indexes.md`
+- depends_on: `TASK-012, TASK-013`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `object_record, record_index_*, record_relation, internal/record/**, runtime.record.* API/MCP/CLI, benchmark harness`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 元数据驱动的 create/get/update/delete/query 通过 API、MCP 和无交互 CLI 等价暴露
+- 乐观锁、软删除、类型校验、声明式 typed index、关系约束和受限查询 DSL 在真实 PostgreSQL 16 下通过
+- 1,000,000 记录下的写放大、查询计划、延迟和存储成本有可重复证据；生产容量验收仍留给 TASK-019
+
+#### Next Action
+
+- 已完成；不要在本任务追加对象/字段/记录共享权限或 outbox。分别进入 TASK-016 和 TASK-017 的独立规格。
+
+#### Handoff Note
+
+- 五项 `runtime.record.*` 能力、migration 4、五类 640 typed partitions、durable write idempotency 和真实 bounded query planner 已通过本地 maker 验证。100 万记录为单机物理路径证据；50 并发与 8/16 GiB 容量仍由 TASK-019 验收。
 
 ## 维护规则
 

@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
-
-var internalServiceIDPattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,63}$`)
 
 type Config struct {
 	HTTPListen         string
@@ -20,7 +17,7 @@ type Config struct {
 	Log                Log
 	Identity           Identity
 	ConsoleSessionKey  string
-	Provisioning       Provisioning
+	AccessContext      AccessContext
 }
 
 type Database struct {
@@ -54,14 +51,19 @@ type TrustedIssuer struct {
 	JWKSURL  string
 }
 
-type Provisioning struct {
-	AgentCiCiBaseURL string
-	AgentCiCiHMACKey string
-	CallerKeys       map[string]string
+type AccessContext struct {
+	KeycloakIssuer   string
+	KeycloakAudience string
+	KeycloakJWKSURL  string
+	KeycloakClientID string
+	AllowedScopes    []string
+	TokenTTL         time.Duration
 }
 
-func (p Provisioning) Enabled() bool {
-	return p.AgentCiCiBaseURL != "" && p.AgentCiCiHMACKey != "" && len(p.CallerKeys) > 0
+func (access AccessContext) Enabled() bool {
+	return access.KeycloakIssuer != "" && access.KeycloakAudience != "" &&
+		access.KeycloakJWKSURL != "" && access.KeycloakClientID != "" &&
+		len(access.AllowedScopes) > 0
 }
 
 func LoadEnv() (Config, error) {
@@ -93,16 +95,15 @@ func Load(getenv func(string) string) (Config, error) {
 			TrustedIssuers: nil,
 		},
 		ConsoleSessionKey: getenv("AI_NATIVE_CONSOLE_SESSION_HMAC_KEY"),
-		Provisioning: Provisioning{
-			AgentCiCiBaseURL: strings.TrimRight(getenv("AI_NATIVE_AGENTCICI_BASE_URL"), "/"),
-			AgentCiCiHMACKey: getenv("AI_NATIVE_AGENTCICI_HMAC_KEY"),
+		AccessContext: AccessContext{
+			KeycloakIssuer:   strings.TrimRight(getenv("AI_NATIVE_KEYCLOAK_ISSUER"), "/"),
+			KeycloakAudience: getenv("AI_NATIVE_KEYCLOAK_AUDIENCE"),
+			KeycloakJWKSURL:  getenv("AI_NATIVE_KEYCLOAK_JWKS_URL"),
+			KeycloakClientID: getenv("AI_NATIVE_KEYCLOAK_CLIENT_ID"),
+			AllowedScopes:    parseScopes(getenv("AI_NATIVE_OACT_ALLOWED_SCOPES")),
+			TokenTTL:         10 * time.Minute,
 		},
 	}
-	callerKeys, parseErr := parseCallerKeys(getenv("AI_NATIVE_PROVISIONING_CALLER_KEYS"))
-	if parseErr != nil {
-		return Config{}, parseErr
-	}
-	cfg.Provisioning.CallerKeys = callerKeys
 	trustedIssuers, trustedIssuersErr := parseTrustedIssuers(getenv("AI_NATIVE_IDENTITY_TRUSTED_ISSUERS"))
 	if trustedIssuersErr != nil {
 		return Config{}, trustedIssuersErr
@@ -124,6 +125,9 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	if cfg.Database.MaxIdleTime, err = parseDuration(getenv("AI_NATIVE_DATABASE_MAX_IDLE_TIME"), cfg.Database.MaxIdleTime); err != nil {
 		return Config{}, fmt.Errorf("invalid database max idle time")
+	}
+	if cfg.AccessContext.TokenTTL, err = parseDuration(getenv("AI_NATIVE_OACT_TTL"), cfg.AccessContext.TokenTTL); err != nil {
+		return Config{}, fmt.Errorf("invalid OACT TTL")
 	}
 	if cfg.Database.URL != "" {
 		if !validDatabaseURL(cfg.Database.URL) {
@@ -151,29 +155,14 @@ func Load(getenv func(string) string) (Config, error) {
 	if cfg.ConsoleSessionKey != "" && len(cfg.ConsoleSessionKey) < 32 {
 		return Config{}, fmt.Errorf("console session key is too short")
 	}
-	if err := validateProvisioning(cfg.Provisioning); err != nil {
+	if err := validateAccessContext(cfg.AccessContext, cfg.Identity); err != nil {
 		return Config{}, err
 	}
 	return cfg, nil
 }
 
-func parseCallerKeys(raw string) (map[string]string, error) {
-	if raw == "" {
-		return map[string]string{}, nil
-	}
-	values := map[string]string{}
-	for _, item := range strings.Split(raw, ";") {
-		parts := strings.SplitN(item, "=", 2)
-		serviceID := strings.TrimSpace(parts[0])
-		if len(parts) != 2 || !internalServiceIDPattern.MatchString(serviceID) || len(parts[1]) < 32 {
-			return nil, fmt.Errorf("invalid provisioning caller configuration")
-		}
-		if _, exists := values[serviceID]; exists {
-			return nil, fmt.Errorf("invalid provisioning caller configuration")
-		}
-		values[serviceID] = parts[1]
-	}
-	return values, nil
+func parseScopes(raw string) []string {
+	return strings.Fields(strings.ReplaceAll(raw, ",", " "))
 }
 
 // parseTrustedIssuers accepts semicolon-separated source|issuer|audience|jwks_url entries.
@@ -212,9 +201,12 @@ func parseTrustedIssuers(raw string) ([]TrustedIssuer, error) {
 	return result, nil
 }
 
-func validateProvisioning(p Provisioning) error {
+func validateAccessContext(access AccessContext, identity Identity) error {
 	present := 0
-	for _, value := range []bool{p.AgentCiCiBaseURL != "", p.AgentCiCiHMACKey != "", len(p.CallerKeys) > 0} {
+	for _, value := range []bool{
+		access.KeycloakIssuer != "", access.KeycloakAudience != "", access.KeycloakJWKSURL != "",
+		access.KeycloakClientID != "", len(access.AllowedScopes) > 0,
+	} {
 		if value {
 			present++
 		}
@@ -222,14 +214,54 @@ func validateProvisioning(p Provisioning) error {
 	if present == 0 {
 		return nil
 	}
-	if present != 3 || len(p.AgentCiCiHMACKey) < 32 {
-		return fmt.Errorf("controlled provisioning configuration must be complete")
+	if present != 5 {
+		return fmt.Errorf("access context configuration must be complete")
 	}
-	parsed, err := url.Parse(p.AgentCiCiBaseURL)
-	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
-		return fmt.Errorf("invalid AgentCiCi provisioning URL")
+	if !validHTTPSOrLoopbackURL(access.KeycloakIssuer) || !validHTTPSOrLoopbackURL(access.KeycloakJWKSURL) {
+		return fmt.Errorf("invalid Keycloak access context URL")
+	}
+	if identity.Issuer == "" || identity.Audience == "" || identity.Algorithm != "HS256" || len(identity.HMACKey) < 32 {
+		return fmt.Errorf("access context requires complete HS256 identity signing configuration")
+	}
+	if access.TokenTTL < time.Minute || access.TokenTTL > time.Hour {
+		return fmt.Errorf("OACT TTL must be between 1m and 1h")
+	}
+	seen := map[string]struct{}{}
+	for _, scope := range access.AllowedScopes {
+		if !validScope(scope) {
+			return fmt.Errorf("invalid OACT allowed scope")
+		}
+		if _, exists := seen[scope]; exists {
+			return fmt.Errorf("duplicate OACT allowed scope")
+		}
+		seen[scope] = struct{}{}
 	}
 	return nil
+}
+
+func validScope(scope string) bool {
+	if scope == "" || len(scope) > 128 {
+		return false
+	}
+	for _, character := range scope {
+		if !(character >= 'a' && character <= 'z') &&
+			!(character >= '0' && character <= '9') &&
+			character != '.' && character != ':' && character != '-' && character != '_' {
+			return false
+		}
+	}
+	return true
+}
+
+func validHTTPSOrLoopbackURL(raw string) bool {
+	parsed, err := url.Parse(raw)
+	if err != nil || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return false
+	}
+	if parsed.Scheme == "https" {
+		return true
+	}
+	return parsed.Scheme == "http" && (parsed.Hostname() == "127.0.0.1" || parsed.Hostname() == "localhost" || parsed.Hostname() == "::1")
 }
 
 func validDatabaseURL(raw string) bool {

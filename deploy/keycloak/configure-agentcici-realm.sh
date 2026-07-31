@@ -97,6 +97,35 @@ if [[ -d /opt/keycloak/current/themes/agentcici ]]; then
     -s 'supportedLocales=["zh-CN"]' >/dev/null
 fi
 
+create_client semattice-cli '{
+  "clientId":"semattice-cli",
+  "name":"CloudCC Semattice CLI",
+  "enabled":true,
+  "protocol":"openid-connect",
+  "publicClient":true,
+  "standardFlowEnabled":true,
+  "directAccessGrantsEnabled":false,
+  "implicitFlowEnabled":false,
+  "serviceAccountsEnabled":false,
+  "redirectUris":["http://127.0.0.1"],
+  "webOrigins":[],
+  "attributes":{"pkce.code.challenge.method":"S256"}
+}'
+semattice_cli_id="$(kcadm get clients -r agentcici -q 'clientId=semattice-cli' --fields id | sed -n 's/.*"id" : "\([^"]*\)".*/\1/p' | head -n 1)"
+if [[ -z "${semattice_cli_id}" ]]; then
+  printf '%s\n' 'Unable to resolve semattice-cli client.' >&2
+  exit 1
+fi
+kcadm update "clients/${semattice_cli_id}" -r agentcici \
+  -s 'publicClient=true' \
+  -s 'standardFlowEnabled=true' \
+  -s 'directAccessGrantsEnabled=false' \
+  -s 'implicitFlowEnabled=false' \
+  -s 'serviceAccountsEnabled=false' \
+  -s 'redirectUris=["http://127.0.0.1"]' \
+  -s 'webOrigins=[]' \
+  -s 'attributes={"pkce.code.challenge.method":"S256"}' >/dev/null
+
 create_client semattice-api '{
   "clientId":"semattice-api",
   "name":"CloudCC Semattice Resource Server",
@@ -109,6 +138,25 @@ create_client semattice-api '{
   "implicitFlowEnabled":false,
   "serviceAccountsEnabled":false
 }'
+
+# Semattice verifies Keycloak access tokens as a resource server before issuing
+# its own short-lived OACT. Keep this mapper idempotent so repeat runs reconcile
+# the public CLI without creating duplicate audience claims.
+if ! kcadm get "clients/${semattice_cli_id}/protocol-mappers/models" -r agentcici |
+  grep -Eq '"name"[[:space:]]*:[[:space:]]*"semattice-api-audience"'; then
+  printf '%s' '{
+    "name":"semattice-api-audience",
+    "protocol":"openid-connect",
+    "protocolMapper":"oidc-audience-mapper",
+    "consentRequired":false,
+    "config":{
+      "included.client.audience":"semattice-api",
+      "access.token.claim":"true",
+      "id.token.claim":"false",
+      "lightweight.claim":"false"
+    }
+  }' | kcadm create "clients/${semattice_cli_id}/protocol-mappers/models" -r agentcici -f - >/dev/null
+fi
 
 create_client official-access-context '{
   "clientId":"official-access-context",

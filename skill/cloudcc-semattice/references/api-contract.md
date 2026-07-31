@@ -51,7 +51,7 @@ Content-Type: application/json
 - `approvals`：已验证的审批标识
 - 服务主体适用时的 `owner_principal_id` 和 `client_id`
 
-禁止索要或保存用户密码、Keycloak 管理凭据、客户端密钥、数据库连接串、签名密钥和长期令牌。不要使用未经官方主体投影的 Keycloak 服务账号令牌直连平台。
+禁止索要或保存用户密码、Keycloak 管理凭据、客户端密钥、数据库连接串或签名密钥。人工 CLI 续期所需的 Keycloak refresh token只能由 [登录凭据助手](authentication.md) 保存到操作系统凭据库，不得进入普通文件、仓库、日志或命令行；其他长期令牌不得保存。不要使用未经官方主体投影的 Keycloak 用户或服务账号令牌直连平台。
 
 ## 响应信封
 
@@ -115,8 +115,8 @@ python3 scripts/semattice_api.py \
 
 技能内 [API 能力目录](api-catalog.md) 用于快速规划；实际调用前以该接口返回的线上 Schema 为最终依据。
 
-## 不属于本技能的接口
+## 不属于 Capability 调用的接口
 
-- `POST /internal/v1/company-provisionings`：AgentCiCi 控制的内部 HMAC 接口，含时间戳、nonce、签名和重放保护；禁止普通 AI 或用户令牌调用。
+- `POST /v1/auth/token`：仅由登录助手使用 Keycloak access token换取短期 Semattice OACT；它不是业务 Capability，不接受租户或主体身份正文。
 - `/console/session`、`/console/api/*`：浏览器管理中心会话和只读模拟治理数据，不是业务事实来源。
 - `/mcp`：本技能明确不使用。

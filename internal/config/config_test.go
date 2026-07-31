@@ -74,24 +74,43 @@ func TestLoadRejectsInvalidValuesWithoutLeakingSecrets(t *testing.T) {
 	}
 }
 
-func TestLoadProvisioningRequiresCompleteValidConfiguration(t *testing.T) {
+func TestLoadAccessContextRequiresCompleteValidConfiguration(t *testing.T) {
 	valid := map[string]string{
-		"AI_NATIVE_AGENTCICI_BASE_URL":       "https://agentcici.example.test",
-		"AI_NATIVE_AGENTCICI_HMAC_KEY":       "agentcici-outbound-key-material-that-is-long-enough",
-		"AI_NATIVE_PROVISIONING_CALLER_KEYS": "agentcici=agentcici-inbound-key-material-that-is-long-enough;external-system=external-system-inbound-key-material-that-is-long-enough",
+		"AI_NATIVE_IDENTITY_ISSUER":     "https://semattice.example.test",
+		"AI_NATIVE_IDENTITY_AUDIENCE":   "semattice-api",
+		"AI_NATIVE_IDENTITY_ALGORITHM":  "HS256",
+		"AI_NATIVE_IDENTITY_HMAC_KEY":   "semattice-signing-key-material-that-is-long-enough",
+		"AI_NATIVE_KEYCLOAK_ISSUER":     "https://sso.example.test/realms/example",
+		"AI_NATIVE_KEYCLOAK_AUDIENCE":   "semattice-api",
+		"AI_NATIVE_KEYCLOAK_JWKS_URL":   "https://sso.example.test/realms/example/protocol/openid-connect/certs",
+		"AI_NATIVE_KEYCLOAK_CLIENT_ID":  "semattice-cli",
+		"AI_NATIVE_OACT_ALLOWED_SCOPES": "system.capability.read,record.read",
+		"AI_NATIVE_OACT_TTL":            "15m",
 	}
 	cfg, err := Load(func(key string) string { return valid[key] })
-	if err != nil || !cfg.Provisioning.Enabled() || len(cfg.Provisioning.CallerKeys) != 2 {
-		t.Fatalf("valid provisioning config rejected: cfg=%#v err=%v", cfg.Provisioning, err)
+	if err != nil || !cfg.AccessContext.Enabled() || len(cfg.AccessContext.AllowedScopes) != 2 || cfg.AccessContext.TokenTTL != 15*time.Minute {
+		t.Fatalf("valid access context config rejected: cfg=%#v err=%v", cfg.AccessContext, err)
 	}
 	invalid := []map[string]string{
-		{"AI_NATIVE_AGENTCICI_BASE_URL": valid["AI_NATIVE_AGENTCICI_BASE_URL"]},
-		{"AI_NATIVE_AGENTCICI_BASE_URL": valid["AI_NATIVE_AGENTCICI_BASE_URL"], "AI_NATIVE_AGENTCICI_HMAC_KEY": valid["AI_NATIVE_AGENTCICI_HMAC_KEY"], "AI_NATIVE_PROVISIONING_CALLER_KEYS": "AgentCiCi=too-short"},
-		{"AI_NATIVE_AGENTCICI_BASE_URL": valid["AI_NATIVE_AGENTCICI_BASE_URL"], "AI_NATIVE_AGENTCICI_HMAC_KEY": valid["AI_NATIVE_AGENTCICI_HMAC_KEY"], "AI_NATIVE_PROVISIONING_CALLER_KEYS": "agentcici=agentcici-inbound-key-material-that-is-long-enough;agentcici=duplicate-key-material-that-is-long-enough"},
+		{"AI_NATIVE_KEYCLOAK_ISSUER": valid["AI_NATIVE_KEYCLOAK_ISSUER"]},
+		{
+			"AI_NATIVE_IDENTITY_ISSUER": valid["AI_NATIVE_IDENTITY_ISSUER"], "AI_NATIVE_IDENTITY_AUDIENCE": valid["AI_NATIVE_IDENTITY_AUDIENCE"],
+			"AI_NATIVE_IDENTITY_ALGORITHM": valid["AI_NATIVE_IDENTITY_ALGORITHM"], "AI_NATIVE_IDENTITY_HMAC_KEY": valid["AI_NATIVE_IDENTITY_HMAC_KEY"],
+			"AI_NATIVE_KEYCLOAK_ISSUER": valid["AI_NATIVE_KEYCLOAK_ISSUER"], "AI_NATIVE_KEYCLOAK_AUDIENCE": valid["AI_NATIVE_KEYCLOAK_AUDIENCE"],
+			"AI_NATIVE_KEYCLOAK_JWKS_URL": "http://external.example.test/certs", "AI_NATIVE_KEYCLOAK_CLIENT_ID": valid["AI_NATIVE_KEYCLOAK_CLIENT_ID"],
+			"AI_NATIVE_OACT_ALLOWED_SCOPES": valid["AI_NATIVE_OACT_ALLOWED_SCOPES"],
+		},
+		{
+			"AI_NATIVE_IDENTITY_ISSUER": valid["AI_NATIVE_IDENTITY_ISSUER"], "AI_NATIVE_IDENTITY_AUDIENCE": valid["AI_NATIVE_IDENTITY_AUDIENCE"],
+			"AI_NATIVE_IDENTITY_ALGORITHM": valid["AI_NATIVE_IDENTITY_ALGORITHM"], "AI_NATIVE_IDENTITY_HMAC_KEY": valid["AI_NATIVE_IDENTITY_HMAC_KEY"],
+			"AI_NATIVE_KEYCLOAK_ISSUER": valid["AI_NATIVE_KEYCLOAK_ISSUER"], "AI_NATIVE_KEYCLOAK_AUDIENCE": valid["AI_NATIVE_KEYCLOAK_AUDIENCE"],
+			"AI_NATIVE_KEYCLOAK_JWKS_URL": valid["AI_NATIVE_KEYCLOAK_JWKS_URL"], "AI_NATIVE_KEYCLOAK_CLIENT_ID": valid["AI_NATIVE_KEYCLOAK_CLIENT_ID"],
+			"AI_NATIVE_OACT_ALLOWED_SCOPES": "record.read,record.read",
+		},
 	}
 	for _, values := range invalid {
 		if _, err := Load(func(key string) string { return values[key] }); err == nil {
-			t.Fatalf("invalid provisioning configuration accepted: %#v", values)
+			t.Fatalf("invalid access context configuration accepted: %#v", values)
 		}
 	}
 }
