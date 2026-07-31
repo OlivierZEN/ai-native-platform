@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T09:27:37Z
-updated_by: root after verified manual metadata publish rollout
+updated_at: 2026-07-31T09:38:38Z
+updated_by: root after verified production metadata publication
 phase: cross-product-identity-live
 active_task: "TASK-033"
 next_action: "等待AgentCiCi新版、Keycloak SMTP、OACT签名配置和受权service client凭据后，执行真实机器主体的OACT exchange、owner失效与撤销投影验收。"
@@ -23,7 +23,7 @@ read_next:
 
 - TASK-049 / FEAT-046 已完成：提交`34023d0a55981761ed0642809b82a5f5b2f7db9f`发布为`/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制SHA-256为`6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`。`metadata.version.publish`现在接受用户明确提供的非空手动`approval_id`并在发布事务中持久审计，其他高风险能力仍校验可信OACT审批声明。四项服务active、Nginx和健康检查通过、错误日志为0；Skill开发/安装副本均为`1.4.0`。
 
-- 用户授权的生产元数据写入已完成：当前OACT绑定企业`orgx2x8awt02djpp5xdp`与租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`。序号1草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`现含`contact / 联系人`对象`019fb736-c3cb-7e1b-8f98-b93614102672`，以及`large_backpack / 大书包`对象`019fb75e-29db-7726-8ff0-8c5033ae08d8`；后者包含`name / 书包名称`字段`019fb75e-d8fb-70ef-9275-1c90a31dd3b1`和`color / 颜色`字段`019fb75e-dbc9-7576-9889-e0a67ad3902c`。`metadata.version.get`回读确认草稿为2对象、2字段、0关系。未发布元数据，未创建业务记录或修改授权。
+- 用户已明确确认并发布生产元数据首版本：当前OACT绑定企业`orgx2x8awt02djpp5xdp`与租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`。版本`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`现在为`published`，包含`contact / 联系人`对象`019fb736-c3cb-7e1b-8f98-b93614102672`，以及`large_backpack / 大书包`对象`019fb75e-29db-7726-8ff0-8c5033ae08d8`；后者包含active索引字段`name / 书包名称`和`color / 颜色`。快照摘要为`9d56197d04962a3ab6ad60b4610fc4035dd51b2cb6b9f049d719eb88c9953f4f`，发布审计标识为`audit:req-f7b19407-5c65-48b3-8eaa-fdd6369c063b`。未创建业务记录或修改授权。
 
 - TASK-048 已完成：提交`ffdbec4fada7aa0169d75dd785bac8607cf927b8`发布为`/opt/semattice/releases/20260731T080337Z-web-oidc-ffdbec4fada7`，二进制SHA-256为`0e31e75dc59487c6bdf02a9eed169f826fa918d2427e3373a304c2584d8f57f0`。四个服务active、健康和匿名负例通过，真实Chrome顶栏精确显示“应用开发组织”且控制台零错误；上一release、Nginx和静态站备份均保留。
 

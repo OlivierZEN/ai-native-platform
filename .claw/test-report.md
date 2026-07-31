@@ -1,13 +1,22 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T09:27:37Z
-updated_by: root after production manual metadata publish verification
-last_run_at: 2026-07-31T09:27:37Z
+updated_at: 2026-07-31T09:38:38Z
+updated_by: root after production metadata publication verification
+last_run_at: 2026-07-31T09:38:38Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 生产元数据首版本发布验收
+
+- 用户明确确认发布当前完整草稿中的全部对象和字段。发布前`system.capability.list`确认`metadata.version.publish`仍要求`metadata.publish`scope、高风险、异步、`approval_required=true`以及两个必填输入；能力发现审计标识为`audit:req-88eb9816-fc56-4967-9837-9cd6f0490722`。
+- 发布前`tenant.get-status`确认企业`orgx2x8awt02djpp5xdp`、租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`和Native生命周期均为active；`metadata.version.get`以审计标识`audit:req-2f290dc4-9334-4f79-a2e9-9c957a2bdf9a`确认目标仍为序号1草稿、2对象、2字段、0关系。
+- 写操作先完成无Token dry-run，实际调用使用稳定幂等键`idem-publish-metadata-v1-manual-20260731`和手动确认标识`manual-draft-v1-user-confirmation-20260731`。`metadata.version.publish`返回`succeeded / published`，发布审计标识为`audit:req-f7b19407-5c65-48b3-8eaa-fdd6369c063b`。
+- 不可变快照摘要为`9d56197d04962a3ab6ad60b4610fc4035dd51b2cb6b9f049d719eb88c9953f4f`；包含`contact / 联系人`与`large_backpack / 大书包`两个对象，后者包含`name / 书包名称`和`color / 颜色`两个text字段，零关系。
+- 发布后`metadata.version.get`回读审计标识为`audit:req-8e8de8fb-72cf-463f-8936-38587349e4bc`，版本状态为`published`、快照摘要一致，两个字段均为`lifecycle_state=active`、`index_state=active`；随后`tenant.get-status`仍为active，审计标识为`audit:req-7fe4c51f-bd00-4b0d-8f21-eec9d406f3a1`。
+- 追加管理中心UI验收时，既有Chrome管理中心Session已过期并跳转统一登录页；未代用户输入账号、密码或其他凭据。真实Capability API发布与回读验证已经完成，用户重新登录管理中心后可查看已发布模型。
 
 ## 2026-07-31 TASK-049 手动元数据发布确认生产验收
 

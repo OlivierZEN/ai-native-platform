@@ -7,8 +7,8 @@ owner_role: backend-agent
 task_ids: TASK-049
 related_decisions: ADR-003
 related_issues: none
-updated_at: 2026-07-31T09:27:37Z
-updated_by: root after production rollout and contract verification
+updated_at: 2026-07-31T09:38:38Z
+updated_by: root after verified first-version publication
 ---
 
 # FEAT-046 - 元数据直接发布支持手动确认
@@ -91,9 +91,10 @@ updated_by: root after production rollout and contract verification
 - 四项服务、Nginx 配置、边缘健康、匿名负例和零错误日志验证通过；线上能力发现返回新的手动确认描述、原有高风险异步策略及两个必填输入。
 - 空白 `approval_id` 线上负例以 `FAILED_PRECONDITION` 失败，审计标识为 `audit:req-7e8ae6fc-bb30-4de9-9fe9-a45f5d60ffdd`。
 - Skill 开发副本与本机安装副本均为 `1.4.0`、逐文件一致且通过官方校验。
-- 实际草稿仍未发布；最终回读确认它包含两个对象、两个字段和零关系，需用户重新确认整版范围。
+- 用户重新确认完整范围后，以`manual-draft-v1-user-confirmation-20260731`发布版本`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`；发布审计标识为`audit:req-f7b19407-5c65-48b3-8eaa-fdd6369c063b`。
+- 发布后回读状态为`published`，快照摘要为`9d56197d04962a3ab6ad60b4610fc4035dd51b2cb6b9f049d719eb88c9953f4f`，包含两个对象、两个active索引字段和零关系。
 
 ## 交接说明
 
-- 生产元数据草稿可能被并行修改；实际发布前必须重新读取并向用户确认整个版本内容。
+- 后续元数据修改必须创建候选草稿并走Changeset流程，不能直接修改本次不可变已发布版本。
 - 如需回滚服务，把 `/opt/semattice/current` 切回 `20260731T080337Z-web-oidc-ffdbec4fada7` 并重启 Semattice；本次没有数据库迁移。

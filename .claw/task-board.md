@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T09:27:37Z
-updated_by: root after production manual metadata publish rollout
+updated_at: 2026-07-31T09:38:38Z
+updated_by: root after verified production metadata publication
 board_status: active
 ---
 
@@ -182,11 +182,11 @@ board_status: active
 
 #### Next Action
 
-- Completed. Before publishing the production draft, obtain explicit confirmation for its current complete two-object contents.
+- Completed. The user explicitly confirmed and published the complete two-object production version.
 
 #### Handoff Note
 
-- Commit `34023d0a55981761ed0642809b82a5f5b2f7db9f` is deployed as `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`. The production draft remains unpublished because it now contains both `contact` and `large_backpack`.
+- Commit `34023d0a55981761ed0642809b82a5f5b2f7db9f` is deployed as `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`. Version `019fb736-8c34-7f0c-a0e8-82f385ffd9b0` was published with both `contact` and `large_backpack`; publish audit ID is `audit:req-f7b19407-5c65-48b3-8eaa-fdd6369c063b`.
 
 ### TASK-041 - Add Keycloak PKCE login to cloudcc-semattice skill
 
