@@ -1,13 +1,19 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T08:08:00Z
-updated_by: root after production contact draft verification
-last_run_at: 2026-07-31T08:08:00Z
+updated_at: 2026-07-31T08:10:16Z
+updated_by: root after CodeUp main publication verification
+last_run_at: 2026-07-31T08:10:16Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 CodeUp main发布验证
+
+- 推送前工作树clean，`origin/main`是本地HEAD的祖先，左右提交计数为`0 / 5`；待发布提交依次为`dcf2b81`、`a1ad1d9`、`ffdbec4`、`55883c2`和`63484d3`。
+- `git push origin main`以普通快进将CodeUp `main`从`27020e3`更新至`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`，未使用force push。
+- 推送后本地HEAD、`origin/main`和`git ls-remote origin refs/heads/main`均为`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`。
 
 ## 2026-07-31 生产联系人草稿对象验证
 

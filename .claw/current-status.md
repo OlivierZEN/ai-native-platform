@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T08:08:00Z
-updated_by: root after verified production contact draft creation
+updated_at: 2026-07-31T08:10:16Z
+updated_by: root after verified CodeUp main publication
 phase: cross-product-identity-live
 active_task: "TASK-033"
 next_action: "等待AgentCiCi新版、Keycloak SMTP、OACT签名配置和受权service client凭据后，执行真实机器主体的OACT exchange、owner失效与撤销投影验收。"
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- CodeUp `origin/main` 已通过普通快进从`27020e3`发布至`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`，包含网站OIDC、租户名称顶栏、生产发布证据和联系人草稿验证共5个提交；本地HEAD、tracking ref与远端分支回读一致，未使用force push。
 
 - 用户授权的生产元数据写入已完成：当前OACT绑定企业`orgx2x8awt02djpp5xdp`与租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`。`metadata.version.create`创建序号1草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`，`metadata.object.upsert`创建`contact / 联系人`对象`019fb736-c3cb-7e1b-8f98-b93614102672`；`metadata.version.get`回读确认草稿仅含该对象、0字段、0关系。未发布元数据，未创建业务记录或修改授权。
 
