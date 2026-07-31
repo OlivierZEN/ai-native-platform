@@ -1,13 +1,20 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T07:49:52Z
-updated_by: root after production web OIDC deployment verification
-last_run_at: 2026-07-31T07:49:52Z
+updated_at: 2026-07-31T08:00:41Z
+updated_by: root after tenant-name topbar verification
+last_run_at: 2026-07-31T08:00:41Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 TASK-047 控制台租户名称顶栏验证
+
+- 控制台右上角元素改为`tenant-name`，首次`/console/api/overview`响应以`tenant_name`更新展示；缺失名称时显示“当前租户”。
+- 静态契约确认HTML不再包含`session-subject`，JavaScript不再读取`session.subject`，并将资源版本更新为`console.js?v=20260731-02`。
+- `node --check deploy/semattice/www/console/console.js`、Python HTML解析、Node绑定断言、`GOTOOLCHAIN=go1.26.5 go test ./internal/console ./cmd/ai-native-platform -count=1`和`git diff --check`：通过。
+- 本轮为本地显示层修复；未修改后端接口、Session、Organization/tenant映射，未提交或部署。
 
 ## 2026-07-31 TASK-046 Semattice网站Keycloak登录生产验收
 

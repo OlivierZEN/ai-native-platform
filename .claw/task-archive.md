@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-31T07:49:52Z
-updated_by: root after archiving verified production web OIDC rollout
+updated_at: 2026-07-31T08:00:41Z
+updated_by: root after archiving verified tenant-name topbar fix
 archive_status: active
 ---
 
@@ -11,6 +11,34 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-047 - Show tenant name in the console topbar
+
+- status: `done`
+- priority: `medium`
+- owner_role: `frontend-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-040, TASK-046`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `console static HTML/JavaScript and focused verification evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- The topbar displays the authenticated tenant's `tenant_name` from `/console/api/overview`.
+- The Keycloak user UUID is no longer rendered in the topbar.
+- Session, tenant isolation and other console pages remain unchanged.
+
+#### Next Action
+
+- Local implementation is complete. Commit and deploy only when separately authorized.
+
+#### Handoff Note
+
+- The overview response is the tenant-name source of truth. The topbar falls back to“当前租户”and never renders the Keycloak subject.
 
 ### TASK-046 - Deploy Semattice web Keycloak login
 
