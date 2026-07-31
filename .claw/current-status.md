@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-25T02:56:50Z
-updated_by: root after console asset-cache correction and browser verification
-phase: cross-product-identity-live
-active_task: "TASK-033"
-next_action: "实现 Semattice 官方 OACT Principal 投影，并与已发布的 AgentCiCi FEAT-145 对齐；Keycloak SMTP 配置前不启用自动人类邀请。"
+updated_at: 2026-07-31T01:20:00Z
+updated_by: root
+phase: live-tenant-governance-correction
+active_task: "TASK-034"
+next_action: "用真实租户发布元数据替换 Semattice 管理中心内存演示 fixture，并完成生产只读验证。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-034 / FEAT-034：用户指出管理中心仍展示“演示环境”与 `example.demo` 成员。线上核验表明 `org5nszpgj99jaysxv6y` 的 Semattice tenant 为 active，当前 metadata v1 已发布 5 个研发交付对象、37 个有效字段；本地身份、角色和组织投影均为 0。此任务将控制台接到已有 RLS 的真实只读投影，空数据明确显示为未投影，绝不伪造成员或模型。
 
 - TASK-033 / FEAT-033 已启动：AgentCiCi `2.8.20` 已发布统一 Principal 基座和机器责任模型，但 Semattice 当前仅把官方 OACT `sub` 直接作为 actor，尚未承载 `principal_id` / `principal_type`。本任务将保持 OACT/JWKS 本地验签，拒绝 Keycloak Service Account token 直连，并将新官方 human/service OACT 映射为数据平台本地 Principal。Keycloak Realm 尚未配置 SMTP，自动人类邀请不提前启用。
 

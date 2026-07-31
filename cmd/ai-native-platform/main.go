@@ -58,6 +58,7 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 	var poolsToClose []interface{ Close() }
 	var tenantService *tenant.Service
 	var usageService *metering.Service
+	var consoleReader consoleapp.Reader
 	if cfg.ControlDatabaseURL != "" {
 		controlDatabase := cfg.Database
 		controlDatabase.URL = cfg.ControlDatabaseURL
@@ -75,6 +76,7 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		}
 		poolsToClose = append(poolsToClose, runtimePool)
 		tenantService = tenant.NewService(controlPool, operations.ClaimBoundPort{})
+		consoleReader = consoleapp.NewPostgresReader(runtimePool, controlPool)
 		// Company provisioning is intentionally not a public capability. All new
 		// tenants enter through the AgentCiCi-validated internal route below.
 		definitions = append(definitions, tenant.CapabilityDefinitions(tenantService, false)...)
@@ -137,7 +139,10 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		}
 		routes.Handle("/internal/v1/company-provisionings", internalprovisioning.NewHandler(tenantService, cfg.Provisioning))
 		routes.Handle("/mcp", mcpserver.NewAuthenticatedStreamableHTTPHandler(invoker, verifier.VerifyWithExpiration))
-		routes.Handle("/console/", consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey))
+		if consoleReader == nil {
+			return writeStartupFailure(out, capability.CodeValidationFailed, "console data reader is required")
+		}
+		routes.Handle("/console/", consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey, consoleReader))
 		routes.Handle("/", api.NewAuthenticatedHandler(invoker, verifier))
 		return serve(ctx, args[1:], routes, cfg.HTTPListen, logger, out)
 	}

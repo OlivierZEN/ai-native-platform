@@ -28,6 +28,30 @@ board_status: active
 
 ## Active Tasks
 
+### TASK-034 - 管理中心接入真实租户治理数据
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-034-live-tenant-governance-console.md`
+- depends_on: `TASK-032, TASK-033`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `console reader, console API/static view, tests and production validation`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 控制台由已验证会话的 tenant context 读取真实 published metadata、RBAC、组织和审计投影。
+- `org5nszpgj99jaysxv6y` 显示 5 个研发交付对象与 37 个有效字段，未投影身份数据明确为空态。
+- 演示 fixture 不再进入生产控制台响应，安全边界和线上 read-only 验证通过。
+
+#### Next Action
+
+- 实现真实只读 reader，并对正确租户/空投影/越权隔离完成测试。
+
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
 - status: `in_progress`
