@@ -4,7 +4,7 @@ feature_id: FEAT-042
 title: Production rollout of Semattice-owned Keycloak access context
 status: implemented
 owner_role: release-agent
-task_ids: TASK-042
+task_ids: TASK-043
 related_decisions: ADR-014
 related_issues: none
 updated_at: 2026-07-31T05:02:19Z

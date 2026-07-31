@@ -246,6 +246,8 @@ class SematticeAuthenticationTests(unittest.TestCase):
 
     def test_loopback_receiver_accepts_only_the_bound_state(self) -> None:
         callback_errors: list[BaseException] = []
+        callback_response: dict[str, object] = {}
+        callback_done = threading.Event()
 
         def browser_open(login_url: str, **_values: object) -> bool:
             query = urllib.parse.parse_qs(urllib.parse.urlparse(login_url).query)
@@ -257,9 +259,15 @@ class SematticeAuthenticationTests(unittest.TestCase):
             def send_callback() -> None:
                 try:
                     with urllib.request.urlopen(callback_url, timeout=2) as response:
-                        response.read()
+                        callback_response["status"] = response.status
+                        callback_response["content_type"] = response.headers["Content-Type"]
+                        callback_response["cache_control"] = response.headers["Cache-Control"]
+                        callback_response["csp"] = response.headers["Content-Security-Policy"]
+                        callback_response["body"] = response.read().decode("utf-8")
                 except BaseException as exc:  # test thread must report every failure
                     callback_errors.append(exc)
+                finally:
+                    callback_done.set()
 
             threading.Thread(target=send_callback, daemon=True).start()
             return True
@@ -273,11 +281,58 @@ class SematticeAuthenticationTests(unittest.TestCase):
                 timeout=2,
                 no_browser=False,
             )
+        self.assertTrue(callback_done.wait(2))
         self.assertEqual(callback_errors, [])
         self.assertEqual(code_value, "loopback-code")
         parsed = urllib.parse.urlparse(redirect_uri)
         self.assertEqual(parsed.hostname, "127.0.0.1")
         self.assertEqual(parsed.path, "")
+        self.assertEqual(callback_response["status"], 200)
+        self.assertEqual(callback_response["content_type"], "text/html; charset=utf-8")
+        self.assertEqual(callback_response["cache_control"], "no-store")
+        self.assertIn("default-src 'none'", str(callback_response["csp"]))
+        self.assertIn("CloudCC Semattice", str(callback_response["body"]))
+        self.assertIn("身份验证完成", str(callback_response["body"]))
+        self.assertNotIn("loopback-code", str(callback_response["body"]))
+
+    def test_loopback_receiver_uses_safe_failure_page(self) -> None:
+        callback_response: dict[str, object] = {}
+        callback_done = threading.Event()
+
+        def browser_open(login_url: str, **_values: object) -> bool:
+            query = urllib.parse.parse_qs(urllib.parse.urlparse(login_url).query)
+            callback_url = (
+                f"{query['redirect_uri'][0]}?"
+                + urllib.parse.urlencode({"state": "wrong-state", "code": "secret-code"})
+            )
+
+            def send_callback() -> None:
+                try:
+                    urllib.request.urlopen(callback_url, timeout=2)
+                except urllib.error.HTTPError as exc:
+                    callback_response["status"] = exc.code
+                    callback_response["body"] = exc.read().decode("utf-8")
+                finally:
+                    callback_done.set()
+
+            threading.Thread(target=send_callback, daemon=True).start()
+            return True
+
+        with mock.patch("semattice_auth.webbrowser.open", side_effect=browser_open):
+            with self.assertRaisesRegex(AuthError, "state"):
+                receive_authorization_code(
+                    "https://sso.example.test/authorize",
+                    client_id="semattice-cli",
+                    state_value="expected-state",
+                    code_challenge="challenge",
+                    timeout=2,
+                    no_browser=False,
+                )
+        self.assertTrue(callback_done.wait(2))
+        self.assertEqual(callback_response["status"], 400)
+        self.assertIn("身份验证未完成", str(callback_response["body"]))
+        self.assertNotIn("wrong-state", str(callback_response["body"]))
+        self.assertNotIn("secret-code", str(callback_response["body"]))
 
     def test_login_uses_code_flow_mints_oact_and_never_caches_refresh_token(self) -> None:
         session = self.manager.login(self.settings)

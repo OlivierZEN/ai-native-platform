@@ -524,6 +524,227 @@ def parse_callback_query(query: str, expected_state: str) -> str:
     return code_value
 
 
+def callback_page(succeeded: bool) -> bytes:
+    page_class = "success" if succeeded else "failure"
+    aria_role = "status" if succeeded else "alert"
+    status_label = "AUTHORIZATION RECEIVED" if succeeded else "AUTHORIZATION INTERRUPTED"
+    headline = "身份验证完成" if succeeded else "身份验证未完成"
+    detail = (
+        "正在返回终端完成安全连接。你现在可以关闭此窗口。"
+        if succeeded
+        else "请返回终端查看原因，然后重新发起登录。"
+    )
+    symbol = (
+        '<path d="m7.5 12.5 3 3 6-7"/>'
+        if succeeded
+        else '<path d="M9 9l6 6M15 9l-6 6"/>'
+    )
+    return f"""<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>{headline} · CloudCC Semattice</title>
+  <style>
+    :root {{
+      color-scheme: dark;
+      --ink: #0b0d0c;
+      --paper: #ece9df;
+      --muted: #9c9f97;
+      --line: rgba(236, 233, 223, .18);
+      --acid: #c8ff3d;
+      --cyan: #4ee8d3;
+      --danger: #ff8d84;
+      --serif: "Iowan Old Style", "Baskerville", Georgia, serif;
+      --mono: "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace;
+    }}
+    * {{ box-sizing: border-box; }}
+    body {{
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      overflow: hidden;
+      color: var(--paper);
+      background:
+        radial-gradient(circle at 82% 12%, rgba(78, 232, 211, .11), transparent 32%),
+        radial-gradient(circle at 12% 88%, rgba(200, 255, 61, .08), transparent 28%),
+        linear-gradient(rgba(255, 255, 255, .026) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .026) 1px, transparent 1px),
+        var(--ink);
+      background-size: auto, auto, 42px 42px, 42px 42px, auto;
+      font-family: var(--mono);
+    }}
+    body::before {{
+      content: "";
+      position: fixed;
+      width: 360px;
+      height: 360px;
+      border: 1px solid var(--line);
+      transform: rotate(45deg);
+      opacity: .36;
+      pointer-events: none;
+    }}
+    .card {{
+      position: relative;
+      width: min(560px, 100%);
+      border: 1px solid var(--line);
+      background: rgba(11, 13, 12, .86);
+      box-shadow: 24px 24px 0 rgba(200, 255, 61, .035);
+      backdrop-filter: blur(18px);
+    }}
+    .card::before {{
+      content: "";
+      position: absolute;
+      inset: -1px auto auto -1px;
+      width: 92px;
+      height: 3px;
+      background: var(--accent);
+    }}
+    .success {{ --accent: var(--acid); }}
+    .failure {{ --accent: var(--danger); }}
+    .header {{
+      min-height: 72px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+    }}
+    .brand {{ display: flex; align-items: center; gap: 12px; }}
+    .brand-mark {{
+      width: 30px;
+      height: 30px;
+      display: grid;
+      grid-template: 1fr 1fr / 1fr 1fr;
+      border: 1px solid var(--paper);
+      transform: rotate(45deg);
+    }}
+    .brand-mark i {{ border: 1px solid rgba(236, 233, 223, .25); }}
+    .brand-mark i:first-child {{ background: var(--accent); }}
+    .brand-name {{ display: grid; gap: 3px; }}
+    .brand-name strong {{ font-size: 10px; letter-spacing: .16em; }}
+    .brand-name span {{ color: var(--muted); font: italic 18px/1 var(--serif); }}
+    .secure {{
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 8px;
+      letter-spacing: .12em;
+    }}
+    .secure::before {{
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 12px var(--cyan);
+    }}
+    .content {{ padding: 52px 48px 46px; }}
+    .status-mark {{
+      width: 76px;
+      height: 76px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--accent);
+      color: var(--ink);
+      background: var(--accent);
+      transform: rotate(45deg);
+      box-shadow: 0 0 54px color-mix(in srgb, var(--accent) 17%, transparent);
+    }}
+    .status-mark svg {{
+      width: 34px;
+      height: 34px;
+      transform: rotate(-45deg);
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }}
+    .eyebrow {{
+      margin: 42px 0 12px;
+      color: var(--accent);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .17em;
+    }}
+    h1 {{
+      margin: 0;
+      font: italic clamp(42px, 9vw, 62px)/.95 var(--serif);
+      letter-spacing: -.035em;
+    }}
+    .detail {{
+      max-width: 410px;
+      margin: 24px 0 0;
+      color: #c9c8c1;
+      font: 13px/1.9 -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    }}
+    .footer {{
+      min-height: 58px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 8px;
+      letter-spacing: .1em;
+    }}
+    .footer b {{ color: var(--paper); font-weight: 500; }}
+    @media (max-width: 560px) {{
+      body {{ padding: 16px; }}
+      .header, .footer {{ padding-inline: 18px; }}
+      .secure {{ display: none; }}
+      .content {{ padding: 42px 24px 38px; }}
+      .status-mark {{ width: 64px; height: 64px; }}
+      .detail {{ font-size: 12px; }}
+    }}
+    @media (prefers-reduced-motion: no-preference) {{
+      .card {{ animation: arrive .45s cubic-bezier(.2, .75, .25, 1) both; }}
+      .status-mark {{ animation: settle .55s .12s cubic-bezier(.2, .75, .25, 1) both; }}
+      @keyframes arrive {{
+        from {{ opacity: 0; transform: translateY(14px); }}
+        to {{ opacity: 1; transform: none; }}
+      }}
+      @keyframes settle {{
+        from {{ opacity: 0; transform: rotate(45deg) scale(.72); }}
+        to {{ opacity: 1; transform: rotate(45deg) scale(1); }}
+      }}
+    }}
+  </style>
+</head>
+<body>
+  <main class="card {page_class}" aria-labelledby="callback-title">
+    <header class="header">
+      <div class="brand" aria-label="CloudCC Semattice">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+        <span class="brand-name"><strong>CLOUDCC</strong><span>Semattice</span></span>
+      </div>
+      <span class="secure">SECURE LOOPBACK</span>
+    </header>
+    <section class="content" role="{aria_role}">
+      <div class="status-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24">{symbol}</svg>
+      </div>
+      <p class="eyebrow">{status_label}</p>
+      <h1 id="callback-title">{headline}</h1>
+      <p class="detail">{detail}</p>
+    </section>
+    <footer class="footer">
+      <span><b>LOCAL CALLBACK</b> · 127.0.0.1</span>
+      <span>NO CREDENTIALS SHOWN</span>
+    </footer>
+  </main>
+</body>
+</html>
+""".encode("utf-8")
+
+
 def receive_authorization_code(
     authorization_endpoint: str,
     *,
@@ -543,15 +764,23 @@ def receive_authorization_code(
                 if parsed.path not in {"", "/"}:
                     raise AuthError("无效的回调路径")
                 result["code"] = parse_callback_query(parsed.query, state_value)
-                body = "登录完成，可以关闭此窗口。".encode("utf-8")
+                body = callback_page(True)
                 status_code = 200
             except AuthError as exc:
                 result["error"] = str(exc)
-                body = "登录未完成，请返回终端查看原因。".encode("utf-8")
+                body = callback_page(False)
                 status_code = 400
             self.send_response(status_code)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
+            self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Cache-Control", "no-store")
+            self.send_header(
+                "Content-Security-Policy",
+                "default-src 'none'; style-src 'unsafe-inline'; "
+                "base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+            )
+            self.send_header("Referrer-Policy", "no-referrer")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("X-Frame-Options", "DENY")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)

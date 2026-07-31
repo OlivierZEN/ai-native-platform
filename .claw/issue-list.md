@@ -1,8 +1,8 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-07-16T15:34:16Z
-updated_by: ai
+updated_at: 2026-07-31T05:09:53Z
+updated_by: root after merging production feature histories
 ---
 
 # 问题追踪列表
@@ -14,8 +14,13 @@ updated_by: ai
 
 ## 活跃问题
 
-- 暂无活跃问题。
-- 新增问题时，至少记录 `ISSUE-xxx`、严重级别、状态、证据、根因状态和下一步动作。
+### ISSUE-001 - 当前生产 release 尚未包含合并后的控制台与登录组合
+
+- severity: `medium`
+- status: `open`
+- evidence: 当前生产 release `/opt/semattice/releases/20260731T045751Z-standalone-auth` 在远端 TASK-040 真实治理控制台源码合入本地 `main` 前构建；合并后的仓库源码已同时包含 TASK-040 与 TASK-043。
+- root_cause: `verified`；两个功能从分叉的本地/远端历史分别发布，生产认证 release 的构建输入不含后来合并的控制台提交。
+- next_action: 本次 CodeUp 推送完成后，从同一合并 HEAD 构建新的不可变生产 release；依次验证真实控制台读取、Keycloak PKCE、`/v1/auth/token`、OACT Capability 调用、匿名负例和回滚证据。
 
 ## 已解决问题
 

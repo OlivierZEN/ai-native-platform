@@ -1,15 +1,25 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T05:02:19Z
-updated_by: root after TASK-042 production rollout verification
-last_run_at: 2026-07-31T05:02:19Z
+updated_at: 2026-07-31T05:17:12Z
+updated_by: root after combined source merge regression
+last_run_at: 2026-07-31T05:17:12Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-## 2026-07-31 TASK-042 Semattice 自有换票生产发布
+## 2026-07-31 TASK-040～TASK-043 合并后组合源码回归
+
+- 将 CodeUp `origin/main` 的真实租户治理控制台与本地 Semattice 自有 Keycloak登录历史合并；冲突处理中同时保留 PostgreSQL console reader、`POST /v1/auth/token`、非公开租户开户边界和现有 Capability/MCP/API 路由。合并树无冲突标记，`git diff --check` 通过。
+- `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`、`go mod verify` 和 `CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath` 全部通过；`internal/console` 回归已覆盖真实 reader接线。
+- `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py' -v`：15 项通过。新增回调页验证覆盖成功/失败 HTML、`no-store`、CSP和授权码/state不回显。
+- `node --check deploy/semattice/www/console/console.js`、仓库 `deploy/keycloak/*.sh` 与 `scripts/*.sh` 全量 `bash -n` 通过。
+- 官方 `skill-creator/scripts/quick_validate.py` 对开发副本和本机安装副本均返回 `Skill is valid!`；开发副本已同步至本机安装目录且逐文件一致，未包含 Python缓存。
+- 常见私钥/Token、10 MiB大文件、Python缓存、冲突标记和 staged diff门禁通过。项目状态 validator仅报告既有 FEAT-033 frontmatter/status问题，本次任务编号合并、ISSUE-001与组合验证未新增状态错误。
+- ISSUE-001保留为真实发布风险：当前线上 `20260731T045751Z-standalone-auth` 在合并远端控制台源码前构建。本轮只验证并推送组合源码，不把两个历史 release分别通过误报为同一线上制品已组合发布。
+
+## 2026-07-31 TASK-043 Semattice 自有换票生产发布
 
 - 发布前 `go test ./...`、14 项 Python登录测试、`git diff --check`、Keycloak脚本语法和 Python语法门禁均通过；`linux/amd64` CGO-free制品 SHA-256 为 `73c552daffcf3ee2dcc203a009f08acc7b8effe3754e9a1d69267a690b3074f0`，上传后远端校验和一致。
 - 原子切换至 `/opt/semattice/releases/20260731T045751Z-standalone-auth`；上一 release、受保护环境文件和 Keycloak `semattice-cli` client配置均已备份。环境文件保持 `root:semattice 0640`，release二进制为 `root:root 0755`。
@@ -18,27 +28,34 @@ last_run_status: passed
 - `tenant_registry`只读复核确认 `orgx2x8awt02djpp5xdp` 对应 tenant `ce85dabd-68be-503d-9d1b-9b63c536fa78`，global/native均为 active。
 - 使用本机安装的 Skill `1.2.2` 完成真实 Keycloak Authorization Code + S256 PKCE登录；Semattice换票返回 authenticated，随后 OACT调用 `system.capability.list` 返回 `succeeded`、51 项能力，审计标识为 `audit:req-14679929-3ea0-4d06-be34-39e3c053f340`。未输出 Token、密码或密钥，未写业务数据。
 - production OACT allowlist当前仅为 `system.capability.read`；业务读写 scope尚未开放，防止在 Principal/RBAC授予模型完成前把服务端 allowlist误当作用户授权。
-- 项目状态校验器已用正确的 `.claw` 目录执行；仅报告早于本任务存在的 FEAT-033 frontmatter/status问题，FEAT-042、TASK-042、归档和发布证据未新增状态错误。`git diff --check` 与凭据扫描通过。
+- 项目状态校验器已用正确的 `.claw` 目录执行；仅报告早于本任务存在的 FEAT-033 frontmatter/status问题，FEAT-042、TASK-043、归档和发布证据未新增状态错误。`git diff --check` 与凭据扫描通过。
 
-## 2026-07-31 TASK-041 Semattice 自有 Keycloak Organization 换票
+## 2026-07-31 TASK-042 Semattice 自有 Keycloak Organization 换票
 
 - `go test -race ./... -count=1`：全量通过。新增覆盖 Keycloak OIDC固定 issuer/audience/RS256/JWKS/`azp`/Organization验证、Organization alias到 active tenant映射、scope allowlist、Semattice自签 OACT与现有 verifier兼容，以及缺 Token、多组织、未映射/停用 tenant和越权 scope负例。
 - `go vet ./...`、`go mod verify`、`CGO_ENABLED=0 go build -trimpath ./cmd/ai-native-platform`：通过。
 - `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s tests -p 'test_*.py' -v`：14 项通过；登录和续期只调用 Semattice `/v1/auth/token`，Organization alias进入 Keycloak scope，旧 v1缓存 fail closed。
 - 官方 `skill-creator/scripts/quick_validate.py` 对开发副本和本机安装副本均返回 `Skill is valid!`；YAML、bash语法、CLI help/dry-run、VERSION/README `1.2.2`、两目录逐文件一致、`git diff --check` 和常见 Token/私钥扫描通过。
 - 活动 Go/Python登录代码中未检出 AgentCiCi API、`available-tenants`、外部 mint或 `/internal/v1/company-provisionings`；保留的 `sso.agentcici.com` / `semattice.agentcici.com` 是现有 Keycloak与 Semattice基础设施域名，不是应用接口依赖。
-- 项目状态 validator仅保留既有 FEAT-033 frontmatter/status问题；TASK-041/FEAT-041、任务归档和完成任务上限未新增错误。
+- 项目状态 validator仅保留既有 FEAT-033 frontmatter/status问题；TASK-042/FEAT-041、任务归档和完成任务上限未新增错误。
 - 本轮未读取未跟踪 `.env`，未访问真实用户/租户 Token，未部署生产、修改远程 Keycloak、发布技能仓库、创建 tag或推送 Git。
 
-## 2026-07-30 TASK-040 cloudcc-semattice Keycloak PKCE 登录本地验证
+## 2026-07-30 TASK-041 cloudcc-semattice Keycloak PKCE 登录本地验证
 
 - `python3 -B -m unittest discover -s tests -p 'test_*.py' -v`：13 项通过，覆盖 S256 PKCE、state/authorization code负例、真实本机 loopback listener、默认最小发现 scope、可用公司/OACT 换票、Keycloak refresh token轮换、401 单次同请求重试、显式 `SEMATTICE_TOKEN` 优先、logout、`0600/0700` 缓存权限、符号链接拒绝、URL 凭据/query/fragment拒绝、Bearer redirect阻断、错误描述脱敏和错误响应连接重置。
 - 独立前向使用检查确认流程可发现、新旧 dry-run兼容；检查发现的跨来源 redirect Authorization 转发、服务端错误描述泄密和空默认 scope均已修复并加入回归测试。
 - 官方 `skill-creator/scripts/quick_validate.py` 返回 `Skill is valid!`；`agents/openai.yaml` YAML、Keycloak `semattice-cli` JSON、`bash -n`、新旧 CLI help/dry-run、VERSION/README `1.2.1` 一致性、Organization Scope、常见 secret pattern和 `git diff --check` 均通过。
 - `GOTOOLCHAIN=go1.26.5 go test ./... -count=1` 全量通过；本次未修改 Go 运行时代码。
 - Keycloak 官方文档确认 native app 注册 `http://127.0.0.1` 时允许系统选择动态端口，当前 client不使用全 wildcard、端口 wildcard、Web origin、implicit、password grant或 service account。
-- 项目状态 validator 已运行，仅报告既有 `FEAT-033` 缺 `feature_id` / `updated_at` / `updated_by` 且 status非标准；FEAT-040/TASK-040 未新增状态错误。
+- 项目状态 validator 已运行，仅报告既有 `FEAT-033` 缺 `feature_id` / `updated_at` / `updated_by` 且 status非标准；FEAT-040/TASK-041 未新增状态错误。
 - 本轮没有读取既有未跟踪 `.env`，没有访问真实身份/租户服务，没有浏览器登录、部署、发布仓库同步、提交、标签或远程推送。
+
+## 2026-07-31 TASK-040 管理中心真实租户数据发布验证
+
+- `local`：`GOTOOLCHAIN=go1.26.5 go test ./...`、`go vet ./...`、`go mod verify`、`bash -n scripts/release-console.sh`、`node --check deploy/semattice/www/console/console.js` 与 `git diff --check` 全部通过。
+- `security/data-source`：控制台 Handler 只把已验证 Cookie 的 tenant/company/subject 传给 reader；reader 从 control pool 解析 active tenant，再以 runtime `database.WithTenant` 查询 published metadata、RBAC、组织与审计。匿名 `/console/api/overview` 继续为 401，reader 错误不返回治理数据。
+- `production`：release `/opt/semattice/releases/20260731T012059Z-console` 已启动且 `semattice` active；Nginx 校验、`https://semattice.agentcici.com/healthz`、控制台静态页 200 和匿名治理 API 401 均通过。
+- `live-tenant-read`：在服务器内部使用一次性 120 秒官方签名会话读取 `org5nszpgj99jaysxv6y`，未输出或保存令牌、私钥或用户身份。概览返回 `objects=5, fields=37, members=0, roles=0, organizations=0`；对象目录精确为 `dev_change:7, dev_project:8, dev_requirement:8, dev_task:8, dev_worklog:6`，并返回“Semattice 已发布研发交付模型 · 只读”。
 
 ## 2026-07-30 TASK-039 cloudcc-semattice 1.1.0 GitHub 发布验证
 

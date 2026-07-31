@@ -22,6 +22,7 @@ type IdentityVerifier interface {
 
 type Handler struct {
 	verifier IdentityVerifier
+	reader   Reader
 	key      []byte
 	now      func() time.Time
 }
@@ -35,11 +36,11 @@ type session struct {
 	ExpiresAt int64    `json:"exp"`
 }
 
-func NewHandler(verifier IdentityVerifier, key string) *Handler {
-	if verifier == nil || len(key) < 32 {
-		panic("console handler requires verifier and 32-byte session key")
+func NewHandler(verifier IdentityVerifier, key string, reader Reader) *Handler {
+	if verifier == nil || len(key) < 32 || reader == nil {
+		panic("console handler requires verifier, reader and 32-byte session key")
 	}
-	return &Handler{verifier: verifier, key: []byte(key), now: time.Now}
+	return &Handler{verifier: verifier, reader: reader, key: []byte(key), now: time.Now}
 }
 
 func (handler *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +63,12 @@ func (handler *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusForbidden, "当前用户没有管理权限")
 		return
 	}
-	writeJSON(w, http.StatusOK, fixture(r.URL.Path, s))
+	value, err := handler.reader.Read(r.Context(), s, r.URL.Path)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "无法读取当前租户治理数据")
+		return
+	}
+	writeJSON(w, http.StatusOK, value)
 }
 
 func (handler *Handler) session(w http.ResponseWriter, r *http.Request) {

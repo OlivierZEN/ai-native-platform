@@ -4,7 +4,7 @@ feature_id: FEAT-041
 title: Semattice-owned Keycloak organization access context
 status: implemented
 owner_role: integration-agent
-task_ids: TASK-041
+task_ids: TASK-042
 related_decisions: ADR-014
 related_issues: none
 updated_at: 2026-07-31T04:05:56Z

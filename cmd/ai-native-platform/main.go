@@ -58,6 +58,7 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 	var poolsToClose []interface{ Close() }
 	var tenantService *tenant.Service
 	var usageService *metering.Service
+	var consoleReader consoleapp.Reader
 	if cfg.ControlDatabaseURL != "" {
 		controlDatabase := cfg.Database
 		controlDatabase.URL = cfg.ControlDatabaseURL
@@ -75,6 +76,7 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		}
 		poolsToClose = append(poolsToClose, runtimePool)
 		tenantService = tenant.NewService(controlPool, operations.ClaimBoundPort{})
+		consoleReader = consoleapp.NewPostgresReader(runtimePool, controlPool)
 		// Tenant provisioning is intentionally not a public capability.
 		definitions = append(definitions, tenant.CapabilityDefinitions(tenantService, false)...)
 		metadataService := metadata.NewService(runtimePool, controlPool)
@@ -150,7 +152,10 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 			tenantService, oidcVerifier, signer, cfg.AccessContext.AllowedScopes, cfg.AccessContext.TokenTTL,
 		))
 		routes.Handle("/mcp", mcpserver.NewAuthenticatedStreamableHTTPHandler(invoker, verifier.VerifyWithExpiration))
-		routes.Handle("/console/", consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey))
+		if consoleReader == nil {
+			return writeStartupFailure(out, capability.CodeValidationFailed, "console data reader is required")
+		}
+		routes.Handle("/console/", consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey, consoleReader))
 		routes.Handle("/", api.NewAuthenticatedHandler(invoker, verifier))
 		return serve(ctx, args[1:], routes, cfg.HTTPListen, logger, out)
 	}

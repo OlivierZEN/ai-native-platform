@@ -4,7 +4,7 @@ feature_id: FEAT-040
 title: Semattice skill Keycloak PKCE login and OACT credential helper
 status: implemented
 owner_role: integration-agent
-task_ids: TASK-040
+task_ids: TASK-041
 related_decisions: ADR-014
 related_issues: none
 updated_at: 2026-07-30T13:20:27Z
@@ -98,7 +98,7 @@ semattice call
 
 ## 交付计划
 
-- `TASK-040`：实现技能凭据助手、Keycloak client、文档、版本和测试。
+- `TASK-041`：实现技能凭据助手、Keycloak client、文档、版本和测试。
 - 主要范围：`skill/cloudcc-semattice/`、`deploy/keycloak/configure-agentcici-realm.sh`、`docs/specs/FEAT-029-*`、项目状态和 Python 测试。
 - 不修改 Go Resource Server、数据库 schema 或外部 AgentCiCi 仓库。
 

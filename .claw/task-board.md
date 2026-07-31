@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T05:02:19Z
-updated_by: root after completing TASK-042 production rollout
+updated_at: 2026-07-31T05:09:53Z
+updated_by: root after merging TASK-040 live console with TASK-041 through TASK-043 authentication work
 board_status: active
 ---
 
@@ -160,7 +160,7 @@ board_status: active
 
 ## Completed Tasks
 
-### TASK-040 - Add Keycloak PKCE login to cloudcc-semattice skill
+### TASK-041 - Add Keycloak PKCE login to cloudcc-semattice skill
 
 - status: `done`
 - priority: `high`
@@ -168,7 +168,7 @@ board_status: active
 - claimed_by: `root`
 - spec_path: `docs/specs/FEAT-040-skill-keycloak-pkce-login.md`
 - depends_on: `TASK-029, FEAT-028`
-- blocked_by: `none for local implementation; real login requires published AgentCiCi human access-context endpoints`
+- blocked_by: `none`
 - related_issues: `none`
 - scope_files: `skill/cloudcc-semattice authentication helper and guidance, Keycloak semattice-cli registration, Python tests and project state`
 - branch: `main`
@@ -178,16 +178,16 @@ board_status: active
 
 - Human CLI login uses Keycloak Authorization Code + S256 PKCE and a loopback callback without collecting passwords.
 - Refresh tokens use the operating-system credential store; only a short OACT and non-sensitive metadata use a user-only local cache.
-- AgentCiCi mints the current-company OACT; API calls refresh automatically and never send raw Keycloak tokens to Semattice.
+- Semattice `/v1/auth/token` mints the current-organization OACT; API calls refresh automatically and never send raw Keycloak tokens to the Capability API.
 - Legacy explicit-token invocation remains compatible, and automated security/refresh/contract tests plus skill validation pass.
 
 #### Next Action
 
-- Local implementation is complete. Publish AgentCiCi human access-context endpoints and register the production `semattice-cli` client before real-login acceptance; those external changes require their own authorization and evidence.
+- Completed by TASK-042 and TASK-043: Semattice-owned token exchange, production `semattice-cli` registration and real PKCE/OACT read-only acceptance all passed.
 
 #### Handoff Note
 
-- Version `1.2.1` is prepared only in the project development copy. No release repository sync, Git tag, remote push, Keycloak deployment or live login was performed. Independent forward testing found and drove fixes for Bearer redirect forwarding, unsafe error descriptions, the missing default discovery scope and the missing Organization Scope.
+- Version `1.2.1` was the local PKCE implementation milestone. TASK-042 upgraded the final Skill to `1.2.2`, synchronized the local installed copy and removed the AgentCiCi exchange dependency; TASK-043 completed live login. The independent GitHub Skill release/tag remains a separate release action.
 
 ### TASK-039 - Publish Semattice guidance update to CodeUp and GitHub
 

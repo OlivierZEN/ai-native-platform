@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-31T05:02:19Z
-updated_by: release-agent after standalone Keycloak access-context rollout
+updated_at: 2026-07-31T05:09:53Z
+updated_by: release-agent after merging live console and standalone access-context rollout records
 verification_status: passed
 ---
 
@@ -48,8 +48,11 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 
 ## 部署与发布
 
+- 2026-07-31 TASK-040 真实租户治理控制台曾发布为 `/opt/semattice/releases/20260731T012059Z-console`。发布脚本交叉编译 Linux amd64 二进制、校验 SHA-256、原子切换 `/opt/semattice/current` 并保留上一 release / 静态站备份。控制台已不再使用内存 fixture；OACT 会话经 runtime RLS 读取真实租户 published metadata、RBAC、组织和审计。该版本线上验证为 active、Nginx valid、edge health 200、匿名治理 API 401；目标研发交付公司读取为 metadata v1 / 5 objects / 37 active fields，本地成员、角色和组织投影均为 0。
+
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
 - 当前 release 目录：`/opt/semattice/releases/20260731T045751Z-standalone-auth`；当前链接：`/opt/semattice/current`。上一可回滚应用 release `/opt/semattice/releases/20260731T012059Z-console` 仍存在。
+- 当前认证 release 在本次合入远端 TASK-040 源码前构建，因此下一次发布必须从推送后的同一 `main` HEAD 构建组合制品，并同时回归真实治理控制台与独立登录；不得把两个历史 release 的分别通过误写成当前单一制品已同时包含两项功能。
 - 当前 Semattice环境备份为 `/etc/semattice/semattice.env.backup.20260731T045751Z-standalone-auth`；Keycloak `semattice-cli` client备份为 `/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - Semattice不再配置或调用 AgentCiCi开户/OACT接口。`/v1/auth/token` 固定验证 Keycloak issuer、`semattice-api` audience、JWKS、`azp=semattice-cli` 和唯一 Organization alias，再映射 active `tenant_registry.company_id` 并签发 Semattice短期 OACT。
 - `semattice-cli` 必须保持 public、Authorization Code、PKCE S256、`http://127.0.0.1` redirect；`semattice-api-audience` mapper必须唯一且写入 access token，`organization` client scope必须分配。当前 OACT allowlist仅为 `system.capability.read`，业务读写 scope须经 Principal/RBAC设计和单独发布。
@@ -65,7 +68,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 业务 Realm 为 `agentcici`；已登记 `agentcici-bff`、`semattice-api`、`official-access-context`、`followup-worker`。本次只创建非秘密 client 注册，后续应用接入再按最小权限读取并安全分发所需 secret。
 - 更新时先安装新的不可变 release 目录，核对 checksum，再原子切换 `/opt/semattice/current` 并重启 `semattice`。不要覆盖或删除旧 release。
 - 回滚时将 `current` 指回前一 release 并重启；数据库 migration 不自动回滚，数据目录不得删除。
-- 受控开户生产 smoke：从受信 AgentCiCi 主机向 `POST /internal/v1/company-provisionings` 发送 HMAC 请求。无签名请求必须为 403；对格式合法但不存在的 `company_id`，签名请求应在 AgentCiCi 组织校验后返回 `FAILED_PRECONDITION` / 412，且不创建 tenant、reservation 或 operation。
+- 独立登录生产 smoke：匿名 `POST /v1/auth/token` 必须为 401；真实 `semattice-cli` Authorization Code + S256 PKCE 登录只向 Semattice换取短期 OACT，并以最小 `system.capability.read` scope成功调用 Capability API。旧 `/internal/v1/company-provisionings` 已删除，不再作为活动发布门禁。
 
 ## 排障
 

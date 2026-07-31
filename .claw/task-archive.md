@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-31T05:02:19Z
-updated_by: root after TASK-042 production rollout
+updated_at: 2026-07-31T05:09:53Z
+updated_by: root after merging TASK-040 through TASK-043 histories
 archive_status: active
 ---
 
@@ -12,14 +12,14 @@ archive_status: active
 
 ## Archived Tasks
 
-### TASK-042 - Deploy Semattice-owned Keycloak access context
+### TASK-043 - Deploy Semattice-owned Keycloak access context
 
 - status: `done`
 - priority: `critical`
 - owner_role: `release-agent`
 - claimed_by: `root`
 - spec_path: `docs/specs/FEAT-042-production-standalone-auth-rollout.md`
-- depends_on: `TASK-041`
+- depends_on: `TASK-042`
 - blocked_by: `none`
 - related_issues: `none`
 - scope_files: `production release binary, /etc/semattice/semattice.env, semattice-cli audience mapper, rollout evidence`
@@ -41,14 +41,14 @@ archive_status: active
 
 - 当前 production allowlist仅含 `system.capability.read`。不得通过扩大 allowlist代替 Principal、角色、Permission Set、RLS和审批控制。
 
-### TASK-041 - Remove AgentCiCi from Semattice authentication and runtime
+### TASK-042 - Remove AgentCiCi from Semattice authentication and runtime
 
 - status: `done`
 - priority: `critical`
 - owner_role: `integration-agent`
 - claimed_by: `root`
 - spec_path: `docs/specs/FEAT-041-semattice-owned-keycloak-access-context.md`
-- depends_on: `TASK-029, TASK-040`
+- depends_on: `TASK-029, TASK-041`
 - blocked_by: `none`
 - related_issues: `none`
 - scope_files: `access-context endpoint, Keycloak verifier, OACT signer, tenant mapping, runtime configuration, cloudcc-semattice skill and tests`
@@ -64,7 +64,7 @@ archive_status: active
 
 #### Next Action
 
-- 本地实现和本机 Skill `1.2.2` 更新已完成；生产发布和真实 PKCE/OACT只读验收已由 TASK-042 完成。
+- 本地实现和本机 Skill `1.2.2` 更新已完成；生产发布和真实 PKCE/OACT只读验收已由 TASK-043 完成。
 
 #### Handoff Note
 
@@ -78,7 +78,7 @@ archive_status: active
 - claimed_by: `project-manager`
 - spec_path: `docs/specs/FEAT-026-agentcici-controlled-company-provisioning.md`
 - depends_on: `TASK-011, TASK-025`
-- blocked_by: `superseded by TASK-041`
+- blocked_by: `superseded by TASK-042`
 - related_issues: `none`
 - scope_files: `removed AgentCiCi reservation/completion client, HMAC route and provisioning configuration`
 - branch: `agent/go-capability-platform-baseline`
@@ -94,7 +94,31 @@ archive_status: active
 
 #### Handoff Note
 
-- 2026-07-24 的联调和生产证据保留为历史记录；TASK-041按用户要求删除了对应活动代码和启动门禁。
+- 2026-07-24 的联调和生产证据保留为历史记录；TASK-042按用户要求删除了对应活动代码和启动门禁。
+
+### TASK-040 - 管理中心接入真实租户治理数据
+
+- status: `done`
+- priority: `critical`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-034-live-tenant-governance-console.md`
+- depends_on: `TASK-032, TASK-033`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `console reader, console API/static view, tests and production validation`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 控制台由已验证会话的 tenant context 读取真实 published metadata、RBAC、组织和审计投影。
+- `org5nszpgj99jaysxv6y` 显示 5 个研发交付对象与 37 个有效字段，未投影身份数据明确为空态。
+- 演示 fixture 不再进入生产控制台响应，安全边界和线上 read-only 验证通过。
+
+#### Next Action
+
+- 已发布 `20260731T012059Z-console`；真实租户读取返回 5 对象、37 有效字段及 0 本地成员/角色/组织投影。
 
 ### TASK-021 - Establish the Phase 0 Loop Engineering controls
 
