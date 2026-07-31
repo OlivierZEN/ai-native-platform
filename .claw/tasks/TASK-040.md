@@ -1,6 +1,6 @@
 ---
 kind: task-status
-task_id: TASK-034
+task_id: TASK-040
 status: in_progress
 updated_at: 2026-07-31T01:20:00Z
 updated_by: root
@@ -9,7 +9,7 @@ owner_role: fullstack-agent
 spec_path: docs/specs/FEAT-034-live-tenant-governance-console.md
 ---
 
-# TASK-034 - 管理中心接入真实租户治理数据
+# TASK-040 - 管理中心接入真实租户治理数据
 
 ## Current State
 

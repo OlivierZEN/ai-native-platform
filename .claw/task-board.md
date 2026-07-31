@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-25T01:15:00Z
-updated_by: root after Semattice console production release
+updated_at: 2026-07-30T06:54:07Z
+updated_by: root after completing TASK-039 CodeUp and GitHub publication
 board_status: active
 ---
 
@@ -28,7 +28,7 @@ board_status: active
 
 ## Active Tasks
 
-### TASK-034 - 管理中心接入真实租户治理数据
+### TASK-040 - 管理中心接入真实租户治理数据
 
 - status: `in_progress`
 - priority: `critical`
@@ -211,6 +211,176 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-039 - Publish Semattice guidance update to CodeUp and GitHub
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-038`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `project repository, skill/cloudcc-semattice, /Users/xuhm/Documents/cloudcc-semattice-skill, CodeUp origin, GitHub CloudCCAI/cloudcc-semattice, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- The project guidance changes and release evidence are committed and pushed as a fast-forward to the Alibaba CodeUp `main` branch.
+- The development skill is synchronized to the clean independent release repository after an inspected rsync dry-run.
+- Skill validation, version consistency, secret/cache checks and release-repository diff checks pass.
+- GitHub `main` and the new immutable annotated tag `v1.1.0` point to the same release commit and remote README/VERSION are verified.
+
+#### Next Action
+
+- Completed. Future skill changes start from the project development copy and require a new immutable SemVer tag.
+
+#### Handoff Note
+
+- CodeUp content commit is `a55d71d773446902598b28fb525c7562003f351b`. GitHub release commit is `3ac29afc34366d66a2e9320975dc3be498d55181`; GitHub main and `v1.1.0^{}` match. No force push or historical tag movement was used.
+
+### TASK-038 - Separate Semattice product guidance from execution guidance
+
+- status: `done`
+- priority: `high`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-037`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/cloudcc-semattice product positioning, business module scenarios, metadata operation workflows, local skill installation and project state`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- AI can distinguish Semattice product/design questions from authorized API execution requests.
+- Every current public capability domain is connected to its business problem, representative scenario and implementation entrypoint.
+- Objects, fields and relations have explicit create/read/update/delete or evolution boundaries without inventing unsupported APIs.
+- The skill validates successfully and the local installed copy matches the project development copy.
+
+#### Next Action
+
+- Completed locally as development version `1.1.0`; subsequent GitHub release is tracked by `TASK-039`.
+
+#### Handoff Note
+
+- Product positioning is grounded in goals, ADR-012 and FEAT-009. API availability remains grounded in the runtime registry and API catalog. The installed copy is `/Users/xuhm/.codex/skills/cloudcc-semattice`; `TASK-039` subsequently published immutable `v1.1.0`.
+
+### TASK-037 - Rename the skill to cloudcc-semattice
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-036`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `AGENTS.md, skill/cloudcc-semattice, /Users/xuhm/Documents/cloudcc-semattice-skill, CloudCCAI GitHub repository, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 技能目录、SKILL frontmatter、README、UI 显示名和默认调用名统一为 `cloudcc-semattice`
+- 不兼容的调用名变更以 `1.0.0` 管理，旧调用名不保留兼容别名
+- 项目内开发副本、独立发布仓库、GitHub 仓库名称与 `v1.0.0` 发布结果均已验证
+
+#### Next Action
+
+- 已完成；后续版本从项目内 `skill/cloudcc-semattice` 开发副本按根 `AGENTS.md` 流程同步、校验并发布。
+
+#### Handoff Note
+
+- GitHub 仓库为 `https://github.com/CloudCCAI/cloudcc-semattice`；`main` 和 annotated tag `v1.0.0` 均指向提交 `5b156c057af7517c81f5892d1f8123ec74f00ea6`。本地独立发布仓库位于 `/Users/xuhm/Documents/cloudcc-semattice-skill`，项目内开发副本不含 `.git`。禁止 force push 或移动已发布标签。
+
+### TASK-036 - Document and exercise the Semattice skill release workflow
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-035`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `AGENTS.md, skill/semattice-customization-expert-universal/README.md, VERSION, /Users/xuhm/Documents/semattice-customization-expert-universal, CloudCCAI GitHub repository, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 项目根 `AGENTS.md` 固化开发副本与发布仓库边界、SemVer、同步、校验、提交、标签、推送和远程验证流程；技能 README 不包含这些内部维护步骤
+- 开发副本与独立仓库内容一致，且项目内技能目录不包含 `.git`
+- `v0.1.1` 通过发布前校验并以原子 push 发布，远程分支、标签、VERSION 和 README 均经验证
+
+#### Next Action
+
+- 已完成文档边界纠正；后续修改技能时，只按项目根 `AGENTS.md` 的发布流程执行，每次创建新的不可变 `v<version>` 标签。当前本地 README 纠正未提交或推送。
+
+#### Handoff Note
+
+- 内部发布流程的唯一来源是项目根 `AGENTS.md`。项目内开发源为 `skill/semattice-customization-expert-universal`，不含 `.git`；独立发布仓库为 `/Users/xuhm/Documents/semattice-customization-expert-universal`。`v0.1.1` 对应提交 `228f6f737b53ce41cc3f51126ca58498d33a3f47`，禁止 force push 或移动已发布标签。
+
+### TASK-035 - Version and publish the Semattice customization skill
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/semattice-customization-expert-universal, /Users/xuhm/Documents/semattice-customization-expert-universal, CloudCCAI GitHub repository, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 根目录 `VERSION` 是唯一版本源，README 说明安装、使用、SemVer 和升级流程
+- 独立仓库首次提交和 `v0.1.0` 标签通过技能与 CLI 校验
+- `CloudCCAI/semattice-customization-expert-universal` 公开仓库存在，远程 `main`、标签和 README 均已验证
+
+#### Next Action
+
+- 已完成；后续升级先更新 `VERSION` 和内容、通过技能校验，再提交并创建新的不可变 `v<version>` 标签。
+
+#### Handoff Note
+
+- 远程仓库为 `https://github.com/CloudCCAI/semattice-customization-expert-universal`。本地独立仓库位于 `/Users/xuhm/Documents/semattice-customization-expert-universal`；main 与 `v0.1.0` 均发布提交 `93c2701`。禁止 force push 或移动已发布标签。
+
+### TASK-034 - Rename the Semattice customization skill
+
+- status: `done`
+- priority: `medium`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/semattice-customization-expert-universal, .claw/`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 技能目录、SKILL frontmatter 和默认 `$skill` 调用名统一为 `semattice-customization-expert-universal`
+- UI 显示名与新技能名称一致，功能说明、参考资料和脚本行为不变
+- 官方技能校验、旧名称残留和脚本语法检查通过
+
+#### Next Action
+
+- 已完成；后续安装或调用必须使用 `$semattice-customization-expert-universal`。
+
+#### Handoff Note
+
+- 本次仅重命名技能身份和显示标题，不改变 Capability API 操作边界。
 
 ### TASK-032 - Semattice 企业管理中心第一版
 
@@ -490,89 +660,6 @@ board_status: active
 
 - 已完成并由本地 PostgreSQL 证据验证。Profile 不进入业务授权模型；组织树只计算数据范围与记录共享，禁止 `record × user` ACL 物化。规则投影只存 record-to-group 边且未 ready 时 fail closed；构建结束会检查缺边，access group disabled 会撤销其共享路径；组织合并不物理删除。通用自动运行/告警与完整容量验收已明确拆分至 TASK-017/TASK-019。
 
-### TASK-009 - Review the greenfield architecture baseline
-
-- status: `done`
-- priority: `high`
-- owner_role: `shared`
-- claimed_by: `human + root`
-- spec_path: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md`
-- depends_on: `none`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `docs/specs/FEAT-009-greenfield-ai-native-crm-platform.md, .claw/goals.md, .claw/decisions.md`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 绿地边界、目标架构、阶段路线和验收标准已完成架构评审
-- 评审结论和架构修订均已写回 feature spec 与 ADR
-- Phase 0 核心编码前置决策已明确；后置组件选型不阻塞开工
-
-#### Next Action
-
-- 已完成。后续从 `TASK-010` 开始执行 Phase 0，不重新打开本任务；架构变更通过对应 feature spec 和 ADR 管理。
-
-#### Handoff Note
-
-- 用户于 2026-07-18 正式批准 `FEAT-009`，规格状态已改为 `approved`，ADR-003 已接受。Event Bus、Search/OLAP、Wasm/流程、数据驻留和计费仍为独立后置 ADR，不阻塞 `TASK-010`。
-
-### TASK-010 - Define the technology stack and repository baseline
-
-- status: `done`
-- priority: `critical`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-010-go-engineering-baseline.md`
-- depends_on: `TASK-009`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `go.mod, go.sum, cmd/**, internal/config/**, internal/observability/**, internal/database/**, scripts/**, docs/**`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- Go 工程、配置、结构化日志、pgx 连接、显式 checksum migration runner 和测试目录基线可执行
-- migrator/control/runtime 三种连接身份分离，26 个外部模块许可和 checksum 已审计
-
-#### Next Action
-
-- 已完成；后续任务复用同一配置、日志、连接池和迁移 runner，新增依赖继续执行许可门禁。
-
-#### Handoff Note
-
-- Go 1.26.5 单运行时、CGO-free 四目标构建和 PostgreSQL 16 基线已由 maker 与独立 checker 验证。生产 CI、发布、SBOM/provenance/signature 和部署仍不在本任务授权范围。
-
-### TASK-011 - Integrate the unified tenant operations control plane
-
-- status: `done`
-- priority: `high`
-- owner_role: `integration-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-011-unified-tenant-operations-control-plane.md`
-- depends_on: `TASK-010`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `Native operations port, JWT identity, tenant registry, lifecycle, routing, operation, audit, API/MCP/CLI`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- Native 可独立开户；与 Agent CC 绑定时复用运营控制面提供的 UUIDv4 `tenant_id + 20 位 company_id`
-- 生命周期、修订、幂等、失败恢复、审计与可信身份负向测试通过
-- 六个租户能力由同一 Registry/Invoker 投影为 authenticated API、MCP 和无交互 CLI
-
-#### Next Action
-
-- 已完成当前仓库 Native 适配器与契约；未来跨仓库接入须由运营端实现版本化 `operations.Port`，不在本任务伪造完成。
-
-#### Handoff Note
-
-- `ai_native_control` 是非 owner、非 superuser、非 BYPASSRLS 的独立跨租户身份，仅在 tenant registry/operation/audit 三表获得精确权限；真实 main 双连接接线测试通过。
-
 ### TASK-012 - Validate the PostgreSQL shard baseline
 
 - status: `done`
@@ -682,65 +769,6 @@ board_status: active
 #### Handoff Note
 
 - 五项 `runtime.record.*` 能力、migration 4、五类 640 typed partitions、durable write idempotency 和真实 bounded query planner 已通过本地 maker 验证。100 万记录为单机物理路径证据；50 并发与 8/16 GiB 容量仍由 TASK-019 验收。
-
-### TASK-020 - Implement the pure-Agent capability contract PoC
-
-- status: `done`
-- priority: `critical`
-- owner_role: `shared`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-020-pure-agent-capability-contract.md`
-- depends_on: `TASK-010` (user-authorized narrow L2 exception for the Go PoC only)
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `capability registry, API gateway, MCP server, non-interactive CLI, contract tests`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 每个已发布原子能力从统一 Capability Contract 派生 API、MCP Tool 与 CLI
-- CLI 仅支持结构化输入和 JSON/JSON Lines 输出，无菜单、提示或终端状态依赖
-- 三入口通过等价性、权限、幂等、审计和错误码契约测试
-
-#### Next Action
-
-- 已完成受限 L2 PoC；后续 PostgreSQL、租户控制面与身份集成已由用户另行扩大授权，必须转入 `TASK-010/011/012` 的独立规格与检查点，不在本任务继续追加源码。
-
-#### Handoff Note
-
-- `system.capability.list` 通过同一 Go Registry/Invoker 暴露 API、MCP 和无交互 CLI，独立 checker 已验证 test/race/vet/module verify、四目标纯 Go cross-build、无 TTY、MCP stdout 和 denylist。本任务完成时尚未授权数据库与身份集成；后续扩大授权以 `current-status.md` 为准。生产部署、CI、发布仍未授权，高风险异步 `operation_id`、持久审计与通用输出 Schema 校验仍未实现。
-
-### TASK-021 - Establish the Phase 0 Loop Engineering controls
-
-- status: `done`
-- priority: `critical`
-- owner_role: `project-manager`
-- claimed_by: `root`
-- spec_path: `none`
-- depends_on: `none`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `LOOP.md, STATE.md, loop-constraints.md, loop-budget.md, loop-run-log.md, .claw/`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- L1 loop state, budget, constraints and append-only run log are present and internally consistent
-- Five-hour local automation ran with no remote-write or source-edit permission
-- Initial readiness audit and project-state validation have real recorded results
-- Five-hour handoff identifies the L2 promotion gate and next verified action
-
-#### Next Action
-
-- 已完成；不要恢复该 L1 bootstrap。后续 L2 授权和任务状态以 `current-status.md` 与活跃任务卡为准。
-
-#### Handoff Note
-
-- This was the L1 report-only bootstrap. Its original source-code gate has since been satisfied and expanded by the user; do not reuse this completed task as the current authorization record.
-- Local L1 evidence is ahead of `origin/main` and deliberately unpushed; publishing remains a human-approved action.
-- Five-hour handoff: state validation passed; 23 pre-handoff logs were monotonic, L1-only, with zero source actions. This line records the historical gate at handoff; subsequent approvals, Go evidence and expanded L2 scope are recorded in `current-status.md` and later task cards.
 
 ## 维护规则
 

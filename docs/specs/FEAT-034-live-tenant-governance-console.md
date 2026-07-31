@@ -4,7 +4,7 @@ feature_id: FEAT-034
 title: Semattice 管理中心真实租户治理数据
 status: approved
 owner_role: fullstack-agent
-task_ids: TASK-034
+task_ids: TASK-040
 related_decisions: ADR-009, ADR-014
 related_issues: none
 updated_at: 2026-07-31T01:20:00Z
