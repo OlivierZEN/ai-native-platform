@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T08:05:11Z
-updated_by: root after completing tenant-name production rollout
+updated_at: 2026-07-31T09:24:41Z
+updated_by: root after verifying manual metadata publish implementation
 board_status: active
 ---
 
@@ -27,6 +27,30 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-049 - Support manual confirmation for direct metadata publication
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-046-manual-direct-metadata-publish-confirmation.md`
+- depends_on: `TASK-013, TASK-043`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `metadata publish service and audit, Capability contract, tests, cloudcc-semattice skill, production release and verification`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- `metadata.version.publish` accepts an explicitly supplied non-empty manual `approval_id` and audits it transactionally.
+- All other approval-gated capabilities retain trusted OACT approval verification.
+- Local regression, Skill validation, production deployment and health checks pass.
+
+#### Next Action
+
+- Commit the verified narrow change, deploy it through the immutable release script, and verify the production contract and service health.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 

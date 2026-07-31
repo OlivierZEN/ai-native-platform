@@ -1,6 +1,6 @@
 # CloudCC Semattice（语义格）
 
-当前版本：[`1.3.0`](VERSION)
+当前版本：[`1.4.0`](VERSION)
 
 `cloudcc-semattice` 是帮助 AI 理解、设计并通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它先说明产品定位、业务模块和资源模型，再在用户授权后执行租户、元数据、记录、用量、授权、组织和共享等受控操作。
 
@@ -31,7 +31,7 @@
 
 ```bash
 git clone \
-  --branch v1.3.0 \
+  --branch v1.4.0 \
   --depth 1 \
   https://github.com/CloudCCAI/cloudcc-semattice.git \
   ~/.codex/skills/cloudcc-semattice
@@ -104,7 +104,7 @@ python3 scripts/semattice_api.py \
 ```bash
 cd ~/.codex/skills/cloudcc-semattice
 git fetch --tags
-git checkout v1.3.0
+git checkout v1.4.0
 ```
 
 `1.0.0` 将技能 ID 和调用名统一为 `cloudcc-semattice`。从 `0.x` 升级时，请安装到新目录并将调用名改为 `$cloudcc-semattice`；确认新技能可用后再移除旧目录。
@@ -116,6 +116,8 @@ git checkout v1.3.0
 `1.2.2` 移除 AgentCiCi 应用换票依赖，改为 Keycloak Organization直接映射 Semattice tenant，并由 Semattice `/v1/auth/token` 签发短期 OACT；升级后必须重新登录。
 
 `1.3.0` 将人工登录默认请求扩展为当前51项公开Capability所需的全部26个唯一scope；服务端Principal/RBAC、RLS、独立审批、幂等和审计门禁保持不变。升级后旧登录缓存会被拒绝，必须重新执行 `semattice login`。
+
+`1.4.0` 为内测租户的首个元数据版本增加手动发布确认：`metadata.version.publish` 接受用户明确提供的非空 `approval_id` 并持久审计，不要求该值出现在 OACT 的 `approvals` 声明中。其他高风险能力仍要求可信令牌中的真实审批标识。
 
 ## 目录结构
 
