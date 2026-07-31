@@ -1,13 +1,21 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T09:38:38Z
-updated_by: root after production metadata publication verification
-last_run_at: 2026-07-31T09:38:38Z
+updated_at: 2026-07-31T10:17:51Z
+updated_by: root after local fieldless object regression verification
+last_run_at: 2026-07-31T10:17:51Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 TASK-050 无字段对象控制台修复本地验证
+
+- 根因回归测试确认nil字段集合经JSON编码为`fields: []`，并确认已有字段原样保留；`GOTOOLCHAIN=go1.26.5 go test ./internal/console -count=1`通过。
+- Node行为测试以`fields: null`调用真实`objectPage`函数，确认不抛异常且响应对象被归一为长度0的数组；`node --check deploy/semattice/www/console/console.js`通过。
+- `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`和`go mod verify`全部通过。
+- Linux amd64 CGO-free发布构建通过，验证制品SHA-256为`25f9f08d0b92baa9d4ce00b5567f57fcd194e5a87c602711d806d16907ed98d4`；`bash -n scripts/release-console.sh`与`git diff --check`通过。
+- 生产部署和真实Chrome登录态验收待执行，不在本地结果中提前标记完成。
 
 ## 2026-07-31 生产元数据首版本发布验收
 

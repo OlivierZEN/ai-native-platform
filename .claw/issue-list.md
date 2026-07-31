@@ -1,8 +1,8 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-07-31T07:49:52Z
-updated_by: root after verifying combined production release
+updated_at: 2026-07-31T10:15:08Z
+updated_by: root after reproducing fieldless object console failure
 ---
 
 # 问题追踪列表
@@ -14,7 +14,13 @@ updated_by: root after verifying combined production release
 
 ## 活跃问题
 
-- 暂无活跃问题。
+### ISSUE-002 - 无字段已发布对象导致管理中心对象页崩溃
+
+- severity: `high`
+- status: `in_progress`
+- root_cause: `verified`；reader仅为存在字段的对象填充`fieldsByObject`，零字段对象取得nil slice并编码为JSON `null`，前端直接访问`item.fields.length`。
+- impact: 已发布元数据本身正确，但当前租户的“对象与字段”页面无法渲染。
+- fix: TASK-050 将后端空集合规范化为`[]`，并为前端与零字段场景补防御和回归测试。
 
 ## 已解决问题
 

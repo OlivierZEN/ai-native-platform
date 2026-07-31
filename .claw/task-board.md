@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T09:38:38Z
-updated_by: root after verified production metadata publication
+updated_at: 2026-07-31T10:17:51Z
+updated_by: root after local fieldless object regression verification
 board_status: active
 ---
 
@@ -27,6 +27,30 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-050 - Render published objects with no fields in the administration console
+
+- status: `review`
+- priority: `critical`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-040`
+- blocked_by: `none`
+- related_issues: `ISSUE-002`
+- scope_files: `internal/console reader and tests, console JavaScript, production release and browser verification`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Published objects with zero fields are returned with `fields: []`, never `null`.
+- The object list and field matrix render safely even if an older or malformed response contains a non-array `fields` value.
+- Focused and repository regression checks pass, and production Chrome renders both `contact` and `large_backpack` without console errors.
+
+#### Next Action
+
+- Local regression is complete. Commit the clean release candidate, deploy through the immutable console release workflow, and verify both objects in the authenticated production console.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 

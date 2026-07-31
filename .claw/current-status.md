@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T09:38:38Z
-updated_by: root after verified production metadata publication
+updated_at: 2026-07-31T10:17:51Z
+updated_by: root after local fieldless object regression verification
 phase: cross-product-identity-live
-active_task: "TASK-033"
-next_action: "等待AgentCiCi新版、Keycloak SMTP、OACT签名配置和受权service client凭据后，执行真实机器主体的OACT exchange、owner失效与撤销投影验收。"
+active_task: "TASK-050"
+next_action: "提交TASK-050修复，按不可变release流程部署生产并在真实Chrome登录态复测对象与字段页。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-050 / ISSUE-002 本地修复已通过：控制台reader现在将零字段对象稳定编码为`fields: []`，前端将非数组字段集合归一为空数组，静态资源版本已更新。定向Go测试、前端零字段行为、全仓race/vet/module、Linux amd64构建、脚本语法和diff检查均通过；待提交、生产部署和真实Chrome复测。
 
 - CodeUp `origin/main` 已通过普通快进从`27020e3`发布至`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`，包含网站OIDC、租户名称顶栏、生产发布证据和联系人草稿验证共5个提交；本地HEAD、tracking ref与远端分支回读一致，未使用force push。
 
