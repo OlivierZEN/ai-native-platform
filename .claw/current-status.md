@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T08:02:18Z
-updated_by: root after user authorized tenant-name commit and deployment
+updated_at: 2026-07-31T08:05:11Z
+updated_by: root after verified tenant-name production rollout
 phase: cross-product-identity-live
-active_task: "TASK-048"
-next_action: "完成发布前门禁并提交tenant_name顶栏改动，从该提交构建不可变生产release，执行公网与真实浏览器验收。"
+active_task: "TASK-033"
+next_action: "等待AgentCiCi新版、Keycloak SMTP、OACT签名配置和受权service client凭据后，执行真实机器主体的OACT exchange、owner失效与撤销投影验收。"
 read_next:
   goals: true
   decisions: true
@@ -19,9 +19,9 @@ read_next:
 
 ## 快照
 
-- TASK-048 已获用户明确授权：提交并部署TASK-047顶栏租户名称修复。发布必须从clean commit构建、保留上一应用release与静态/Nginx备份，并以真实登录会话确认右上角显示`overview.tenant_name`而不是Keycloak subject。
+- TASK-048 已完成：提交`ffdbec4fada7aa0169d75dd785bac8607cf927b8`发布为`/opt/semattice/releases/20260731T080337Z-web-oidc-ffdbec4fada7`，二进制SHA-256为`0e31e75dc59487c6bdf02a9eed169f826fa918d2427e3373a304c2584d8f57f0`。四个服务active、健康和匿名负例通过，真实Chrome顶栏精确显示“应用开发组织”且控制台零错误；上一release、Nginx和静态站备份均保留。
 
-- TASK-047 已完成本地实现：控制台右上角不再展示Keycloak内部用户UUID，改为展示当前`/console/api/overview`返回的`tenant_name`，缺失名称时回退为“当前租户”；未修改登录Session、Organization映射或后端接口。JavaScript、HTML/绑定契约与Console/主程序回归通过，尚未提交或部署。
+- TASK-047 已上线：控制台右上角不再展示Keycloak内部用户UUID，改为展示当前`/console/api/overview`返回的`tenant_name`，缺失名称时回退为“当前租户”；未修改登录Session、Organization映射或后端接口。
 
 - TASK-046 / FEAT-045 已完成：提交`dcf2b811b7ec88d0685938f6d6564c818ba24314`已发布为`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`，二进制SHA-256为`d000e922e0231d39cca9040821bc42cdfa7b96411ad782d5b679bd083db93b87`。现有`semattice-web` Secret只在服务器内写入受保护文件；服务、Nginx、健康与匿名负例、OIDC 303/S256 PKCE均通过。真实Chrome登录成功回到企业管理中心，显示当前租户和退出按钮且浏览器控制台零错误。上一release与环境、Nginx、静态站备份均保留。
 

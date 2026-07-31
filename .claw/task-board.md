@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T08:02:18Z
-updated_by: root after starting tenant-name production rollout
+updated_at: 2026-07-31T08:05:11Z
+updated_by: root after completing tenant-name production rollout
 board_status: active
 ---
 
@@ -27,35 +27,6 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
-
-### TASK-048 - Deploy tenant name in the console topbar
-
-- status: `in_progress`
-- priority: `high`
-- owner_role: `release-agent`
-- claimed_by: `root`
-- spec_path: `none`
-- depends_on: `TASK-047`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `committed console static change, immutable Semattice release and production verification evidence`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- The verified TASK-047 change is committed without credentials.
-- A new immutable release is active while the prior release and static/Nginx backups remain available.
-- Public health and authentication negative checks pass.
-- A real authenticated browser displays the overview `tenant_name` and no Keycloak subject in the topbar.
-
-#### Next Action
-
-- Run release gates, commit the exact change, deploy from the clean commit and perform public plus browser acceptance.
-
-#### Handoff Note
-
-- User explicitly authorized commit and production deployment on 2026-07-31. This release is display-only and must not change Keycloak, Session or tenant mapping configuration.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 

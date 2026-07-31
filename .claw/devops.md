@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-31T07:49:52Z
-updated_by: root after production web OIDC rollout
+updated_at: 2026-07-31T08:05:11Z
+updated_by: root after tenant-name production rollout
 verification_status: passed
 ---
 
@@ -26,7 +26,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 当前部署制品 SHA-256：`d000e922e0231d39cca9040821bc42cdfa7b96411ad782d5b679bd083db93b87`。
+- 当前部署制品 SHA-256：`0e31e75dc59487c6bdf02a9eed169f826fa918d2427e3373a304c2584d8f57f0`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动
@@ -51,7 +51,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 2026-07-31 TASK-040 真实租户治理控制台曾发布为 `/opt/semattice/releases/20260731T012059Z-console`。发布脚本交叉编译 Linux amd64 二进制、校验 SHA-256、原子切换 `/opt/semattice/current` 并保留上一 release / 静态站备份。控制台已不再使用内存 fixture；OACT 会话经 runtime RLS 读取真实租户 published metadata、RBAC、组织和审计。该版本线上验证为 active、Nginx valid、edge health 200、匿名治理 API 401；目标研发交付公司读取为 metadata v1 / 5 objects / 37 active fields，本地成员、角色和组织投影均为 0。
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- 当前 release 目录：`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`；当前链接：`/opt/semattice/current`。该release从提交`dcf2b811b7ec88d0685938f6d6564c818ba24314`构建，同一制品同时包含真实治理控制台、Semattice CLI自有登录和网站OIDC登录；上一release保留可原子回滚。
+- 当前 release 目录：`/opt/semattice/releases/20260731T080337Z-web-oidc-ffdbec4fada7`；当前链接：`/opt/semattice/current`。该release从提交`ffdbec4fada7aa0169d75dd785bac8607cf927b8`构建，在既有组合制品上将控制台顶栏改为显示`overview.tenant_name`；上一release`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`保留可原子回滚。
 - 网站OIDC环境备份为`/etc/semattice/semattice.env.backup.20260731T074537Z-before-web-oidc`；Nginx与静态站使用同一release标识创建发布前备份。Keycloak `semattice-cli` client历史备份仍为`/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - `semattice-web`是confidential server-side client。现有Client Secret仅保存于`/etc/semattice/secrets/semattice-web-client-secret`，Secret目录必须为`root:semattice 0750`，文件为`root:semattice 0640`；环境仅以`AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE`引用该文件，不得把Secret写入env、日志、仓库或浏览器。
 - 网站登录入口为`GET /auth/oidc/login`，callback为`https://semattice.agentcici.com/auth/oidc/callback`。登录使用Authorization Code + S256 PKCE、state和nonce；成功后只创建最长15分钟的`Secure; HttpOnly; SameSite=Lax`签名Session Cookie，不在Cookie中保存Keycloak Token。真实Chrome登录已验证回到`/console/`并显示当前租户和退出按钮。
@@ -60,7 +60,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - systemd unit：`/etc/systemd/system/semattice.service`；仓库模板为 `deploy/semattice/semattice.service`。
 - Nginx server block：`/etc/nginx/conf.d/semattice.conf`；仓库模板为 `deploy/semattice/nginx.conf`。
 - Streamable HTTP MCP：Nginx `location = /mcp` 代理至 `127.0.0.1:8080`，必须透传 `Authorization`、将上游 `Host` 固定为 `127.0.0.1`，并关闭 `proxy_buffering`、`proxy_request_buffering`、`proxy_cache`。这使 SDK loopback DNS-rebinding 防护继续有效；当前远程配置备份为 `/etc/nginx/conf.d/semattice.conf.backup.20260724T153300Z` 与 `.backup.20260724T155400Z-mcp-host`。
-- 静态说明与控制台：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。控制台根页和静态资产均以 `Cache-Control: no-store` 发送，HTML 通过带版本的 CSS/JS URL 防止客户端复用旧样式。本次发布前静态站备份位于 `/var/www/semattice-backups/20260725T025439Z-console`。
+- 静态说明与控制台：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。控制台根页和静态资产均以 `Cache-Control: no-store` 发送，HTML 通过带版本的 CSS/JS URL 防止客户端复用旧样式。当前发布前静态站备份位于`/var/www/semattice-backups/20260731T080337Z-web-oidc-ffdbec4fada7`，对应Nginx备份为`/etc/nginx/conf.d/semattice.conf.backup.20260731T080337Z-web-oidc-ffdbec4fada7`。
 - 管理中心：`https://semattice.agentcici.com/console/`。`GET /console/session` 无 Cookie 返回 200 的公开 `authenticated:false` 状态；所有 `/console/api/*` 必须为短时签名 Cookie，匿名为 401。`POST /console/session` 仅接收 OACT Bearer，伪造/过期 Token 为 401。顶栏产品菜单回到 `https://x.agentcici.com/admin`，不传递或持久化 OACT。运行环境必须配置独立的 `AI_NATIVE_CONSOLE_SESSION_HMAC_KEY`，不得输出其值。
 - Keycloak 当前 release：`/opt/keycloak/releases/keycloak-26.7.0`，当前链接为 `/opt/keycloak/current`；systemd unit 为 `/etc/systemd/system/keycloak.service`，Nginx vhost 为 `/etc/nginx/conf.d/sso.agentcici.com.conf`。受控安装前备份在 `/root/keycloak-backups/20260724T083102Z-before-keycloak`。
 - Keycloak 登录主题源码为 `deploy/keycloak/themes/agentcici`；在 Keycloak 主机上以 root 运行 `deploy/keycloak/apply-agentcici-login-theme.sh <theme-source>`。脚本会备份现有主题和 realm 的 `loginTheme` 字段、原子替换 `/opt/keycloak/current/themes/agentcici`、设置 `agentcici` Realm 的 theme/中文 locale 并重启 Keycloak。主题只改变浏览器外观，绝不复制或输出密码、Token、client secret 或数据库配置。

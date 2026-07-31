@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-31T08:00:41Z
-updated_by: root after archiving verified tenant-name topbar fix
+updated_at: 2026-07-31T08:05:11Z
+updated_by: root after archiving verified tenant-name production rollout
 archive_status: active
 ---
 
@@ -11,6 +11,35 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-048 - Deploy tenant name in the console topbar
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-047`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `committed console static change, immutable Semattice release and production verification evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- The verified TASK-047 change is committed without credentials.
+- A new immutable release is active while the prior release and static/Nginx backups remain available.
+- Public health and authentication negative checks pass.
+- A real authenticated browser displays the overview `tenant_name` and no Keycloak subject in the topbar.
+
+#### Next Action
+
+- Completed. Future display changes require a new committed immutable release.
+
+#### Handoff Note
+
+- Commit`ffdbec4fada7aa0169d75dd785bac8607cf927b8`is active as`/opt/semattice/releases/20260731T080337Z-web-oidc-ffdbec4fada7`. Chrome showed“应用开发组织”in`#tenant-name`with zero console errors; rollback evidence passed.
 
 ### TASK-047 - Show tenant name in the console topbar
 
@@ -34,11 +63,11 @@ archive_status: active
 
 #### Next Action
 
-- Local implementation is complete. Commit and deploy only when separately authorized.
+- Completed by TASK-048 production rollout.
 
 #### Handoff Note
 
-- The overview response is the tenant-name source of truth. The topbar falls back to“当前租户”and never renders the Keycloak subject.
+- The overview response is the tenant-name source of truth. The topbar falls back to“当前租户”and never renders the Keycloak subject. Production browser acceptance passed.
 
 ### TASK-046 - Deploy Semattice web Keycloak login
 

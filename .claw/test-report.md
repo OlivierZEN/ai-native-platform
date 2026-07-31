@@ -1,20 +1,29 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T08:00:41Z
-updated_by: root after tenant-name topbar verification
-last_run_at: 2026-07-31T08:00:41Z
+updated_at: 2026-07-31T08:05:11Z
+updated_by: root after tenant-name production verification
+last_run_at: 2026-07-31T08:05:11Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 TASK-048 控制台租户名称生产验收
+
+- 发布前`GOTOOLCHAIN=go1.26.5 go test ./... -count=1`、`go vet ./...`、`go mod verify`、JavaScript、HTML、发布脚本、租户名称绑定和`git diff --check`均通过。
+- 提交`ffdbec4fada7aa0169d75dd785bac8607cf927b8`构建为Linux amd64制品，SHA-256为`0e31e75dc59487c6bdf02a9eed169f826fa918d2427e3373a304c2584d8f57f0`，发布目录为`/opt/semattice/releases/20260731T080337Z-web-oidc-ffdbec4fada7`。
+- Semattice、Nginx、PostgreSQL 16和Keycloak均active，Semattice重启计数为0，Nginx配置有效，发布后Semattice错误日志为空；健康200、匿名治理API 401、OIDC登录303。
+- 生产静态契约确认存在`#tenant-name`和`data.tenant_name`绑定，不再包含`session-subject`。
+- 真实Chrome复用有效登录Session打开`/console/`，`#tenant-name`精确显示“应用开发组织”，页面保持企业管理中心治理视图，浏览器控制台错误数为0。
+- 上一release`20260731T074549Z-web-oidc-dcf2b811b7ec`、Nginx备份和静态站备份均存在，回滚证据通过。
 
 ## 2026-07-31 TASK-047 控制台租户名称顶栏验证
 
 - 控制台右上角元素改为`tenant-name`，首次`/console/api/overview`响应以`tenant_name`更新展示；缺失名称时显示“当前租户”。
 - 静态契约确认HTML不再包含`session-subject`，JavaScript不再读取`session.subject`，并将资源版本更新为`console.js?v=20260731-02`。
 - `node --check deploy/semattice/www/console/console.js`、Python HTML解析、Node绑定断言、`GOTOOLCHAIN=go1.26.5 go test ./internal/console ./cmd/ai-native-platform -count=1`和`git diff --check`：通过。
-- 本轮为本地显示层修复；未修改后端接口、Session、Organization/tenant映射，未提交或部署。
+- 本地显示层修复未修改后端接口、Session、Organization/tenant映射；后续已由TASK-048提交并部署。
 
 ## 2026-07-31 TASK-046 Semattice网站Keycloak登录生产验收
 
