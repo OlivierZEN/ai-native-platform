@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T01:20:00Z
+updated_at: 2026-07-31T01:30:00Z
 updated_by: root
-phase: live-tenant-governance-correction
-active_task: "TASK-040"
-next_action: "用真实租户发布元数据替换 Semattice 管理中心内存演示 fixture，并完成生产只读验证。"
+phase: cross-product-identity-live
+active_task: "TASK-033"
+next_action: "等待 AgentCiCi 新版上线后，以真实受权机器账户执行 OACT exchange、owner 失效和撤销投影验收。"
 read_next:
   goals: true
   decisions: true
@@ -19,7 +19,7 @@ read_next:
 
 ## 快照
 
-- TASK-040 / FEAT-034：用户指出管理中心仍展示“演示环境”与 `example.demo` 成员。线上核验表明 `org5nszpgj99jaysxv6y` 的 Semattice tenant 为 active，当前 metadata v1 已发布 5 个研发交付对象、37 个有效字段；本地身份、角色和组织投影均为 0。此任务将控制台接到已有 RLS 的真实只读投影，空数据明确显示为未投影，绝不伪造成员或模型。
+- TASK-040 / FEAT-034：已发布 `/opt/semattice/releases/20260731T012059Z-console`。管理中心不再返回内存演示 fixture，而是由已验证 OACT 会话的 tenant context 经 runtime RLS 查询真实数据。目标公司 `org5nszpgj99jaysxv6y` 为 metadata v1 published，真实控制台 API 返回 5 个研发交付对象、37 个有效字段；其 Semattice 本地成员、角色和组织投影均为 0，页面以明确空态展示，绝不再显示 `example.demo` 或“演示环境”。
 
 - TASK-039 已完成：项目技能与发布证据以提交 `a55d71d773446902598b28fb525c7562003f351b` 快进推送至阿里云 CodeUp `main`，远端分支回读一致。独立技能仓库将 `main + v1.1.0` 原子推送至 `https://github.com/CloudCCAI/cloudcc-semattice`，release commit 为 `3ac29afc34366d66a2e9320975dc3be498d55181`；本地 HEAD、`origin/main` 和 `v1.1.0^{}` 一致，远程 HEAD 指向 main，仓库页、标签页及 raw VERSION/README 均验证通过。未使用 force push，未移动历史标签。
 
@@ -36,7 +36,7 @@ read_next:
 - TASK-033 / FEAT-033 已启动：AgentCiCi `2.8.20` 已发布统一 Principal 基座和机器责任模型，但 Semattice 当前仅把官方 OACT `sub` 直接作为 actor，尚未承载 `principal_id` / `principal_type`。本任务将保持 OACT/JWKS 本地验签，拒绝 Keycloak Service Account token 直连，并将新官方 human/service OACT 映射为数据平台本地 Principal。Keycloak Realm 尚未配置 SMTP，自动人类邀请不提前启用。
 
 - 术语边界已确认并写入项目规范：后续“数据平台”始终且仅指本仓库的 CloudCC Semattice（语义格，`/Volumes/AISpace/codehouse/AI-Native-Platform`）；Agent CC / AgentCiCi 与 CloudCC CRM 均是外部应用或集成方，不得混称。规范来源为根目录 `README.md` 与 `AGENTS.md`。
-- `TASK-032` Semattice 企业管理中心第一版已上线：当前 release 为 `/opt/semattice/releases/20260725T025439Z-console`。12 对象/84 字段/8 成员/24 审计/10 配置的模拟治理 fixture 仅在受会话保护的内存 API 中返回，不写 PostgreSQL。顶栏产品菜单明确当前 Semattice 管理端，并可直接回到 `https://x.agentcici.com/admin`，不传递或储存 OACT。控制台 HTML、CSS 与 JS 均使用 no-store 响应，且 HTML 引用带版本资源，避免结构更新后复用旧样式。生产 smoke 确认控制台静态页 200、匿名会话状态 200、匿名治理 API 为 401、`semattice` active、`nginx -t` 成功；浏览器复核触发器为 96×30px、菜单为 224×116px。上一应用 release、Nginx 配置和静态站备份均已保留。规格见 `docs/specs/FEAT-030-semattice-administration-console.md`。
+- `TASK-032` Semattice 企业管理中心第一版已由 TASK-040 真实数据投影替代：当前 release 为 `/opt/semattice/releases/20260731T012059Z-console`。顶栏产品菜单仍可直接回到 `https://x.agentcici.com/admin`，不传递或储存 OACT；控制台 HTML、CSS 与 JS 使用 no-store 响应。匿名治理 API 为 401，受管理 scope 保护的 API 才可读取当前租户真实治理事实。
 - 用户指定的阿里云 CodeUp 仓库已作为独立 `codeup` remote 接入，当前项目快照首次发布到其 `main` 分支；GitHub `origin` 保持不变，本地工作分支与 upstream 未被改写。
 - 用户已确认并于 2026-07-24 明确授权官方应用身份互通实施（ADR-014、FEAT-028、FEAT-029）：Keycloak 是唯一 IdP；官方应用使用短期、单租户的 OACT 在 API/MCP/CLI 间互通，登录/切换公司/续期时换发而非逐请求交换；第三方只能使用独立 Keycloak Service Account 的数据平台最小权限 Token。当前执行 TASK-029，允许在 ECS `115.29.222.70` 部署 Keycloak、配置 `sso.agentcici.com`，并在此授权范围内实施跨仓库运行时改造和生产发布。
 - TASK-029 已完成基础链路发布：Keycloak 26.7.0 运行于授权 ECS 的 loopback `:8180`，Nginx 经现有 `*.agentcici.com` TLS 证书公开 `https://sso.agentcici.com`；独立 PostgreSQL `keycloak` 数据库/role、非特权 systemd、业务 Realm 和首批 client 已创建。AgentCiCi `2.8.11` 已切换至 Keycloak OIDC，24 个全局账户存在一对一外部身份映射，OACT JWKS 公开为 RS256。Semattice release `20260724T094721Z-keycloak-jwks` 已上线，固定信任 AgentCiCi OACT issuer/audience/JWKS 并保留旧 HS256 兼容；真实 RS256 技术烟测调用成功，未逐请求回调 Keycloak。

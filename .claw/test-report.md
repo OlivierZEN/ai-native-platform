@@ -1,13 +1,20 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-30T06:54:07Z
-updated_by: root after verifying TASK-039 CodeUp and GitHub publication
-last_run_at: 2026-07-30T06:54:07Z
+updated_at: 2026-07-31T01:30:00Z
+updated_by: root after TASK-040 live console verification
+last_run_at: 2026-07-31T01:30:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 TASK-040 管理中心真实租户数据发布验证
+
+- `local`：`GOTOOLCHAIN=go1.26.5 go test ./...`、`go vet ./...`、`go mod verify`、`bash -n scripts/release-console.sh`、`node --check deploy/semattice/www/console/console.js` 与 `git diff --check` 全部通过。
+- `security/data-source`：控制台 Handler 只把已验证 Cookie 的 tenant/company/subject 传给 reader；reader 从 control pool 解析 active tenant，再以 runtime `database.WithTenant` 查询 published metadata、RBAC、组织与审计。匿名 `/console/api/overview` 继续为 401，reader 错误不返回治理数据。
+- `production`：release `/opt/semattice/releases/20260731T012059Z-console` 已启动且 `semattice` active；Nginx 校验、`https://semattice.agentcici.com/healthz`、控制台静态页 200 和匿名治理 API 401 均通过。
+- `live-tenant-read`：在服务器内部使用一次性 120 秒官方签名会话读取 `org5nszpgj99jaysxv6y`，未输出或保存令牌、私钥或用户身份。概览返回 `objects=5, fields=37, members=0, roles=0, organizations=0`；对象目录精确为 `dev_change:7, dev_project:8, dev_requirement:8, dev_task:8, dev_worklog:6`，并返回“Semattice 已发布研发交付模型 · 只读”。
 
 ## 2026-07-30 TASK-039 cloudcc-semattice 1.1.0 GitHub 发布验证
 

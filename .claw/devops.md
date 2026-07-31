@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-24T15:54:00Z
-updated_by: release-agent after public MCP discovery production verification
+updated_at: 2026-07-31T01:30:00Z
+updated_by: root after TASK-040 live console verification
 verification_status: passed
 ---
 
@@ -47,6 +47,8 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - Keycloak 26.7.0：以非特权 `keycloak` 用户运行，JDK 为 Amazon Corretto 21，监听 `127.0.0.1:8180`；管理健康端口仅监听 `127.0.0.1:9000`。其独立 PostgreSQL 数据库和 role 均为 `keycloak`，不得与 Semattice 运行数据库角色或连接串混用。
 
 ## 部署与发布
+
+- 2026-07-31 TASK-040 真实租户治理控制台：当前 release 是 `/opt/semattice/releases/20260731T012059Z-console`。发布脚本交叉编译 Linux amd64 二进制、校验 SHA-256、原子切换 `/opt/semattice/current` 并保留上一 release / 静态站备份。控制台已不再使用内存 fixture；OACT 会话经 runtime RLS 读取真实租户 published metadata、RBAC、组织和审计。线上服务 active、Nginx valid、edge health 200、匿名治理 API 401；目标研发交付公司读取为 metadata v1 / 5 objects / 37 active fields，本地成员、角色和组织投影均为 0。
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
 - 当前 release 目录：`/opt/semattice/releases/20260725T025439Z-console`；当前链接：`/opt/semattice/current`。上一可回滚应用 release `20260725T025333Z-console` 仍存在。

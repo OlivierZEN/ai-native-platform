@@ -2,12 +2,12 @@
 kind: feature-spec
 feature_id: FEAT-034
 title: Semattice 管理中心真实租户治理数据
-status: approved
+status: verified
 owner_role: fullstack-agent
 task_ids: TASK-040
 related_decisions: ADR-009, ADR-014
 related_issues: none
-updated_at: 2026-07-31T01:20:00Z
+updated_at: 2026-07-31T01:30:00Z
 updated_by: root
 ---
 
@@ -42,3 +42,9 @@ updated_by: root
 3. 本地成员/角色/组织未投影时显示可理解的空态而非虚构身份数据。
 4. 仍保持短期 Cookie、管理 scope、RLS、匿名 401 和错误租户 fail-closed 边界。
 5. 定向及全量 Go 测试、静态 JS 检查、生产构建与线上真实租户读验证通过。
+
+## 发布结果
+
+- 已发布 `/opt/semattice/releases/20260731T012059Z-console`；服务 active、Nginx 校验、边缘健康和匿名治理 API 401 均通过。
+- 受控的 120 秒官方签名会话在不输出令牌、私钥或用户身份的前提下，真实读取目标租户返回 5 个对象、37 个有效字段、0 位本地成员、0 个本地角色和 0 个本地组织。
+- 对象及字段数精确为：`dev_project` 8、`dev_requirement` 8、`dev_task` 8、`dev_worklog` 6、`dev_change` 7。
