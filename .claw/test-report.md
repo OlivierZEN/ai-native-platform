@@ -1,13 +1,34 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T08:10:16Z
-updated_by: root after CodeUp main publication verification
-last_run_at: 2026-07-31T08:10:16Z
+updated_at: 2026-07-31T09:27:37Z
+updated_by: root after production manual metadata publish verification
+last_run_at: 2026-07-31T09:27:37Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 TASK-049 手动元数据发布确认生产验收
+
+- 定向PostgreSQL用例验证：不在Principal `approvals`声明中的手动ID可完成首版本发布并在同一事务写入`approval_id`、`approval_mode=manual`和版本ID；缺失/空白ID失败，已有活动版本仍要求Changeset，未验证的Changeset审批仍fail closed。
+- 临时`postgres:16`全仓`go test ./... -count=1`、全量`go test -race ./... -count=1`、`go vet ./...`、`go mod verify`、16项Skill Python测试、官方Skill校验和无Token发布dry-run全部通过；临时数据库容器已清理。
+- 实现提交`34023d0a55981761ed0642809b82a5f5b2f7db9f`构建并原子发布为`/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制SHA-256为`6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`；上一release`20260731T080337Z-web-oidc-ffdbec4fada7`保留。
+- Semattice、Nginx、PostgreSQL 16和Keycloak均为active，Semattice重启计数为0，Nginx配置有效，发布后Semattice错误日志为0；边缘健康和首页为200，匿名治理API与匿名换票均为401。
+- 线上`system.capability.list`返回`succeeded`和51项能力；`metadata.version.publish`描述已更新为显式手动确认，仍要求`metadata.publish`、高风险、异步、`approval_required=true`，输入继续必填`metadata_version_id`与`approval_id`。
+- 空白`approval_id`实际负例返回`FAILED_PRECONDITION / a manual approval id is required`，审计标识为`audit:req-7e8ae6fc-bb30-4de9-9fe9-a45f5d60ffdd`，没有改变草稿。
+- Skill开发副本经预览后同步到本机安装目录，两边逐文件一致、官方校验通过且版本均为`1.4.0`；未同步或发布独立GitHub Skill仓库。
+- 最终`metadata.version.get`回读审计标识为`audit:req-8323d1a2-83d5-4e51-a735-55ca06534d86`，草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`仍为`draft`，包含`contact`和`large_backpack`两个对象、后者两个字段、零关系。由于原发布授权发生在只有联系人对象时，本轮没有扩大授权并发布整版。
+
+## 2026-07-31 生产大书包草稿对象验证
+
+- 当前CLI会话为`authenticated`，绑定企业`orgx2x8awt02djpp5xdp`和生产地址`https://semattice.agentcici.com`；未在命令、输出或状态文件中暴露Token。
+- `system.capability.list`返回`succeeded`、51项能力和26个唯一scope；线上Schema确认`metadata.object.upsert`和`metadata.field.upsert`均为中风险、同步、无需审批，要求`metadata.definition.write`。
+- `metadata.version.get`先回读可信草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`为`draft`，当时仅含`contact / 联系人`对象；审计标识为`audit:req-c6017c92-025a-42f1-91ae-4a1d1ec05fa0`。
+- 对象和两项字段写入均先完成无Token dry-run并使用稳定幂等键。`metadata.object.upsert`创建`large_backpack / 大书包`对象`019fb75e-29db-7726-8ff0-8c5033ae08d8`，审计标识为`audit:req-89a97093-2e38-4bb5-b24a-ac8181a1ca62`。
+- `metadata.field.upsert`创建必填、索引的`text`字段`name / 书包名称`，字段ID为`019fb75e-d8fb-70ef-9275-1c90a31dd3b1`，审计标识为`audit:req-ef84b628-547f-44c6-b9c5-32f66ac70e52`；约束为1至200个Unicode字符。
+- `metadata.field.upsert`创建可选、索引的`text`字段`color / 颜色`，字段ID为`019fb75e-dbc9-7576-9889-e0a67ad3902c`，审计标识为`audit:req-45f00d9d-a0f8-465f-a82f-e9297bce81ff`；约束为1至100个Unicode字符。
+- 最终`metadata.version.get`回读返回`succeeded`，审计标识为`audit:req-378fd751-00f7-4762-9b8a-d9adc9f46dd1`；草稿为2对象、2字段、0关系，两个新字段均为`active`且索引状态为`active`。未调用发布、记录、权限、共享或其他高影响写能力。
 
 ## 2026-07-31 CodeUp main发布验证
 

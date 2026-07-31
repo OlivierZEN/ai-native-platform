@@ -2,13 +2,13 @@
 kind: feature-spec
 feature_id: FEAT-046
 title: Manual confirmation for direct metadata publication
-status: approved
+status: verified
 owner_role: backend-agent
 task_ids: TASK-049
 related_decisions: ADR-003
 related_issues: none
-updated_at: 2026-07-31T09:24:41Z
-updated_by: root after local implementation and verification
+updated_at: 2026-07-31T09:27:37Z
+updated_by: root after production rollout and contract verification
 ---
 
 # FEAT-046 - 元数据直接发布支持手动确认
@@ -87,9 +87,13 @@ updated_by: root after local implementation and verification
 - 已获得用户对行为边界和生产部署的明确授权。
 - 服务层已只放宽直接发布的审批声明成员校验，并在同一事务持久审计手动确认标识。
 - 定向 PostgreSQL、全仓 PostgreSQL、全量 race、vet、module、Skill 测试、官方 Skill 校验和无 Token dry-run 均通过。
-- 待完成生产发布、线上契约与健康验证，以及安装 Skill 副本同步。
+- 提交 `34023d0a55981761ed0642809b82a5f5b2f7db9f` 已部署为 `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制 SHA-256 为 `6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`。
+- 四项服务、Nginx 配置、边缘健康、匿名负例和零错误日志验证通过；线上能力发现返回新的手动确认描述、原有高风险异步策略及两个必填输入。
+- 空白 `approval_id` 线上负例以 `FAILED_PRECONDITION` 失败，审计标识为 `audit:req-7e8ae6fc-bb30-4de9-9fe9-a45f5d60ffdd`。
+- Skill 开发副本与本机安装副本均为 `1.4.0`、逐文件一致且通过官方校验。
+- 实际草稿仍未发布；最终回读确认它包含两个对象、两个字段和零关系，需用户重新确认整版范围。
 
 ## 交接说明
 
-- 发布代码前确认全量测试和 Skill 校验通过。
 - 生产元数据草稿可能被并行修改；实际发布前必须重新读取并向用户确认整个版本内容。
+- 如需回滚服务，把 `/opt/semattice/current` 切回 `20260731T080337Z-web-oidc-ffdbec4fada7` 并重启 Semattice；本次没有数据库迁移。
