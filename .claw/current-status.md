@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T08:05:11Z
-updated_by: root after verified tenant-name production rollout
+updated_at: 2026-07-31T08:08:00Z
+updated_by: root after verified production contact draft creation
 phase: cross-product-identity-live
 active_task: "TASK-033"
 next_action: "等待AgentCiCi新版、Keycloak SMTP、OACT签名配置和受权service client凭据后，执行真实机器主体的OACT exchange、owner失效与撤销投影验收。"
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- 用户授权的生产元数据写入已完成：当前OACT绑定企业`orgx2x8awt02djpp5xdp`与租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`。`metadata.version.create`创建序号1草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`，`metadata.object.upsert`创建`contact / 联系人`对象`019fb736-c3cb-7e1b-8f98-b93614102672`；`metadata.version.get`回读确认草稿仅含该对象、0字段、0关系。未发布元数据，未创建业务记录或修改授权。
 
 - TASK-048 已完成：提交`ffdbec4fada7aa0169d75dd785bac8607cf927b8`发布为`/opt/semattice/releases/20260731T080337Z-web-oidc-ffdbec4fada7`，二进制SHA-256为`0e31e75dc59487c6bdf02a9eed169f826fa918d2427e3373a304c2584d8f57f0`。四个服务active、健康和匿名负例通过，真实Chrome顶栏精确显示“应用开发组织”且控制台零错误；上一release、Nginx和静态站备份均保留。
 

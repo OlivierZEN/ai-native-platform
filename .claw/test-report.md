@@ -1,13 +1,22 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T08:05:11Z
-updated_by: root after tenant-name production verification
-last_run_at: 2026-07-31T08:05:11Z
+updated_at: 2026-07-31T08:08:00Z
+updated_by: root after production contact draft verification
+last_run_at: 2026-07-31T08:08:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-07-31 生产联系人草稿对象验证
+
+- `system.capability.list`返回`succeeded`，线上共51项能力；`metadata.version.create`、`metadata.object.upsert`和`metadata.version.get`的scope、风险、同步执行、幂等与输入Schema符合Skill目录。
+- `tenant.get-status`确认当前OACT绑定企业`orgx2x8awt02djpp5xdp`、租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`，产品状态为`active`、服务等级为`standard`。
+- 两项写能力均先完成无Token dry-run，正文不含`tenant_id`、`company_id`、actor或scopes；实际调用使用稳定幂等键。
+- `metadata.version.create`创建序号1草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`，审计标识为`audit:req-4ef906ce-cc25-45f8-a007-51576a0aed82`。
+- `metadata.object.upsert`创建`contact / 联系人`对象`019fb736-c3cb-7e1b-8f98-b93614102672`，审计标识为`audit:req-67b3d1c2-a715-4f3a-993e-f72338e4add7`。
+- `metadata.version.get`回读返回`succeeded`，审计标识为`audit:req-1898aa6a-2f6d-42fd-b43e-933312ecf7de`；草稿恰好包含该对象、0字段、0关系。未调用发布、记录或授权写能力，未输出Token或其他凭据。
 
 ## 2026-07-31 TASK-048 控制台租户名称生产验收
 
