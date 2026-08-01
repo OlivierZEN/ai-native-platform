@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-31T08:05:11Z
-updated_by: root after archiving verified tenant-name production rollout
+updated_at: 2026-08-01T15:46:00Z
+updated_by: root
 archive_status: active
 ---
 
@@ -11,6 +11,13 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-014 - Validate the Changeset publisher
+
+- status: `done`
+- owner_role: `backend-agent`
+- spec_path: `docs/specs/FEAT-014-changeset-and-dynamic-field-evolution.md`
+- handoff: migrations 5/6、Changeset 审批/发布/回滚、动态字段回填与 coverage、predecessor 转换、purge/tombstone 已在 PostgreSQL 16 通过；容量认证由 TASK-019 承担。
 
 ### TASK-048 - Deploy tenant name in the console topbar
 

@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-01T13:39:26Z
+updated_at: 2026-08-01T15:46:00Z
 updated_by: root
-phase: development-identity-governance
+phase: development-identity-governance-complete
 active_task: "TASK-049"
-next_action: "实现 FEAT-035 的 Principal 自同步、状态治理和真实控制台投影，并在目标租户建立三类研发身份及角色。"
+next_action: "TASK-049 已完成；监控三类研发身份、5 个强制对象策略和短时 OACT/JWKS 验签。"
 read_next:
   goals: true
   decisions: true
@@ -19,7 +19,7 @@ read_next:
 
 ## 快照
 
-- TASK-049 / FEAT-035：用户已确认产品总监绑定 AgentCiCi 全局用户 `18611892001`，并授权完成产品总监 HUMAN、产品经理 SERVICE、开发者 SERVICE 的完整研发身份体系。本任务新增可信 OACT 自同步、SERVICE owner 投影、状态治理、真实控制台展示和租户最小权限角色，随后在目标租户完成线上开户与回读。
+- TASK-049 / FEAT-035：已完成目标租户研发身份与强制授权治理。产品总监 HUMAN 绑定 AgentCiCi 全局用户 `18611892001`；产品经理和开发者 SERVICE 均投影其 owner，三者状态 active 且分别绑定“产品总监 / 产品经理 / 开发者”角色。活动元数据版本 `019fbde4-76cf-73d9-b36a-324692b10d05` 为 5 个对象、42 个字段，5 个对象策略全部 enforced，三类主体均有研发交付部 primary membership。独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下的开发者投影暂停会阻断 CLI，自恢复被禁止；人类管理员恢复后 CLI 成功，审计记录两次状态写入。JWKS 私网/公网路径与固定 issuer 配置已上线，生产服务 active。
 
 - CodeUp `origin/main` 已通过普通快进从`27020e3`发布至`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`，包含网站OIDC、租户名称顶栏、生产发布证据和联系人草稿验证共5个提交；本地HEAD、tracking ref与远端分支回读一致，未使用force push。
 

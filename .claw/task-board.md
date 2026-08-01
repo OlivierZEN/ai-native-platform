@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-01T13:39:26Z
+updated_at: 2026-08-01T15:46:00Z
 updated_by: root
 board_status: active
 ---
@@ -27,30 +27,6 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
-
-### TASK-049 - 建立 DEV Autopilot 研发身份投影与角色治理
-
-- status: `in_progress`
-- priority: `critical`
-- owner_role: `integration-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-035-governed-development-principal-projection.md`
-- depends_on: `TASK-033, AgentCiCi TASK-262`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `identity projection capabilities, migration 0017, console reader, tests and production role bootstrap`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- HUMAN/SERVICE OACT can safely self-project without caller-supplied identity claims.
-- Product director, product manager and developer projections, owner relation and least-privilege roles exist in the target tenant.
-- Console shows the three real identities and no demo governance identities.
-
-#### Next Action
-
-- Implement migration, identity capabilities, console projection and tests; publish and bootstrap the target tenant.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
@@ -183,6 +159,30 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-049 - 建立 DEV Autopilot 研发身份投影与角色治理
+
+- status: `done`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-035-governed-development-principal-projection.md`
+- depends_on: `TASK-033, AgentCiCi TASK-262`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `identity projection capabilities, migration 0017, console reader, tests and production role bootstrap`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- HUMAN/SERVICE OACT can safely self-project without caller-supplied identity claims.
+- Product director, product manager and developer projections, owner relation and least-privilege roles exist in the target tenant.
+- Console shows the three real identities and no demo governance identities.
+
+#### Next Action
+
+- 已发布 migration 17、Principal 能力与控制台投影；目标租户三类身份、角色、组织、字段权限、5 个 enforced 策略和生命周期负例均完成生产回读。
 
 ### TASK-041 - Add Keycloak PKCE login to cloudcc-semattice skill
 
@@ -714,34 +714,6 @@ board_status: active
 #### Handoff Note
 
 - 元数据 CRUD/publish 始终使用严格 `ai_native_runtime` TenantContext；只有路由解析使用独立 control pool。跨租户、跨版本和已发布修改均 fail closed。
-
-### TASK-014 - Validate the Changeset publisher
-
-- status: `done`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-014-changeset-and-dynamic-field-evolution.md`
-- depends_on: `TASK-013, TASK-015`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `changeset state machine, dynamic field/index lifecycle, versioned quota gates, candidate projection, resumable backfill/coverage, unique/reference validation, purge/tombstone`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- Changeset 可预检、模拟、审批、发布、审计与受限回滚，并有版本一致性测试
-- required/indexed/unique/reference、改名、改类型和删除均通过分阶段迁移，覆盖率未达 100% 时不能激活
-- 每对象动态字段/索引和记录 JSONB 边界在 API、MCP、CLI 中一致执行，回填可恢复且不绕过 TenantContext/RLS
-
-#### Next Action
-
-- 已完成。下一阶段创建并批准 `TASK-016` 的授权与共享独立规格；`TASK-019` 继续负责 8/16 GiB 容量认证，不重新打开本任务。
-
-#### Handoff Note
-
-- migrations 5/6、十项 Changeset 能力、候选版本新写投影、按对象有界回填、revision 冲突恢复、required/index/unique/reference coverage、predecessor 转换、purge/tombstone 和版本化 service-tier 配额均已在真实 PostgreSQL 16 下通过。通用 worker/outbox 属于 `TASK-017`；最终容量数值属于 `TASK-019`。
 
 ## 维护规则
 

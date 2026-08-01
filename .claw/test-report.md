@@ -1,13 +1,23 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T08:10:16Z
-updated_by: root after CodeUp main publication verification
-last_run_at: 2026-07-31T08:10:16Z
+updated_at: 2026-08-01T15:46:00Z
+updated_by: root
+last_run_at: 2026-08-01T15:46:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-01 TASK-049 DEV Autopilot 研发身份与 PDP 生产验收
+
+- `GOTOOLCHAIN=go1.26.5 go test ./internal/principal ./internal/console ./cmd/ai-native-platform -count=1`、项目状态 validator 与 `git diff --check` 均通过。
+- migration 17 已应用，生产 release `/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2` active；`https://semattice.agentcici.com/healthz` 返回 200，Nginx 配置有效。
+- 生产 runtime RLS 回读为 3 个 active Principal：产品总监 HUMAN、产品经理 SERVICE、开发者 SERVICE；两台 SERVICE 的 owner 均为产品总监 account `25deaf62-73c7-40cc-a107-99c56cff2ec9`，display/public/client ID 未被 CLI 同步覆盖。
+- 活动 metadata 精确为 5 objects / 42 fields；3 个 active role assignment、3 个 primary organization membership、5 个 `enforced/private` 对象策略均存在。
+- 正向：产品经理可创建项目/需求/任务/变更；开发者 CLI 可读取、认领、回报进度与 2.5h 工时并完成任务。负向：开发者直接创建项目和调用 `identity.principal.list` 均为 HTTP 403。
+- 生命周期：独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下，`identity.principal.set-status` 的 suspended/active 各成功一次；suspended 时 `identity.principal.sync` fail closed，管理员恢复后 CLI 成功。
+- 审计回读：产品经理/开发者 actor 的 `identity.principal.sync=12`、`runtime.record.create=5`、`runtime.record.get=11`、`runtime.record.query=2`、`runtime.record.update=5`，均为 succeeded；未输出 OACT、secret 或私钥。
 
 ## 2026-07-31 CodeUp main发布验证
 
