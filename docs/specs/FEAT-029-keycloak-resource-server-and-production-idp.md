@@ -43,11 +43,11 @@ flowchart LR
 |---|---|---|---|
 | `agentcici-bff` | confidential | authorization code + PKCE | AgentCiCi 用户登录 BFF |
 | `semattice-api` | bearer-only/resource | 无浏览器流程 | Semattice API、远程 MCP、CLI audience |
-| `semattice-cli` | public | device authorization（后续） | 人工 CLI 登录 |
+| `semattice-cli` | public | authorization code + S256 PKCE + loopback | 人工 CLI 登录 |
 | `official-access-context` | confidential service account | client credentials | ACS/官方上下文签发服务 |
 | `followup-worker` | confidential service account | client credentials | 未来官方服务模板 |
 
-所有 browser redirect URI 必须精确列出 AgentCiCi HTTPS callback；禁用 implicit、resource owner password 与 wildcard redirect。第三方按“第三方 × 公司 × 环境”创建独立 confidential service-account client，不可复用上述官方 client。
+AgentCiCi BFF 的 browser redirect URI 必须精确列出 HTTPS callback；`semattice-cli` 仅注册 Keycloak 为 native app 保留的 `http://127.0.0.1` loopback URI，由 Keycloak允许系统选择的动态端口，不允许其他 host、path 或 Web origin。所有 client 均禁用 implicit 与 resource owner password；第三方按“第三方 × 公司 × 环境”创建独立 confidential service-account client，不可复用上述官方 client。
 
 ## IdP 登录主题
 

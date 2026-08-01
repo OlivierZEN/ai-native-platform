@@ -36,6 +36,13 @@ func TestTenantLifecyclePersistentOperationsAndRevisions(t *testing.T) {
 	}
 	first := invokeTenant(t, invoker, principal, "tenant.provision", provision)
 	assertSucceededStatus(t, first, "active", 1, "succeeded")
+	resolved, found, err := service.ResolveActiveCompany(context.Background(), principal.CompanyID)
+	if err != nil || !found || resolved.TenantID != principal.TenantID || resolved.CompanyID != principal.CompanyID {
+		t.Fatalf("ResolveActiveCompany: status=%#v found=%v err=%v", resolved, found, err)
+	}
+	if _, found, err := service.ResolveActiveCompany(context.Background(), "orgbbbbbbbbbbbbbbbbb"); err != nil || found {
+		t.Fatalf("unknown company resolved: found=%v err=%v", found, err)
+	}
 	legacyProvision := cloneMap(provision)
 	delete(legacyProvision, "company_id")
 	legacyProvision["org_id"] = principal.CompanyID

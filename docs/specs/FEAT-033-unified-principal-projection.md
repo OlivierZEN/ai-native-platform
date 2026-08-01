@@ -1,8 +1,14 @@
 ---
 kind: feature-spec
-id: FEAT-033
-status: released_with_controlled_activation_pending
+feature_id: FEAT-033
 title: Semattice 统一 Principal 投影与官方机器主体认证
+status: in_implementation
+owner_role: integration-agent
+task_ids: TASK-033
+related_decisions: ADR-014
+related_issues: none
+updated_at: 2026-07-31T08:16:26Z
+updated_by: root after normalizing FEAT-033 project metadata
 ---
 
 # FEAT-033：Semattice 统一 Principal 投影与官方机器主体认证

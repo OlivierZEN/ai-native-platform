@@ -1,6 +1,6 @@
 # CloudCC Semattice（语义格）
 
-当前版本：[`1.1.0`](VERSION)
+当前版本：[`1.3.0`](VERSION)
 
 `cloudcc-semattice` 是帮助 AI 理解、设计并通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它先说明产品定位、业务模块和资源模型，再在用户授权后执行租户、元数据、记录、用量、授权、组织和共享等受控操作。
 
@@ -14,15 +14,16 @@
 - 查看租户状态与用量信息。
 - 配置角色、Permission Set、对象策略、组织、团队和共享规则。
 - 使用统一脚本构造请求、执行 dry-run，并检查稳定错误码与审计标识。
+- 通过 Keycloak Authorization Code + PKCE 完成人工 CLI 登录，默认请求全部已发布 Capability 所需的 scope，并自动为当前公司换取和续发短期 OACT。
 
-本技能只调用 `/v1/capabilities/{capability-id}/invoke`。它不使用 MCP，不直连数据库，不调用内部租户开通接口，也不绕过 OAuth、RBAC、租户隔离、审批、幂等或审计。
+本技能的业务操作只调用 `/v1/capabilities/{capability-id}/invoke`；人工登录助手只调用 `/v1/auth/token` 换取短期 OACT。它不使用 MCP，不直连数据库，不调用内部租户开通接口，也不绕过 OAuth、RBAC、租户隔离、审批、幂等或审计。
 
 ## 环境要求
 
 - Codex 技能运行环境。
 - Python 3.10 或更高版本；辅助脚本只使用 Python 标准库。
 - 可访问的 Semattice HTTPS 服务地址。
-- 与目标租户绑定的短期 Bearer Token。
+- 人工登录需要可用的 Keycloak `semattice-cli` public client、Semattice `/v1/auth/token` 和操作系统凭据库；无交互调用可直接提供短期 Bearer Token。
 
 ## 安装
 
@@ -30,7 +31,7 @@
 
 ```bash
 git clone \
-  --branch v1.1.0 \
+  --branch v1.3.0 \
   --depth 1 \
   https://github.com/CloudCCAI/cloudcc-semattice.git \
   ~/.codex/skills/cloudcc-semattice
@@ -40,14 +41,37 @@ git clone \
 
 ## 快速开始
 
-先配置环境变量：
+人工 CLI 首次使用时登录：
+
+```bash
+./scripts/semattice login
+```
+
+该命令打开系统浏览器到 Keycloak，使用 Authorization Code + S256 PKCE 回调本机 `127.0.0.1`。Semattice从已验签的 Keycloak Organization声明映射自己的 tenant并签发短期 OACT；默认 OACT包含当前51项公开Capability所需的全部26个唯一scope。用户名、密码和 MFA只提交给 Keycloak，refresh token只保存在 macOS Keychain或 Linux Secret Service。scope只是Capability入口上限，Principal/RBAC、RLS、审批和审计仍由服务端独立执行。
+
+登录后发现线上能力：
+
+```bash
+./scripts/semattice call \
+  --capability system.capability.list \
+  --input '{}'
+```
+
+查看或清除登录状态：
+
+```bash
+./scripts/semattice status
+./scripts/semattice logout
+```
+
+无交互环境可继续配置短期 Token：
 
 ```bash
 export SEMATTICE_BASE_URL='https://semattice.agentcici.com'
 export SEMATTICE_TOKEN='<short-lived-oact>'
 ```
 
-发现线上能力：
+然后使用兼容调用形式：
 
 ```bash
 python3 scripts/semattice_api.py \
@@ -80,12 +104,18 @@ python3 scripts/semattice_api.py \
 ```bash
 cd ~/.codex/skills/cloudcc-semattice
 git fetch --tags
-git checkout v1.1.0
+git checkout v1.3.0
 ```
 
 `1.0.0` 将技能 ID 和调用名统一为 `cloudcc-semattice`。从 `0.x` 升级时，请安装到新目录并将调用名改为 `$cloudcc-semattice`；确认新技能可用后再移除旧目录。
 
 `1.1.0` 增加产品定位、业务模块场景、设计/实施双模式，以及对象、字段和关系的操作边界。
+
+`1.2.1` 增加 Keycloak Authorization Code + PKCE 人工登录、Organization Scope、系统凭据库 refresh token、当前公司 OACT 换票、自动续期和安全退出。
+
+`1.2.2` 移除 AgentCiCi 应用换票依赖，改为 Keycloak Organization直接映射 Semattice tenant，并由 Semattice `/v1/auth/token` 签发短期 OACT；升级后必须重新登录。
+
+`1.3.0` 将人工登录默认请求扩展为当前51项公开Capability所需的全部26个唯一scope；服务端Principal/RBAC、RLS、独立审批、幂等和审计门禁保持不变。升级后旧登录缓存会被拒绝，必须重新执行 `semattice login`。
 
 ## 目录结构
 
@@ -97,10 +127,14 @@ git checkout v1.1.0
 ├── references/
 │   ├── api-catalog.md
 │   ├── api-contract.md
+│   ├── authentication.md
 │   ├── capability-workflows.md
 │   ├── product-guide.md
 │   └── resource-model.md
-└── scripts/semattice_api.py
+└── scripts/
+    ├── semattice
+    ├── semattice_api.py
+    └── semattice_auth.py
 ```
 
 详细执行规则见 [`SKILL.md`](SKILL.md)。

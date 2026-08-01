@@ -1,11 +1,11 @@
 ---
 name: cloudcc-semattice
-description: 理解、设计和通过统一 HTTPS Capability API 操作 CloudCC Semattice。当 AI 需要说明 Semattice 的产品定位与业务价值，设计对象、字段、关系、记录、权限或共享方案，发现平台能力，或者通过 API 查看及修改租户、元数据、业务数据、用量、授权、组织和共享资源时使用。只允许调用已发布的 `/v1/capabilities/{capability-id}/invoke` 接口；禁止依赖 MCP、直连数据库、调用内部租户开通接口，或绕过 OAuth、RBAC、租户隔离、审批、幂等和审计。
+description: 理解、设计和通过统一 HTTPS Capability API 操作 CloudCC Semattice，并为人类 CLI 使用 Keycloak Authorization Code + PKCE 登录和续期短期 OACT。当 AI 需要说明 Semattice 的产品定位与业务价值，设计对象、字段、关系、记录、权限或共享方案，发现平台能力，登录平台，或者通过 API 查看及修改租户、元数据、业务数据、用量、授权、组织和共享资源时使用。业务操作只允许调用已发布的 `/v1/capabilities/{capability-id}/invoke`；登录助手只允许调用 `/v1/auth/token`。禁止依赖 MCP、直连数据库、调用内部租户开通接口，或绕过 OAuth、RBAC、租户隔离、审批、幂等和审计。
 ---
 
 # CloudCC Semattice（语义格）
 
-同时支持理解设计和安全实施 Semattice。设计阶段先解释产品、业务模块和资源模型；实施阶段只通过统一 HTTPS Capability API 操作平台。使用 `scripts/semattice_api.py` 发送请求，不依赖 MCP，不直接访问数据库，也不把只读演示控制台当作业务接口。
+同时支持理解设计和安全实施 Semattice。设计阶段先解释产品、业务模块和资源模型；业务实施只通过统一 HTTPS Capability API 操作平台，登录只通过专用 `/v1/auth/token` 换取 OACT。使用 `scripts/semattice_api.py` 发送请求，不依赖 MCP，不直接访问数据库，也不把只读演示控制台当作业务接口。
 
 ## 版本
 
@@ -25,7 +25,7 @@ description: 理解、设计和通过统一 HTTPS Capability API 操作 CloudCC 
 3. 涉及对象、字段、关系、记录或权限时，读取 [资源模型](references/resource-model.md)，明确资源身份、生命周期和支持边界。
 4. 仅要求设计时，输出候选模型、能力边界和实施前置条件，不请求令牌、不声称资源已经创建。
 5. 进入实施前，明确本地、预发布或生产环境。目标环境不清晰时，不执行写操作。
-6. 涉及认证、请求格式、错误处理或生产操作时，读取 [API 调用契约](references/api-contract.md)。
+6. 涉及人工登录或令牌续期时，读取 [登录与短期 OACT](references/authentication.md)；涉及认证边界、请求格式、错误处理或生产操作时，读取 [API 调用契约](references/api-contract.md)。
 7. 首次连接或怀疑接口变化时，通过 `system.capability.list` 获取线上能力、scope、风险、执行模式及输入 Schema；技能内目录用于规划，线上返回用于调用前最终校验。
 8. 根据任务读取 [API 能力目录](references/api-catalog.md) 中对应分类。目录覆盖当前主程序注册的全部 51 项公开 Capability API。
 9. 执行组合操作时，读取 [常用操作流程](references/capability-workflows.md)，并按依赖顺序每次调用一个原子能力。
@@ -34,7 +34,25 @@ description: 理解、设计和通过统一 HTTPS Capability API 操作 CloudCC 
 12. 检查 HTTP 状态、`status`、稳定错误码、`result` 和 `audit_id`。写操作成功后，使用最小只读 API 回读验证。
 13. 报告调用的环境、能力 ID、修改结果、稳定资源标识和 `audit_id`；禁止输出令牌或完整敏感数据。
 
-## API 调用
+## 登录与 API 调用
+
+人类首次使用 CLI 时，通过 Keycloak Authorization Code + PKCE 登录；脚本不接收系统密码。默认换取的短期 OACT请求当前51项公开Capability所需的全部26个唯一scope，但scope不替代Principal/RBAC、RLS、审批或审计：
+
+```bash
+./scripts/semattice login
+```
+
+登录脚本使用系统凭据库保护 Keycloak refresh token；Semattice从已验签的 Keycloak Organization映射当前 tenant并签发短期 OACT。详细配置、续期和退出流程见 [登录与短期 OACT](references/authentication.md)。
+
+登录后调用：
+
+```bash
+./scripts/semattice call \
+  --capability system.capability.list \
+  --input '{}'
+```
+
+无交互环境也可继续显式注入短期 OACT：
 
 ```bash
 export SEMATTICE_BASE_URL='https://semattice.agentcici.com'
@@ -55,7 +73,7 @@ python3 scripts/semattice_api.py \
   --dry-run
 ```
 
-禁止把令牌放在命令行参数、技能文件、仓库或日志中。
+禁止把令牌放在命令行参数、技能文件、仓库或日志中。raw Keycloak token只允许由登录脚本发送到 Semattice `/v1/auth/token`，不得用于 Capability API。
 
 ## 授权门禁
 
@@ -65,7 +83,7 @@ python3 scripts/semattice_api.py \
 - 能力要求 `approval_id` 时，只能使用令牌 `approvals` 声明中已经验证的真实审批标识。禁止生成、猜测或替换审批标识。
 - `tenant.decommission` 会创建 `pending_approval` 操作，不代表租户已经完成退役。
 - 收到 `UNAUTHORIZED` 时报告所需 scope，禁止自行扩大令牌权限或切换身份、公司、租户和环境。
-- 禁止通过内部 `POST /internal/v1/company-provisionings` 开通租户；该接口只允许受信 AgentCiCi 服务使用 HMAC 调用。
+- 禁止尝试通过登录或 Capability请求创建租户；Keycloak Organization必须已经映射到现有 Semattice tenant。
 
 ## 事实边界
 

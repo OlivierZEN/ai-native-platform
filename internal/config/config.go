@@ -2,15 +2,13 @@ package config
 
 import (
 	"fmt"
+	"io"
 	"net/url"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
-
-var internalServiceIDPattern = regexp.MustCompile(`^[a-z][a-z0-9-]{0,63}$`)
 
 type Config struct {
 	HTTPListen         string
@@ -20,7 +18,8 @@ type Config struct {
 	Log                Log
 	Identity           Identity
 	ConsoleSessionKey  string
-	Provisioning       Provisioning
+	ConsoleOIDC        ConsoleOIDC
+	AccessContext      AccessContext
 }
 
 type Database struct {
@@ -54,14 +53,29 @@ type TrustedIssuer struct {
 	JWKSURL  string
 }
 
-type Provisioning struct {
-	AgentCiCiBaseURL string
-	AgentCiCiHMACKey string
-	CallerKeys       map[string]string
+type AccessContext struct {
+	KeycloakIssuer   string
+	KeycloakAudience string
+	KeycloakJWKSURL  string
+	KeycloakClientID string
+	AllowedScopes    []string
+	TokenTTL         time.Duration
 }
 
-func (p Provisioning) Enabled() bool {
-	return p.AgentCiCiBaseURL != "" && p.AgentCiCiHMACKey != "" && len(p.CallerKeys) > 0
+type ConsoleOIDC struct {
+	ClientID         string
+	ClientSecretFile string
+	RedirectURI      string
+}
+
+func (oidc ConsoleOIDC) Enabled() bool {
+	return oidc.ClientID != "" && oidc.ClientSecretFile != "" && oidc.RedirectURI != ""
+}
+
+func (access AccessContext) Enabled() bool {
+	return access.KeycloakIssuer != "" && access.KeycloakAudience != "" &&
+		access.KeycloakJWKSURL != "" && access.KeycloakClientID != "" &&
+		len(access.AllowedScopes) > 0
 }
 
 func LoadEnv() (Config, error) {
@@ -93,16 +107,20 @@ func Load(getenv func(string) string) (Config, error) {
 			TrustedIssuers: nil,
 		},
 		ConsoleSessionKey: getenv("AI_NATIVE_CONSOLE_SESSION_HMAC_KEY"),
-		Provisioning: Provisioning{
-			AgentCiCiBaseURL: strings.TrimRight(getenv("AI_NATIVE_AGENTCICI_BASE_URL"), "/"),
-			AgentCiCiHMACKey: getenv("AI_NATIVE_AGENTCICI_HMAC_KEY"),
+		ConsoleOIDC: ConsoleOIDC{
+			ClientID:         getenv("AI_NATIVE_CONSOLE_OIDC_CLIENT_ID"),
+			ClientSecretFile: getenv("AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE"),
+			RedirectURI:      getenv("AI_NATIVE_CONSOLE_OIDC_REDIRECT_URI"),
+		},
+		AccessContext: AccessContext{
+			KeycloakIssuer:   strings.TrimRight(getenv("AI_NATIVE_KEYCLOAK_ISSUER"), "/"),
+			KeycloakAudience: getenv("AI_NATIVE_KEYCLOAK_AUDIENCE"),
+			KeycloakJWKSURL:  getenv("AI_NATIVE_KEYCLOAK_JWKS_URL"),
+			KeycloakClientID: getenv("AI_NATIVE_KEYCLOAK_CLIENT_ID"),
+			AllowedScopes:    parseScopes(getenv("AI_NATIVE_OACT_ALLOWED_SCOPES")),
+			TokenTTL:         10 * time.Minute,
 		},
 	}
-	callerKeys, parseErr := parseCallerKeys(getenv("AI_NATIVE_PROVISIONING_CALLER_KEYS"))
-	if parseErr != nil {
-		return Config{}, parseErr
-	}
-	cfg.Provisioning.CallerKeys = callerKeys
 	trustedIssuers, trustedIssuersErr := parseTrustedIssuers(getenv("AI_NATIVE_IDENTITY_TRUSTED_ISSUERS"))
 	if trustedIssuersErr != nil {
 		return Config{}, trustedIssuersErr
@@ -124,6 +142,9 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	if cfg.Database.MaxIdleTime, err = parseDuration(getenv("AI_NATIVE_DATABASE_MAX_IDLE_TIME"), cfg.Database.MaxIdleTime); err != nil {
 		return Config{}, fmt.Errorf("invalid database max idle time")
+	}
+	if cfg.AccessContext.TokenTTL, err = parseDuration(getenv("AI_NATIVE_OACT_TTL"), cfg.AccessContext.TokenTTL); err != nil {
+		return Config{}, fmt.Errorf("invalid OACT TTL")
 	}
 	if cfg.Database.URL != "" {
 		if !validDatabaseURL(cfg.Database.URL) {
@@ -151,29 +172,45 @@ func Load(getenv func(string) string) (Config, error) {
 	if cfg.ConsoleSessionKey != "" && len(cfg.ConsoleSessionKey) < 32 {
 		return Config{}, fmt.Errorf("console session key is too short")
 	}
-	if err := validateProvisioning(cfg.Provisioning); err != nil {
+	if err := validateAccessContext(cfg.AccessContext, cfg.Identity); err != nil {
+		return Config{}, err
+	}
+	if err := validateConsoleOIDC(cfg.ConsoleOIDC, cfg.AccessContext); err != nil {
 		return Config{}, err
 	}
 	return cfg, nil
 }
 
-func parseCallerKeys(raw string) (map[string]string, error) {
-	if raw == "" {
-		return map[string]string{}, nil
+func ReadSecretFile(path string) (string, error) {
+	info, err := os.Lstat(path)
+	if err != nil || !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 ||
+		info.Mode().Perm()&0007 != 0 || info.Size() <= 0 || info.Size() > 4096 {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
 	}
-	values := map[string]string{}
-	for _, item := range strings.Split(raw, ";") {
-		parts := strings.SplitN(item, "=", 2)
-		serviceID := strings.TrimSpace(parts[0])
-		if len(parts) != 2 || !internalServiceIDPattern.MatchString(serviceID) || len(parts[1]) < 32 {
-			return nil, fmt.Errorf("invalid provisioning caller configuration")
-		}
-		if _, exists := values[serviceID]; exists {
-			return nil, fmt.Errorf("invalid provisioning caller configuration")
-		}
-		values[serviceID] = parts[1]
+	file, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
 	}
-	return values, nil
+	defer file.Close()
+	openedInfo, err := file.Stat()
+	if err != nil || !os.SameFile(info, openedInfo) {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
+	}
+	raw, err := io.ReadAll(io.LimitReader(file, 4097))
+	if err != nil || len(raw) > 4096 {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
+	}
+	secret := strings.TrimSpace(string(raw))
+	if len(secret) < 16 || strings.IndexFunc(secret, func(character rune) bool {
+		return character == ' ' || character == '\t' || character == '\r' || character == '\n'
+	}) >= 0 {
+		return "", fmt.Errorf("console OIDC client secret file is invalid")
+	}
+	return secret, nil
+}
+
+func parseScopes(raw string) []string {
+	return strings.Fields(strings.ReplaceAll(raw, ",", " "))
 }
 
 // parseTrustedIssuers accepts semicolon-separated source|issuer|audience|jwks_url entries.
@@ -212,9 +249,12 @@ func parseTrustedIssuers(raw string) ([]TrustedIssuer, error) {
 	return result, nil
 }
 
-func validateProvisioning(p Provisioning) error {
+func validateAccessContext(access AccessContext, identity Identity) error {
 	present := 0
-	for _, value := range []bool{p.AgentCiCiBaseURL != "", p.AgentCiCiHMACKey != "", len(p.CallerKeys) > 0} {
+	for _, value := range []bool{
+		access.KeycloakIssuer != "", access.KeycloakAudience != "", access.KeycloakJWKSURL != "",
+		access.KeycloakClientID != "", len(access.AllowedScopes) > 0,
+	} {
 		if value {
 			present++
 		}
@@ -222,14 +262,76 @@ func validateProvisioning(p Provisioning) error {
 	if present == 0 {
 		return nil
 	}
-	if present != 3 || len(p.AgentCiCiHMACKey) < 32 {
-		return fmt.Errorf("controlled provisioning configuration must be complete")
+	if present != 5 {
+		return fmt.Errorf("access context configuration must be complete")
 	}
-	parsed, err := url.Parse(p.AgentCiCiBaseURL)
-	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
-		return fmt.Errorf("invalid AgentCiCi provisioning URL")
+	if !validHTTPSOrLoopbackURL(access.KeycloakIssuer) || !validHTTPSOrLoopbackURL(access.KeycloakJWKSURL) {
+		return fmt.Errorf("invalid Keycloak access context URL")
+	}
+	if identity.Issuer == "" || identity.Audience == "" || identity.Algorithm != "HS256" || len(identity.HMACKey) < 32 {
+		return fmt.Errorf("access context requires complete HS256 identity signing configuration")
+	}
+	if access.TokenTTL < time.Minute || access.TokenTTL > time.Hour {
+		return fmt.Errorf("OACT TTL must be between 1m and 1h")
+	}
+	seen := map[string]struct{}{}
+	for _, scope := range access.AllowedScopes {
+		if !validScope(scope) {
+			return fmt.Errorf("invalid OACT allowed scope")
+		}
+		if _, exists := seen[scope]; exists {
+			return fmt.Errorf("duplicate OACT allowed scope")
+		}
+		seen[scope] = struct{}{}
 	}
 	return nil
+}
+
+func validateConsoleOIDC(oidc ConsoleOIDC, access AccessContext) error {
+	present := 0
+	for _, value := range []string{oidc.ClientID, oidc.ClientSecretFile, oidc.RedirectURI} {
+		if value != "" {
+			present++
+		}
+	}
+	if present == 0 {
+		return nil
+	}
+	if present != 3 || !access.Enabled() {
+		return fmt.Errorf("console OIDC configuration must be complete")
+	}
+	redirect, _ := url.Parse(oidc.RedirectURI)
+	if !validScope(oidc.ClientID) || !validHTTPSOrLoopbackURL(oidc.RedirectURI) ||
+		redirect.Path != "/auth/oidc/callback" ||
+		!strings.HasPrefix(oidc.ClientSecretFile, "/") {
+		return fmt.Errorf("console OIDC configuration is invalid")
+	}
+	return nil
+}
+
+func validScope(scope string) bool {
+	if scope == "" || len(scope) > 128 {
+		return false
+	}
+	for _, character := range scope {
+		if !(character >= 'a' && character <= 'z') &&
+			!(character >= '0' && character <= '9') &&
+			character != '.' && character != ':' && character != '-' && character != '_' {
+			return false
+		}
+	}
+	return true
+}
+
+func validHTTPSOrLoopbackURL(raw string) bool {
+	parsed, err := url.Parse(raw)
+	if err != nil || parsed.Host == "" || parsed.User != nil || parsed.RawQuery != "" || parsed.Fragment != "" {
+		return false
+	}
+	if parsed.Scheme == "https" {
+		return true
+	}
+	return parsed.Scheme == "http" && (parsed.Hostname() == "127.0.0.1" || parsed.Hostname() == "localhost" || parsed.Hostname() == "::1")
 }
 
 func validDatabaseURL(raw string) bool {

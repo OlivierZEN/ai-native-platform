@@ -28,7 +28,7 @@ board_status: active
 
 ## Active Tasks
 
-### TASK-041 - 建立 DEV Autopilot 研发身份投影与角色治理
+### TASK-049 - 建立 DEV Autopilot 研发身份投影与角色治理
 
 - status: `in_progress`
 - priority: `critical`
@@ -75,34 +75,6 @@ board_status: active
 #### Next Action
 
 - 已完成 Principal claim、API/MCP/CLI 回归和生产兼容发布；等待 AgentCiCi 新版上线后，以真实受权机器账户执行 OACT exchange、owner 失效和撤销投影验收。
-
-### TASK-026 - Enforce AgentCiCi-controlled company provisioning
-
-- status: `in_progress`
-- priority: `critical`
-- owner_role: `integration-agent`
-- claimed_by: `project-manager`
-- spec_path: `docs/specs/FEAT-026-agentcici-controlled-company-provisioning.md`
-- depends_on: `TASK-011, TASK-025`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `tenant control-plane provisioning, internal HMAC transport, AgentCiCi reservation contract, database migrations and tests`
-- branch: `agent/go-capability-platform-baseline`
-- pr_url: `n/a`
-
-#### Done When
-
-- Semattice cannot create a company projection without AgentCiCi reserve/complete evidence
-- approved callers, HMAC replay protection, idempotency, conflict recovery and cross-service status are verified
-- production release and smoke evidence are recorded for both projects
-
-#### Next Action
-
-- 本机真实 HTTP 联调已于 2026-07-24 通过：AgentCiCi 创建新组织后调用受控入口，Semattice 反向 reserve/complete 并在独立 PostgreSQL 16 投影 `active` tenant；同一幂等键重试未新增 operation。下一步是按既有发布阻断要求完成 Semattice 生产 migration 13 的专用 migrator 执行与证据，再单独安排线上验收。
-
-#### Handoff Note
-
-- `company_id` remains the AgentCiCi `org_id`; do not alter tenant-internal `organization_id` authorization semantics.
 
 ### TASK-017 - Validate transactional outbox and workers
 
@@ -211,6 +183,35 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-041 - Add Keycloak PKCE login to cloudcc-semattice skill
+
+- status: `done`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-040-skill-keycloak-pkce-login.md`
+- depends_on: `TASK-029, FEAT-028`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/cloudcc-semattice authentication helper and guidance, Keycloak semattice-cli registration, Python tests and project state`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Human CLI login uses Keycloak Authorization Code + S256 PKCE and a loopback callback without collecting passwords.
+- Refresh tokens use the operating-system credential store; only a short OACT and non-sensitive metadata use a user-only local cache.
+- Semattice `/v1/auth/token` mints the current-organization OACT; API calls refresh automatically and never send raw Keycloak tokens to the Capability API.
+- Legacy explicit-token invocation remains compatible, and automated security/refresh/contract tests plus skill validation pass.
+
+#### Next Action
+
+- Completed by TASK-042 and TASK-043: Semattice-owned token exchange, production `semattice-cli` registration and real PKCE/OACT read-only acceptance all passed.
+
+#### Handoff Note
+
+- Version `1.2.1` was the local PKCE implementation milestone. TASK-042 upgraded the final Skill to `1.2.2`, synchronized the local installed copy and removed the AgentCiCi exchange dependency; TASK-043 completed live login. The independent GitHub Skill release/tag remains a separate release action.
 
 ### TASK-039 - Publish Semattice guidance update to CodeUp and GitHub
 
@@ -741,34 +742,6 @@ board_status: active
 #### Handoff Note
 
 - migrations 5/6、十项 Changeset 能力、候选版本新写投影、按对象有界回填、revision 冲突恢复、required/index/unique/reference coverage、predecessor 转换、purge/tombstone 和版本化 service-tier 配额均已在真实 PostgreSQL 16 下通过。通用 worker/outbox 属于 `TASK-017`；最终容量数值属于 `TASK-019`。
-
-### TASK-015 - Benchmark object records and typed indexes
-
-- status: `done`
-- priority: `critical`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-015-record-runtime-and-typed-indexes.md`
-- depends_on: `TASK-012, TASK-013`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `object_record, record_index_*, record_relation, internal/record/**, runtime.record.* API/MCP/CLI, benchmark harness`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 元数据驱动的 create/get/update/delete/query 通过 API、MCP 和无交互 CLI 等价暴露
-- 乐观锁、软删除、类型校验、声明式 typed index、关系约束和受限查询 DSL 在真实 PostgreSQL 16 下通过
-- 1,000,000 记录下的写放大、查询计划、延迟和存储成本有可重复证据；生产容量验收仍留给 TASK-019
-
-#### Next Action
-
-- 已完成；不要在本任务追加对象/字段/记录共享权限或 outbox。分别进入 TASK-016 和 TASK-017 的独立规格。
-
-#### Handoff Note
-
-- 五项 `runtime.record.*` 能力、migration 4、五类 640 typed partitions、durable write idempotency 和真实 bounded query planner 已通过本地 maker 验证。100 万记录为单机物理路径证据；50 并发与 8/16 GiB 容量仍由 TASK-019 验收。
 
 ## 维护规则
 

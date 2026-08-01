@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/OlivierZEN/ai-native-platform/internal/accesscontext"
 	"github.com/OlivierZEN/ai-native-platform/internal/api"
 	"github.com/OlivierZEN/ai-native-platform/internal/authorization"
 	"github.com/OlivierZEN/ai-native-platform/internal/capability"
@@ -24,7 +25,6 @@ import (
 	"github.com/OlivierZEN/ai-native-platform/internal/observability"
 	"github.com/OlivierZEN/ai-native-platform/internal/operations"
 	"github.com/OlivierZEN/ai-native-platform/internal/principal"
-	internalprovisioning "github.com/OlivierZEN/ai-native-platform/internal/provisioning"
 	"github.com/OlivierZEN/ai-native-platform/internal/record"
 	"github.com/OlivierZEN/ai-native-platform/internal/tenant"
 )
@@ -78,8 +78,7 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		poolsToClose = append(poolsToClose, runtimePool)
 		tenantService = tenant.NewService(controlPool, operations.ClaimBoundPort{})
 		consoleReader = consoleapp.NewPostgresReader(runtimePool, controlPool)
-		// Company provisioning is intentionally not a public capability. All new
-		// tenants enter through the AgentCiCi-validated internal route below.
+		// Tenant provisioning is intentionally not a public capability.
 		definitions = append(definitions, tenant.CapabilityDefinitions(tenantService, false)...)
 		metadataService := metadata.NewService(runtimePool, controlPool)
 		definitions = append(definitions, metadata.CapabilityDefinitions(metadataService)...)
@@ -130,22 +129,60 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		if verifier == nil {
 			return writeStartupFailure(out, capability.CodeUnauthenticated, "capability API requires configured identity verification")
 		}
-		if !cfg.Provisioning.Enabled() {
-			return writeStartupFailure(out, capability.CodeValidationFailed, "AgentCiCi-controlled provisioning configuration is required")
-		}
 		if len(cfg.ConsoleSessionKey) < 32 {
 			return writeStartupFailure(out, capability.CodeValidationFailed, "console session configuration is required")
 		}
 		routes := http.NewServeMux()
 		if tenantService == nil {
-			return writeStartupFailure(out, capability.CodeValidationFailed, "controlled provisioning requires application database roles")
+			return writeStartupFailure(out, capability.CodeValidationFailed, "access context requires application database roles")
 		}
-		routes.Handle("/internal/v1/company-provisionings", internalprovisioning.NewHandler(tenantService, cfg.Provisioning))
+		if !cfg.AccessContext.Enabled() {
+			return writeStartupFailure(out, capability.CodeValidationFailed, "Keycloak access context configuration is required")
+		}
+		oidcVerifier, accessErr := identity.NewOIDCVerifier(config.TrustedIssuer{
+			Source: "keycloak",
+			Issuer: cfg.AccessContext.KeycloakIssuer, Audience: cfg.AccessContext.KeycloakAudience,
+			JWKSURL: cfg.AccessContext.KeycloakJWKSURL,
+		}, cfg.AccessContext.KeycloakClientID)
+		if accessErr != nil {
+			return writeStartupFailure(out, capability.CodeValidationFailed, accessErr.Error())
+		}
+		signer, accessErr := identity.NewSigner(cfg.Identity)
+		if accessErr != nil {
+			return writeStartupFailure(out, capability.CodeValidationFailed, accessErr.Error())
+		}
+		routes.Handle("/v1/auth/token", accesscontext.NewHandler(
+			tenantService, oidcVerifier, signer, cfg.AccessContext.AllowedScopes, cfg.AccessContext.TokenTTL,
+		))
 		routes.Handle("/mcp", mcpserver.NewAuthenticatedStreamableHTTPHandler(invoker, verifier.VerifyWithExpiration))
 		if consoleReader == nil {
 			return writeStartupFailure(out, capability.CodeValidationFailed, "console data reader is required")
 		}
-		routes.Handle("/console/", consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey, consoleReader))
+		consoleHandler := consoleapp.NewHandler(verifier, cfg.ConsoleSessionKey, consoleReader)
+		if cfg.ConsoleOIDC.Enabled() {
+			clientSecret, oidcErr := config.ReadSecretFile(cfg.ConsoleOIDC.ClientSecretFile)
+			if oidcErr != nil {
+				return writeStartupFailure(out, capability.CodeValidationFailed, oidcErr.Error())
+			}
+			webVerifier, oidcErr := identity.NewOIDCVerifier(config.TrustedIssuer{
+				Source: "keycloak",
+				Issuer: cfg.AccessContext.KeycloakIssuer, Audience: cfg.AccessContext.KeycloakAudience,
+				JWKSURL: cfg.AccessContext.KeycloakJWKSURL,
+			}, cfg.ConsoleOIDC.ClientID)
+			if oidcErr != nil {
+				return writeStartupFailure(out, capability.CodeValidationFailed, oidcErr.Error())
+			}
+			webLogin, oidcErr := consoleapp.NewOIDCLogin(consoleapp.OIDCConfig{
+				Issuer: cfg.AccessContext.KeycloakIssuer, ClientID: cfg.ConsoleOIDC.ClientID,
+				ClientSecret: clientSecret, RedirectURI: cfg.ConsoleOIDC.RedirectURI,
+			}, webVerifier, tenantService, cfg.ConsoleSessionKey)
+			if oidcErr != nil {
+				return writeStartupFailure(out, capability.CodeValidationFailed, oidcErr.Error())
+			}
+			consoleHandler.EnableOIDC(webLogin)
+			routes.Handle("/auth/oidc/", consoleHandler)
+		}
+		routes.Handle("/console/", consoleHandler)
 		routes.Handle("/", api.NewAuthenticatedHandler(invoker, verifier))
 		return serve(ctx, args[1:], routes, cfg.HTTPListen, logger, out)
 	}

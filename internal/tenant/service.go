@@ -67,29 +67,6 @@ func NewService(pool *pgxpool.Pool, operationsPort operations.Port) *Service {
 	return &Service{pool: pool, operations: operationsPort}
 }
 
-// ProvisionFromVerifiedCompany is the only path used by the HMAC-protected
-// internal provisioning endpoint. Its caller has already obtained a durable
-// AgentCiCi reservation for companyID; it deliberately builds the trusted
-// principal server-side instead of accepting caller-supplied tenant identity.
-func (service *Service) ProvisionFromVerifiedCompany(ctx context.Context, callerID, idempotencyKey string,
-	input ProvisionInput) (TenantStatus, *capability.StableError) {
-	tenantID, err := uuid.Parse(input.TenantID)
-	if err != nil || tenantID == uuid.Nil || callerID == "" || idempotencyKey == "" {
-		return TenantStatus{}, validationError("internal provisioning identity is invalid")
-	}
-	raw, err := json.Marshal(input)
-	if err != nil {
-		return TenantStatus{}, validationError("internal provisioning input is invalid")
-	}
-	actor := capability.Actor{ID: callerID, Scopes: []string{"tenant.provision"}}
-	request := capability.Request{
-		CapabilityID: "tenant.provision", RequestID: "internal:" + idempotencyKey, TenantID: tenantID.String(),
-		Actor: actor, IdempotencyKey: idempotencyKey, Input: raw,
-		Principal: &capability.TrustedPrincipal{TenantID: tenantID.String(), CompanyID: input.CompanyID, Actor: actor, Source: "internal_hmac"},
-	}
-	return service.Provision(ctx, request, input)
-}
-
 func (service *Service) Provision(ctx context.Context, request capability.Request, input ProvisionInput) (TenantStatus, *capability.StableError) {
 	tenantID, stableErr := validateProvisionRequest(request, input)
 	if stableErr != nil {
@@ -336,6 +313,15 @@ func (service *Service) mutate(ctx context.Context, request capability.Request, 
 }
 
 const statusColumns = "tenant_id,company_id,shard_id,tenant_bucket,service_tier,global_lifecycle_status,native_status,tenant_revision,product_revision,route_revision,entitlements,coalesce(last_operation_id,'')"
+
+// ResolveActiveCompany maps a Keycloak Organization alias to an existing
+// Semattice tenant. It never provisions or mutates a tenant.
+func (service *Service) ResolveActiveCompany(ctx context.Context, companyID string) (TenantStatus, bool, error) {
+	if companyID == "" {
+		return TenantStatus{}, false, nil
+	}
+	return queryStatusByIdentity(ctx, service.pool, uuid.Nil, companyID, false)
+}
 
 func queryStatusByIdentity(ctx context.Context, query interface {
 	QueryRow(context.Context, string, ...any) pgx.Row

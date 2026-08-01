@@ -7,8 +7,9 @@ deploy_host="${SEMATTICE_DEPLOY_HOST:?set SEMATTICE_DEPLOY_HOST to the authorize
 deploy_user="${SEMATTICE_DEPLOY_USER:-root}"
 deploy_domain="${SEMATTICE_DEPLOY_DOMAIN:-semattice.agentcici.com}"
 identity_file="${SEMATTICE_DEPLOY_IDENTITY_FILE:-}"
-release="$(date -u +%Y%m%dT%H%M%SZ)-console"
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+commit_sha="$(git -C "$repo_root" rev-parse --verify HEAD)"
+release="$(date -u +%Y%m%dT%H%M%SZ)-web-oidc-${commit_sha:0:12}"
 work_dir="$(mktemp -d "${TMPDIR:-/tmp}/semattice-console-release.XXXXXX")"
 remote_stage="/tmp/semattice-console-${release}"
 
@@ -23,6 +24,10 @@ remote=(ssh "${ssh_options[@]}" "${deploy_user}@${deploy_host}")
 copy_remote=(scp "${ssh_options[@]}")
 
 cd "$repo_root"
+if [[ -n "$(git status --porcelain)" ]]; then
+  printf '%s\n' 'release requires a clean committed worktree' >&2
+  exit 1
+fi
 GOTOOLCHAIN=go1.26.5 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
   go build -trimpath -ldflags='-s -w' -o "$work_dir/semattice" ./cmd/ai-native-platform
 tar -C deploy/semattice/www -czf "$work_dir/console-static.tgz" .
@@ -47,12 +52,18 @@ previous_release="$(readlink -f /opt/semattice/current)"
 
 test -n "$previous_release"
 test -f /etc/semattice/semattice.env
+test -f /etc/semattice/secrets/semattice-web-client-secret
 test -f "$nginx_config"
 test -d "$static_root"
 test ! -e "$release_path"
 actual_sha="$(sha256sum "$stage/semattice" | awk '{print $1}')"
 test "$actual_sha" = "$expected_sha"
 tar -tzf "$stage/console-static.tgz" | grep -Eq '(^|\./)console/index.html$'
+test "$(stat -c '%U:%G %a' /etc/semattice/secrets/semattice-web-client-secret)" = 'root:semattice 640'
+test "$(wc -c < /etc/semattice/secrets/semattice-web-client-secret)" -le 4096
+grep -qx 'AI_NATIVE_CONSOLE_OIDC_CLIENT_ID=semattice-web' /etc/semattice/semattice.env
+grep -qx 'AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE=/etc/semattice/secrets/semattice-web-client-secret' /etc/semattice/semattice.env
+grep -qx 'AI_NATIVE_CONSOLE_OIDC_REDIRECT_URI=https://semattice.agentcici.com/auth/oidc/callback' /etc/semattice/semattice.env
 
 if grep -q '^AI_NATIVE_CONSOLE_SESSION_HMAC_KEY=' /etc/semattice/semattice.env; then
   console_key="$(sed -n 's/^AI_NATIVE_CONSOLE_SESSION_HMAC_KEY=//p' /etc/semattice/semattice.env | tail -n 1)"
@@ -102,6 +113,7 @@ fi
 curl -fsS "https://${domain}/healthz" >/dev/null
 curl -fsS "https://${domain}/console/" | grep -q '管理中心'
 test "$(curl -sS -o /dev/null -w '%{http_code}' "https://${domain}/console/api/overview")" = '401'
+test "$(curl -sS -o /dev/null -w '%{http_code}' "https://${domain}/auth/oidc/login")" = '303'
 rm -rf "$stage"
 REMOTE
 

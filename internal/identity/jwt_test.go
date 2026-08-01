@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -141,6 +142,76 @@ func TestVerifierUsesConfiguredJWKSAndOAuthScopeWithoutPerRequestFetch(t *testin
 	}
 }
 
+func TestOIDCVerifierBindsAudienceClientAndOrganization(t *testing.T) {
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("GenerateKey: %v", err)
+	}
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprintf(writer, `{"keys":[{"kty":"RSA","kid":"keycloak-key","use":"sig","alg":"RS256","n":"%s","e":"%s"}]}`,
+			base64.RawURLEncoding.EncodeToString(privateKey.PublicKey.N.Bytes()),
+			base64.RawURLEncoding.EncodeToString(bigEndian(privateKey.PublicKey.E)))
+	}))
+	defer server.Close()
+	issuerURL := "https://sso.example.test/realms/example"
+	verifier, err := NewOIDCVerifier(config.TrustedIssuer{
+		Source: "keycloak", Issuer: issuerURL, Audience: "semattice-api", JWKSURL: server.URL,
+	}, "semattice-cli")
+	if err != nil {
+		t.Fatalf("NewOIDCVerifier: %v", err)
+	}
+	verifier.issuer.client = server.Client()
+	claims := oidcClaims{
+		AuthorizedParty: "semattice-cli",
+		Organization:    json.RawMessage(`{"org2sva14i4udjmi2t4s":{"id":"organization-uuid"}}`),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer: issuerURL, Subject: "e0dc8f2d-ebdc-4cb3-95f5-cd0ccc46f7d6",
+			Audience: jwt.ClaimStrings{"semattice-api"},
+			IssuedAt: jwt.NewNumericDate(time.Now().Add(-time.Minute)), ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour)),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token.Header["kid"] = "keycloak-key"
+	raw, err := token.SignedString(privateKey)
+	if err != nil {
+		t.Fatalf("SignedString: %v", err)
+	}
+	identity, err := verifier.Verify(context.Background(), raw)
+	if err != nil {
+		t.Fatalf("Verify: %v", err)
+	}
+	if identity.Subject != claims.Subject || len(identity.Organizations) != 1 || identity.Organizations[0] != "org2sva14i4udjmi2t4s" {
+		t.Fatalf("identity=%#v", identity)
+	}
+	claims.AuthorizedParty = "semattice-cli"
+	claims.Nonce = "expected-nonce"
+	claims.Audience = jwt.ClaimStrings{"semattice-cli"}
+	idToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	idToken.Header["kid"] = "keycloak-key"
+	rawIDToken, err := idToken.SignedString(privateKey)
+	if err != nil {
+		t.Fatalf("ID token SignedString: %v", err)
+	}
+	if subject, err := verifier.VerifyIDToken(context.Background(), rawIDToken, "expected-nonce"); err != nil || subject != claims.Subject {
+		t.Fatalf("VerifyIDToken subject=%q err=%v", subject, err)
+	}
+	if _, err := verifier.VerifyIDToken(context.Background(), rawIDToken, "wrong-nonce"); err == nil {
+		t.Fatal("wrong ID token nonce was accepted")
+	}
+	claims.Audience = jwt.ClaimStrings{"semattice-api"}
+	claims.AuthorizedParty = "other-client"
+	wrongClient := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	wrongClient.Header["kid"] = "keycloak-key"
+	raw, err = wrongClient.SignedString(privateKey)
+	if err != nil {
+		t.Fatalf("SignedString: %v", err)
+	}
+	if _, err := verifier.Verify(context.Background(), raw); err == nil {
+		t.Fatal("wrong azp was accepted")
+	}
+}
+
 func TestVerifierRejectsUnconfiguredJWKSIssuer(t *testing.T) {
 	verifier, err := NewVerifier(config.Identity{TrustedIssuers: []config.TrustedIssuer{{
 		Source: "official_context", Issuer: "https://official-context.example.test", Audience: "semattice-api", JWKSURL: "https://keys.example.test/jwks",
@@ -181,7 +252,7 @@ func TestPrincipalClaimsRequireExactHumanOrResponsibleServiceIdentity(t *testing
 	service.PrincipalID = service.Subject
 	service.PrincipalType = "SERVICE"
 	service.OwnerPrincipalID = "33333333-3333-4333-8333-333333333333"
-	service.ClientID = "agentcici-semattice-worker"
+	service.ClientID = "semattice-worker"
 	principal, err = verifier.Verify(context.Background(), signToken(t, service, testIdentityKey))
 	if err != nil || principal.PrincipalType != "SERVICE" || principal.OwnerPrincipalID != service.OwnerPrincipalID || principal.ClientID != service.ClientID {
 		t.Fatalf("service principal=%#v err=%v", principal, err)

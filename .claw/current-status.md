@@ -4,12 +4,12 @@ version: 3
 updated_at: 2026-08-01T13:39:26Z
 updated_by: root
 phase: development-identity-governance
-active_task: "TASK-041"
+active_task: "TASK-049"
 next_action: "实现 FEAT-035 的 Principal 自同步、状态治理和真实控制台投影，并在目标租户建立三类研发身份及角色。"
 read_next:
   goals: true
   decisions: true
-  issue_list: false
+  issue_list: true
   task_board: true
   test_report: true
   devops: false
@@ -19,7 +19,29 @@ read_next:
 
 ## 快照
 
-- TASK-041 / FEAT-035：用户已确认产品总监绑定 AgentCiCi 全局用户 `18611892001`，并授权完成产品总监 HUMAN、产品经理 SERVICE、开发者 SERVICE 的完整研发身份体系。本任务新增可信 OACT 自同步、SERVICE owner 投影、状态治理、真实控制台展示和租户最小权限角色，随后在目标租户完成线上开户与回读。
+- TASK-049 / FEAT-035：用户已确认产品总监绑定 AgentCiCi 全局用户 `18611892001`，并授权完成产品总监 HUMAN、产品经理 SERVICE、开发者 SERVICE 的完整研发身份体系。本任务新增可信 OACT 自同步、SERVICE owner 投影、状态治理、真实控制台展示和租户最小权限角色，随后在目标租户完成线上开户与回读。
+
+- CodeUp `origin/main` 已通过普通快进从`27020e3`发布至`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`，包含网站OIDC、租户名称顶栏、生产发布证据和联系人草稿验证共5个提交；本地HEAD、tracking ref与远端分支回读一致，未使用force push。
+
+- 用户授权的生产元数据写入已完成：当前OACT绑定企业`orgx2x8awt02djpp5xdp`与租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`。`metadata.version.create`创建序号1草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`，`metadata.object.upsert`创建`contact / 联系人`对象`019fb736-c3cb-7e1b-8f98-b93614102672`；`metadata.version.get`回读确认草稿仅含该对象、0字段、0关系。未发布元数据，未创建业务记录或修改授权。
+
+- TASK-048 已完成：提交`ffdbec4fada7aa0169d75dd785bac8607cf927b8`发布为`/opt/semattice/releases/20260731T080337Z-web-oidc-ffdbec4fada7`，二进制SHA-256为`0e31e75dc59487c6bdf02a9eed169f826fa918d2427e3373a304c2584d8f57f0`。四个服务active、健康和匿名负例通过，真实Chrome顶栏精确显示“应用开发组织”且控制台零错误；上一release、Nginx和静态站备份均保留。
+
+- TASK-047 已上线：控制台右上角不再展示Keycloak内部用户UUID，改为展示当前`/console/api/overview`返回的`tenant_name`，缺失名称时回退为“当前租户”；未修改登录Session、Organization映射或后端接口。
+
+- TASK-046 / FEAT-045 已完成：提交`dcf2b811b7ec88d0685938f6d6564c818ba24314`已发布为`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`，二进制SHA-256为`d000e922e0231d39cca9040821bc42cdfa7b96411ad782d5b679bd083db93b87`。现有`semattice-web` Secret只在服务器内写入受保护文件；服务、Nginx、健康与匿名负例、OIDC 303/S256 PKCE均通过。真实Chrome登录成功回到企业管理中心，显示当前租户和退出按钮且浏览器控制台零错误。上一release与环境、Nginx、静态站备份均保留。
+
+- TASK-045 / FEAT-044 已随TASK-046上线：保留`semattice-cli`，新增`semattice-web` confidential OIDC网站登录。`/auth/oidc/login`使用state/nonce/S256 PKCE，回调以client_secret_basic换码并验证access/ID token、subject、唯一Organization和active tenant，成功后只创建最长15分钟且不含Keycloak Token的签名安全Cookie。
+
+- TASK-044 / FEAT-043 已完成：`cloudcc-semattice` `1.3.0` 默认请求当前51项公开Capability所需的全部26个唯一scope，旧v2登录缓存fail closed并要求重新登录；开发副本与本机安装副本一致。生产 `AI_NATIVE_OACT_ALLOWED_SCOPES` 已扩展为同一集合，备份为 `/etc/semattice/semattice.env.backup.20260731T052514Z-all-capability-scopes`。真实PKCE登录返回26个scope；线上能力发现为51项/26个scope且零差异，`tenant.get-status`只读调用成功。scope不替代Principal/RBAC、RLS、审批、幂等或审计，验收未执行业务写操作。
+
+- ISSUE-001 已关闭：当前生产release从同一提交构建，已同时包含真实治理控制台、Semattice CLI自有登录和网站OIDC登录，并完成真实浏览器验收。
+
+- TASK-043 / FEAT-042 已完成：历史独立认证release为`/opt/semattice/releases/20260731T045751Z-standalone-auth`，现已由TASK-046组合release取代并保留回滚。旧AgentCiCi开户环境变量已移除，`semattice-api` audience mapper唯一，Organization scope仍为optional。真实PKCE登录已将`orgx2x8awt02djpp5xdp`映射到active tenant `ce85dabd-68be-503d-9d1b-9b63c536fa78`，短期OACT调用`system.capability.list`返回succeeded / 51项能力。TASK-043完成时allowlist仅开放`system.capability.read`，后续已由TASK-044扩展为全部26个公开能力scope；未创建租户/Principal/RBAC、未改其他Keycloak数据、未发布独立Skill release。
+
+- TASK-042 / FEAT-041 本地实现已完成：Semattice新增 `POST /v1/auth/token`，固定验证 Keycloak RS256 issuer/audience/JWKS、`azp=semattice-cli` 和唯一 Organization alias，再映射 active `tenant_registry.company_id` 并使用 Semattice自有 HS256 identity key签发短期 OACT。Skill/CLI删除 AgentCiCi base URL、公司目录和外部 mint调用，缓存升至 v2；`serve`删除 AgentCiCi开户启动门禁、HMAC路由和 reservation/complete代码。Skill升至 `1.2.2` 并同步本机安装目录。14 项 Python测试、全量 Go race、vet、module/build、技能/YAML/bash/diff/secret检查通过。现有 Keycloak Realm/域名作为基础设施标识保留。
+
+- TASK-041 / FEAT-040 本地实现已完成：`cloudcc-semattice` `1.2.1` 开发副本新增 `semattice login/status/logout/call`，以 Keycloak Authorization Code + S256 PKCE、本机 `127.0.0.1` 动态端口、Organization Scope、系统凭据库 refresh token和 `0600` 短期 OACT 缓存实现人类登录；API 临期或 401 时安全刷新一次，显式 `SEMATTICE_TOKEN` 继续优先。Bearer 请求禁止 redirect，认证错误不输出服务端描述，默认只请求 `system.capability.read`。后续 FEAT-041 已将外部换票替换为 Semattice 自有 `/v1/auth/token`。
 
 - TASK-040 / FEAT-034：已发布 `/opt/semattice/releases/20260731T012059Z-console`。管理中心不再返回内存演示 fixture，而是由已验证 OACT 会话的 tenant context 经 runtime RLS 查询真实数据。目标公司 `org5nszpgj99jaysxv6y` 为 metadata v1 published，真实控制台 API 返回 5 个研发交付对象、37 个有效字段；其 Semattice 本地成员、角色和组织投影均为 0，页面以明确空态展示，绝不再显示 `example.demo` 或“演示环境”。
 

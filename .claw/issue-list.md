@@ -1,8 +1,8 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-07-16T15:34:16Z
-updated_by: ai
+updated_at: 2026-07-31T07:49:52Z
+updated_by: root after verifying combined production release
 ---
 
 # 问题追踪列表
@@ -15,11 +15,15 @@ updated_by: ai
 ## 活跃问题
 
 - 暂无活跃问题。
-- 新增问题时，至少记录 `ISSUE-xxx`、严重级别、状态、证据、根因状态和下一步动作。
 
 ## 已解决问题
 
-- 暂无已解决问题。
+### ISSUE-001 - 当前生产 release 尚未包含合并后的控制台与登录组合
+
+- severity: `medium`
+- status: `closed`
+- resolution: 提交`dcf2b811b7ec88d0685938f6d6564c818ba24314`构建并发布为`/opt/semattice/releases/20260731T074549Z-web-oidc-dcf2b811b7ec`，同一制品同时包含真实治理控制台、Semattice CLI自有登录和网站OIDC登录。
+- evidence: 服务、健康、匿名负例、OIDC 303/S256 PKCE参数与真实Chrome登录均通过；登录后回到`/console/`并显示当前租户和退出按钮，浏览器控制台错误数为0。
 
 ## 维护规则
 

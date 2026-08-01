@@ -10,6 +10,7 @@ import (
 	"math/big"
 	"net/http"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -33,6 +34,29 @@ type Claims struct {
 	Scope            string   `json:"scope"`
 	Approvals        []string `json:"approvals,omitempty"`
 	jwt.RegisteredClaims
+}
+
+type OIDCIdentity struct {
+	Subject       string
+	Organizations []string
+}
+
+type oidcClaims struct {
+	AuthorizedParty string          `json:"azp"`
+	Nonce           string          `json:"nonce"`
+	Organization    json.RawMessage `json:"organization"`
+	jwt.RegisteredClaims
+}
+
+type OIDCVerifier struct {
+	issuer   *jwksIssuer
+	clientID string
+}
+
+type Signer struct {
+	issuer   string
+	audience string
+	key      []byte
 }
 
 func (claims Claims) effectiveScopes() []string {
@@ -83,9 +107,144 @@ func NewVerifier(cfg config.Identity) (*Verifier, error) {
 	return verifier, nil
 }
 
+func NewOIDCVerifier(source config.TrustedIssuer, clientID string) (*OIDCVerifier, error) {
+	if source.Issuer == "" || source.Audience == "" || source.JWKSURL == "" || strings.TrimSpace(clientID) == "" {
+		return nil, fmt.Errorf("OIDC verifier configuration is incomplete")
+	}
+	return &OIDCVerifier{
+		issuer:   &jwksIssuer{source: source, client: &http.Client{Timeout: 5 * time.Second}},
+		clientID: strings.TrimSpace(clientID),
+	}, nil
+}
+
+func NewSigner(cfg config.Identity) (*Signer, error) {
+	if cfg.Issuer == "" || cfg.Audience == "" || cfg.Algorithm != "HS256" || len(cfg.HMACKey) < 32 {
+		return nil, fmt.Errorf("identity signer configuration is incomplete")
+	}
+	return &Signer{issuer: cfg.Issuer, audience: cfg.Audience, key: []byte(cfg.HMACKey)}, nil
+}
+
 func (verifier *Verifier) Verify(ctx context.Context, rawToken string) (capability.TrustedPrincipal, error) {
 	principal, _, err := verifier.VerifyWithExpiration(ctx, rawToken)
 	return principal, err
+}
+
+func (verifier *OIDCVerifier) Verify(ctx context.Context, rawToken string) (OIDCIdentity, error) {
+	identity, _, err := verifier.VerifyWithExpiration(ctx, rawToken)
+	return identity, err
+}
+
+func (verifier *OIDCVerifier) VerifyWithExpiration(ctx context.Context, rawToken string) (OIDCIdentity, time.Time, error) {
+	if strings.TrimSpace(rawToken) == "" {
+		return OIDCIdentity{}, time.Time{}, fmt.Errorf("OIDC token is required")
+	}
+	claims := &oidcClaims{}
+	token, err := verifier.parseOIDCToken(ctx, rawToken, claims,
+		jwt.WithAudience(verifier.issuer.source.Audience), jwt.WithExpirationRequired(), jwt.WithIssuedAt())
+	if err != nil || token == nil || !token.Valid || claims.AuthorizedParty != verifier.clientID {
+		return OIDCIdentity{}, time.Time{}, fmt.Errorf("OIDC token is invalid")
+	}
+	subject, parseErr := uuid.Parse(claims.Subject)
+	organizations, organizationErr := organizationAliases(claims.Organization)
+	if parseErr != nil || subject == uuid.Nil || organizationErr != nil || len(organizations) == 0 ||
+		claims.ExpiresAt == nil || claims.IssuedAt == nil {
+		return OIDCIdentity{}, time.Time{}, fmt.Errorf("OIDC claims are incomplete")
+	}
+	return OIDCIdentity{Subject: subject.String(), Organizations: organizations}, claims.ExpiresAt.Time, nil
+}
+
+func (verifier *OIDCVerifier) VerifyIDToken(ctx context.Context, rawToken, expectedNonce string) (string, error) {
+	if strings.TrimSpace(rawToken) == "" || strings.TrimSpace(expectedNonce) == "" {
+		return "", fmt.Errorf("OIDC ID token is required")
+	}
+	claims := &oidcClaims{}
+	token, err := verifier.parseOIDCToken(ctx, rawToken, claims,
+		jwt.WithAudience(verifier.clientID), jwt.WithExpirationRequired(), jwt.WithIssuedAt())
+	if err != nil || token == nil || !token.Valid || claims.Nonce != expectedNonce ||
+		(claims.AuthorizedParty != "" && claims.AuthorizedParty != verifier.clientID) {
+		return "", fmt.Errorf("OIDC ID token is invalid")
+	}
+	subject, err := uuid.Parse(claims.Subject)
+	if err != nil || subject == uuid.Nil || claims.ExpiresAt == nil || claims.IssuedAt == nil {
+		return "", fmt.Errorf("OIDC ID token claims are incomplete")
+	}
+	return subject.String(), nil
+}
+
+func (verifier *OIDCVerifier) parseOIDCToken(ctx context.Context, rawToken string, claims jwt.Claims, options ...jwt.ParserOption) (*jwt.Token, error) {
+	options = append([]jwt.ParserOption{
+		jwt.WithValidMethods([]string{"RS256"}),
+		jwt.WithIssuer(verifier.issuer.source.Issuer),
+	}, options...)
+	return jwt.ParseWithClaims(rawToken, claims, func(token *jwt.Token) (any, error) {
+		if token.Method.Alg() != "RS256" {
+			return nil, fmt.Errorf("unexpected signing algorithm")
+		}
+		keyID, _ := token.Header["kid"].(string)
+		if keyID == "" {
+			return nil, fmt.Errorf("key id is required")
+		}
+		return verifier.issuer.key(ctx, keyID)
+	}, options...)
+}
+
+func organizationAliases(raw json.RawMessage) ([]string, error) {
+	var aliases []string
+	var object map[string]json.RawMessage
+	if json.Unmarshal(raw, &object) == nil && object != nil {
+		for alias := range object {
+			aliases = append(aliases, alias)
+		}
+	} else {
+		var list []string
+		if json.Unmarshal(raw, &list) == nil {
+			aliases = append(aliases, list...)
+		} else {
+			var single string
+			if json.Unmarshal(raw, &single) != nil {
+				return nil, fmt.Errorf("organization claim is invalid")
+			}
+			aliases = append(aliases, single)
+		}
+	}
+	seen := map[string]struct{}{}
+	result := make([]string, 0, len(aliases))
+	for _, alias := range aliases {
+		if !companyIDPattern.MatchString(alias) {
+			return nil, fmt.Errorf("organization alias is invalid")
+		}
+		if _, exists := seen[alias]; exists {
+			continue
+		}
+		seen[alias] = struct{}{}
+		result = append(result, alias)
+	}
+	sort.Strings(result)
+	return result, nil
+}
+
+func (signer *Signer) SignHuman(subject, tenantID, companyID string, scopes []string, now time.Time, ttl time.Duration) (string, time.Time, error) {
+	principalID, principalErr := uuid.Parse(subject)
+	parsedTenantID, tenantErr := uuid.Parse(tenantID)
+	if principalErr != nil || principalID == uuid.Nil || tenantErr != nil || parsedTenantID == uuid.Nil ||
+		!companyIDPattern.MatchString(companyID) || len(scopes) == 0 || ttl <= 0 {
+		return "", time.Time{}, fmt.Errorf("OACT claims are invalid")
+	}
+	expiresAt := now.UTC().Add(ttl)
+	claims := Claims{
+		TenantID: tenantID, CompanyID: companyID, PrincipalID: subject, PrincipalType: "HUMAN",
+		Scopes: append([]string(nil), scopes...),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer: signer.issuer, Subject: subject, Audience: jwt.ClaimStrings{signer.audience},
+			ExpiresAt: jwt.NewNumericDate(expiresAt), NotBefore: jwt.NewNumericDate(now.UTC().Add(-5 * time.Second)),
+			IssuedAt: jwt.NewNumericDate(now.UTC()), ID: uuid.NewString(),
+		},
+	}
+	rawToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString(signer.key)
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("sign OACT")
+	}
+	return rawToken, expiresAt, nil
 }
 
 // VerifyWithExpiration validates locally against the configured HMAC key or a

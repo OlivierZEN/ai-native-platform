@@ -4,7 +4,7 @@ feature_id: FEAT-035
 title: 研发身份投影、负责人关系与租户角色治理
 status: approved
 owner_role: integration-agent
-task_ids: TASK-041
+task_ids: TASK-049
 related_decisions: ADR-012, FEAT-033
 related_issues: none
 updated_at: 2026-08-01T13:39:26Z
@@ -83,4 +83,4 @@ FEAT-033 已验证 OACT 的 HUMAN/SERVICE claims，但当前 `principal_projecti
 
 ## 实现进展
 
-- 已完成现状审计和规格批准，等待 TASK-041 实现与生产开户。
+- 已完成现状审计和规格批准，等待 TASK-049 实现与生产开户。
