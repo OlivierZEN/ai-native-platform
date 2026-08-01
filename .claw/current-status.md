@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T01:30:00Z
+updated_at: 2026-08-01T13:39:26Z
 updated_by: root
-phase: cross-product-identity-live
-active_task: "TASK-033"
-next_action: "等待 AgentCiCi 新版上线后，以真实受权机器账户执行 OACT exchange、owner 失效和撤销投影验收。"
+phase: development-identity-governance
+active_task: "TASK-041"
+next_action: "实现 FEAT-035 的 Principal 自同步、状态治理和真实控制台投影，并在目标租户建立三类研发身份及角色。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-041 / FEAT-035：用户已确认产品总监绑定 AgentCiCi 全局用户 `18611892001`，并授权完成产品总监 HUMAN、产品经理 SERVICE、开发者 SERVICE 的完整研发身份体系。本任务新增可信 OACT 自同步、SERVICE owner 投影、状态治理、真实控制台展示和租户最小权限角色，随后在目标租户完成线上开户与回读。
 
 - TASK-040 / FEAT-034：已发布 `/opt/semattice/releases/20260731T012059Z-console`。管理中心不再返回内存演示 fixture，而是由已验证 OACT 会话的 tenant context 经 runtime RLS 查询真实数据。目标公司 `org5nszpgj99jaysxv6y` 为 metadata v1 published，真实控制台 API 返回 5 个研发交付对象、37 个有效字段；其 Semattice 本地成员、角色和组织投影均为 0，页面以明确空态展示，绝不再显示 `example.demo` 或“演示环境”。
 

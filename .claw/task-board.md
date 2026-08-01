@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T01:30:00Z
-updated_by: root after TASK-040 production verification
+updated_at: 2026-08-01T13:39:26Z
+updated_by: root
 board_status: active
 ---
 
@@ -27,6 +27,30 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-041 - 建立 DEV Autopilot 研发身份投影与角色治理
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-035-governed-development-principal-projection.md`
+- depends_on: `TASK-033, AgentCiCi TASK-262`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `identity projection capabilities, migration 0017, console reader, tests and production role bootstrap`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- HUMAN/SERVICE OACT can safely self-project without caller-supplied identity claims.
+- Product director, product manager and developer projections, owner relation and least-privilege roles exist in the target tenant.
+- Console shows the three real identities and no demo governance identities.
+
+#### Next Action
+
+- Implement migration, identity capabilities, console projection and tests; publish and bootstrap the target tenant.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 

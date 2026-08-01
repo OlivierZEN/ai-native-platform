@@ -23,6 +23,7 @@ import (
 	"github.com/OlivierZEN/ai-native-platform/internal/metering"
 	"github.com/OlivierZEN/ai-native-platform/internal/observability"
 	"github.com/OlivierZEN/ai-native-platform/internal/operations"
+	"github.com/OlivierZEN/ai-native-platform/internal/principal"
 	internalprovisioning "github.com/OlivierZEN/ai-native-platform/internal/provisioning"
 	"github.com/OlivierZEN/ai-native-platform/internal/record"
 	"github.com/OlivierZEN/ai-native-platform/internal/tenant"
@@ -88,6 +89,8 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		definitions = append(definitions, record.CapabilityDefinitions(recordService)...)
 		authorizationService := authorization.NewService(runtimePool, controlPool)
 		definitions = append(definitions, authorization.CapabilityDefinitions(authorizationService)...)
+		principalService := principal.NewService(runtimePool, controlPool)
+		definitions = append(definitions, principal.CapabilityDefinitions(principalService)...)
 	}
 	defer func() {
 		for index := len(poolsToClose) - 1; index >= 0; index-- {

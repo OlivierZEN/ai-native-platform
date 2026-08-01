@@ -144,26 +144,33 @@ func (reader *PostgresReader) recentAudit(ctx context.Context, tx pgx.Tx) []map[
 func (reader *PostgresReader) members(ctx context.Context, tx pgx.Tx, tenant tenantProjection) (any, error) {
 	result := base(tenant)
 	rows, err := tx.Query(ctx, `
-		select p.principal_id,
+		select coalesce(nullif(p.display_name,''),p.principal_id),
+		       case when p.principal_type='service' then coalesce(nullif(p.client_id,''),'机器主体')
+		            else coalesce(nullif(p.public_id,''),'AgentCiCi 全局账号') end,
 		       coalesce(string_agg(distinct r.name, ' · '), '未分配角色'),
-		       coalesce(max(o.name), '未分配组织'), p.status
+		       coalesce(max(o.name), '未分配组织'), p.status,
+		       case when p.principal_type='service'
+		            then coalesce(max(nullif(owner.display_name,'')),p.owner_principal_id,'未绑定负责人')
+		            else '本人' end
 		from principal_projection p
+		left join principal_projection owner on owner.principal_id=p.owner_principal_id
 		left join principal_role_assignment a on a.principal_id=p.principal_id and a.assignment_state='active'
 		left join authorization_role r on r.role_id=a.role_id and r.lifecycle_state='active'
 		left join principal_org_membership m on m.principal_id=p.principal_id and m.membership_state='active' and m.is_primary
 		left join organization_node o on o.organization_id=m.organization_id
-		group by p.principal_id,p.status order by p.principal_id`)
+		group by p.principal_id,p.principal_type,p.display_name,p.public_id,p.client_id,p.owner_principal_id,p.status
+		order by p.created_at,p.principal_id`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 	members := make([]map[string]any, 0)
 	for rows.Next() {
-		var principalID, role, organization, status string
-		if err := rows.Scan(&principalID, &role, &organization, &status); err != nil {
+		var name, account, role, organization, status, owner string
+		if err := rows.Scan(&name, &account, &role, &organization, &status, &owner); err != nil {
 			return nil, err
 		}
-		members = append(members, map[string]any{"name": principalID, "account": "已投影 Principal", "role": role, "organization": organization, "status": status})
+		members = append(members, map[string]any{"name": name, "account": account, "role": role, "organization": organization, "status": status, "owner": owner})
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
