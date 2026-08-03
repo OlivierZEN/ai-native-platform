@@ -1,7 +1,7 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-08-01T15:46:00Z
+updated_at: 2026-08-03T05:02:04Z
 updated_by: root
 archive_status: active
 ---
@@ -11,6 +11,13 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-013 - Design the metadata core model
+
+- status: `done`
+- owner_role: `backend-agent`
+- spec_path: `docs/specs/FEAT-013-metadata-core-model.md`
+- handoff: UUIDv7 元数据版本、对象、字段、关系、draft-only 变更、批准发布、发布后不可变、确定性 snapshot/digest、FORCE RLS 和六能力三入口 parity 已完成；后续 Changeset 治理由 TASK-014 承接。
 
 ### TASK-014 - Validate the Changeset publisher
 

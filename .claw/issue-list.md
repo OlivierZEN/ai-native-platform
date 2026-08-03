@@ -1,7 +1,7 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-08-03T04:52:46Z
+updated_at: 2026-08-03T05:02:04Z
 updated_by: root
 ---
 
@@ -14,16 +14,17 @@ updated_by: root
 
 ## 活跃问题
 
+- 暂无活跃问题。
+
+## 已解决问题
+
 ### ISSUE-002 - 管理中心成员与角色接口返回 500
 
 - severity: `high`
-- status: `in_progress`
+- status: `closed`
 - root_cause: `verified` — `internal/console/reader.go` 的成员聚合查询按未加入 GROUP BY 的 `p.created_at` 排序，PostgreSQL 拒绝执行。
-- impact: 目标租户成员与角色数据实际存在，但 `/console/api/members` 只能返回通用错误；概览、组织架构和对象字段不受影响。
-- evidence: 生产访问日志连续记录 members=500；相同租户上下文只读执行返回 `column "p.created_at" must appear in the GROUP BY clause`，补充分组字段后可读取三名主体和三个角色。
-- remediation: TASK-050 修正 SQL、补真实 PostgreSQL reader 回归测试并发布生产。
-
-## 已解决问题
+- resolution: TASK-050 将 `p.created_at` 纳入 GROUP BY，新增真实 PostgreSQL reader 回归测试，并发布 release `20260803T045726Z-web-oidc-2b29dc5efb47`。
+- evidence: PostgreSQL 16 全量集成通过；生产 HTTPS members=200，返回三名研发主体与三个角色；概览、组织、对象、匿名 401、服务健康和 warning 日志均通过。
 
 ### ISSUE-001 - 当前生产 release 尚未包含合并后的控制台与登录组合
 

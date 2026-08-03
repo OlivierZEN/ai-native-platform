@@ -1,21 +1,24 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-03T04:56:06Z
+updated_at: 2026-08-03T05:02:04Z
 updated_by: root
-last_run_at: 2026-08-03T04:56:06Z
+last_run_at: 2026-08-03T05:02:04Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-## 2026-08-03 TASK-050 成员与角色查询本地验证
+## 2026-08-03 TASK-050 成员与角色查询及生产发布验证
 
 - 生产只读复现确认原 SQL 因 `p.created_at` 未加入 GROUP BY 而失败；修正后同租户可返回三名研发主体和三个角色。
 - 新增真实 PostgreSQL reader 回归测试，覆盖 control 租户解析、runtime TenantContext/RLS、成员聚合结果与角色查询；旧 SQL 会在该测试中返回数据库错误。
 - `./scripts/test-postgres.sh run`：PostgreSQL 16 全仓库集成测试通过，`internal/console` 用时 8.781s。
 - `GOTOOLCHAIN=go1.26.5 go vet ./...`、`go mod verify`、`CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath`和`git diff --check`：通过。
-- 验证构建 SHA-256 为 `08b654e8cfceca3c31b5dc446ed8bd5a6c7b587127f004a75922ff03fc705c68`；生产发布证据待 release 完成后补充。
+- 验证构建 SHA-256 为 `08b654e8cfceca3c31b5dc446ed8bd5a6c7b587127f004a75922ff03fc705c68`。
+- 提交 `2b29dc5efb47` 已发布为 `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`；线上二进制 SHA-256 为 `36fbd1451d211865599ba6e0b0bcbb0d0de435cd35fddf57505f80e09bbb4749`。
+- Semattice、Nginx、PostgreSQL 16、Keycloak 均 active，Nginx 配置有效，健康 200，匿名 members=401，发布后 Semattice warning 日志为空。
+- 服务器内使用受保护会话密钥生成未输出、未落盘的 5 分钟租户只读烟测会话；HTTPS members=200，精确返回三名研发主体和三个角色。overview 为 members=3、roles=3、organizations=1、objects=5、fields=42；organizations 和 objects 接口同时通过。
 
 ## 2026-08-01 TASK-049 DEV Autopilot 研发身份与 PDP 生产验收
 

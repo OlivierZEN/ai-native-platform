@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-03T04:56:06Z
+updated_at: 2026-08-03T05:02:04Z
 updated_by: root
 board_status: active
 ---
@@ -27,29 +27,6 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
-
-### TASK-050 - 修复管理中心成员与角色查询
-
-- status: `in_progress`
-- priority: `high`
-- owner_role: `fullstack-agent`
-- claimed_by: `root`
-- spec_path: `none`
-- depends_on: `TASK-049`
-- blocked_by: `none`
-- related_issues: `ISSUE-002`
-- scope_files: `internal/console/reader.go, internal/console/reader_test.go, project state and production release evidence`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- PostgreSQL 成员聚合查询不再违反 GROUP BY 规则，真实 reader 回归测试可捕获该错误。
-- 生产 `/console/api/members` 返回三类研发身份和三个角色，服务、健康、匿名负例与其他控制台接口无回归。
-
-#### Next Action
-
-- 本地实现与验证通过；提交并发布不可变 release，随后执行真实登录会话验收。
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
@@ -182,6 +159,29 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-050 - 修复管理中心成员与角色查询
+
+- status: `done`
+- priority: `high`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-049`
+- blocked_by: `none`
+- related_issues: `ISSUE-002`
+- scope_files: `internal/console/reader.go, internal/console/reader_test.go, project state and production release evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- PostgreSQL 成员聚合查询不再违反 GROUP BY 规则，真实 reader 回归测试可捕获该错误。
+- 生产 `/console/api/members` 返回三类研发身份和三个角色，服务、健康、匿名负例与其他控制台接口无回归。
+
+#### Next Action
+
+- 已发布并通过生产验收；常规监控。
 
 ### TASK-049 - 建立 DEV Autopilot 研发身份投影与角色治理
 
@@ -710,33 +710,6 @@ board_status: active
 #### Handoff Note
 
 - PoC 使用绑定 127.0.0.1 的专用临时 PostgreSQL 16.13；未连接生产/共享数据库，未执行 HA、备份或恢复。
-
-### TASK-013 - Design the metadata core model
-
-- status: `done`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-013-metadata-core-model.md`
-- depends_on: `TASK-010`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `metadata version, object, field, relation, immutable publication, snapshot, API/MCP/CLI`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- UUIDv7 元数据版本、对象、字段和关系模型具有同租户/同版本复合约束及 FORCE RLS
-- draft-only 变更、批准发布、发布后不可变、确定性 snapshot/digest 与六能力三入口 parity 测试通过
-
-#### Next Action
-
-- 已完成；`TASK-014` 已在此不可变元数据版本之上实现 Changeset 治理，后续任务继续保持本任务核心约束。
-
-#### Handoff Note
-
-- 元数据 CRUD/publish 始终使用严格 `ai_native_runtime` TenantContext；只有路由解析使用独立 control pool。跨租户、跨版本和已发布修改均 fail closed。
 
 ## 维护规则
 

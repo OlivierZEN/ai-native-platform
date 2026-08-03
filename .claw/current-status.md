@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-03T04:56:06Z
+updated_at: 2026-08-03T05:02:04Z
 updated_by: root
-phase: console-members-query-hotfix
-active_task: "TASK-050"
-next_action: "本地修复与 PostgreSQL 全量集成验证通过；提交可发布版本并原子发布生产。"
+phase: console-members-query-hotfix-complete
+active_task: "none"
+next_action: "TASK-050 已完成；监控成员与角色接口及 release 运行状态。"
 read_next:
   goals: true
   decisions: true
@@ -19,7 +19,7 @@ read_next:
 
 ## 快照
 
-- TASK-050 / ISSUE-002：生产 `/console/api/members` 因聚合查询按未分组的 `p.created_at` 排序而返回 500；已把 `p.created_at` 纳入分组并新增真实 PostgreSQL reader 回归测试。PostgreSQL 16 全量集成、vet、module verify 和 Linux/amd64 构建通过，等待提交并发布不可变 release。
+- TASK-050 / ISSUE-002 已完成：`p.created_at` 已纳入成员聚合分组，并新增真实 PostgreSQL reader 回归测试。release `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47` 已上线；生产 HTTPS members=200，精确返回三名研发主体和三个角色，概览为 3 members / 3 roles / 1 organization / 5 objects / 42 fields，服务及发布后 warning 日志正常。
 
 - TASK-049 / FEAT-035：已完成目标租户研发身份与强制授权治理。产品总监 HUMAN 绑定 AgentCiCi 全局用户 `18611892001`；产品经理和开发者 SERVICE 均投影其 owner，三者状态 active 且分别绑定“产品总监 / 产品经理 / 开发者”角色。活动元数据版本 `019fbde4-76cf-73d9-b36a-324692b10d05` 为 5 个对象、42 个字段，5 个对象策略全部 enforced，三类主体均有研发交付部 primary membership。独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下的开发者投影暂停会阻断 CLI，自恢复被禁止；人类管理员恢复后 CLI 成功，审计记录两次状态写入。JWKS 私网/公网路径与固定 issuer 配置已上线，生产服务 active。
 

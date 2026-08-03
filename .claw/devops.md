@@ -10,7 +10,7 @@ verification_status: passed
 
 ## 2026-08-01 TASK-049 研发身份治理生产基线
 
-- 当前 release 为 `/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2`，migration 17 已应用；源码中的私网 JWKS 路由修复为 `4f5580a` 并已推送 GitHub/CodeUp。
+- 当前 release 为 `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`，二进制 SHA-256 为 `36fbd1451d211865599ba6e0b0bcbb0d0de435cd35fddf57505f80e09bbb4749`；migration 17 已应用。该 release 修复控制台 members 聚合排序并保留此前的 Principal/JWKS 能力。
 - 目标 tenant `cbcb9ad2-1ac1-50b2-a833-605884b566c1` 对应 company `org5nszpgj99jaysxv6y`；活动 metadata `019fbde4-76cf-73d9-b36a-324692b10d05` 固定为 5 objects / 42 fields。
 - OACT verifier 的 JWKS 配置使用 `https://semattice.agentcici.com/.well-known/agentcici-oact-jwks.json`，Nginx 将其 301 到固定 AgentCiCi JWKS；服务端仍只信任配置的 issuer/audience/JWKS，不信任 token 自带地址。
 - 研发交付部 organization ID 为 `8ed52e19-be8e-492a-bea7-ab1b2adba0b2`；三类 Principal 均有 active primary membership，5 个研发对象授权策略均为 enforced/private。
@@ -60,7 +60,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 2026-07-31 TASK-040 真实租户治理控制台曾发布为 `/opt/semattice/releases/20260731T012059Z-console`。发布脚本交叉编译 Linux amd64 二进制、校验 SHA-256、原子切换 `/opt/semattice/current` 并保留上一 release / 静态站备份。控制台已不再使用内存 fixture；OACT 会话经 runtime RLS 读取真实租户 published metadata、RBAC、组织和审计。该版本线上验证为 active、Nginx valid、edge health 200、匿名治理 API 401；目标研发交付公司读取为 metadata v1 / 5 objects / 37 active fields，本地成员、角色和组织投影均为 0。
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- 当前 release 目录：`/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2`；当前链接：`/opt/semattice/current`。该 release 包含 migration 17 的受治理 Principal 投影、控制台身份/角色读取和固定 JWKS 验签；旧 release 继续保留为原子回滚点。
+- 当前 release 目录：`/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`；当前链接：`/opt/semattice/current`。该 release 包含 migration 17 的受治理 Principal 投影、控制台身份/角色读取、members 聚合排序修复和固定 JWKS 验签；旧 release 继续保留为原子回滚点。
 - 网站OIDC环境备份为`/etc/semattice/semattice.env.backup.20260731T074537Z-before-web-oidc`；Nginx与静态站使用同一release标识创建发布前备份。Keycloak `semattice-cli` client历史备份仍为`/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - `semattice-web`是confidential server-side client。现有Client Secret仅保存于`/etc/semattice/secrets/semattice-web-client-secret`，Secret目录必须为`root:semattice 0750`，文件为`root:semattice 0640`；环境仅以`AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE`引用该文件，不得把Secret写入env、日志、仓库或浏览器。
 - 网站登录入口为`GET /auth/oidc/login`，callback为`https://semattice.agentcici.com/auth/oidc/callback`。登录使用Authorization Code + S256 PKCE、state和nonce；成功后只创建最长15分钟的`Secure; HttpOnly; SameSite=Lax`签名Session Cookie，不在Cookie中保存Keycloak Token。真实Chrome登录已验证回到`/console/`并显示当前租户和退出按钮。
