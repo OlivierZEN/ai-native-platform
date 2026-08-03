@@ -1,8 +1,8 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-07-31T10:35:02Z
-updated_by: root after deploying the fieldless object console fix
+updated_at: 2026-08-03T01:46:01Z
+updated_by: root after merged production rollout
 ---
 
 # 问题追踪列表
@@ -21,7 +21,15 @@ updated_by: root after deploying the fieldless object console fix
 - root_cause: `verified`；reader仅为存在字段的对象填充`fieldsByObject`，零字段对象取得nil slice并编码为JSON `null`，前端直接访问`item.fields.length`。
 - impact: 已发布元数据本身正确，但当前租户的“对象与字段”页面无法渲染。
 - fix: TASK-050 将后端空集合规范化为`[]`，并为前端与零字段场景补防御和回归测试。
-- verification: 修复制品已上线且服务/静态契约smoke通过；待用户完成Keycloak登录后执行真实页面验收，再转为`verified`。
+- verification: 合并修复制品 `20260803T013913Z-web-oidc-df308b1b981f` 已上线，服务、静态契约、正式 Capability API 和零错误日志 smoke 通过；真实 Chrome 刷新后旧 Session 已失效并停在 Keycloak 登录页，待用户登录后执行页面验收再转为 `verified`。
+
+### ISSUE-003 - 人类 CLI 换票 allowlist 未包含新增 Principal 自同步 scope
+
+- severity: `medium`
+- status: `open`
+- root_cause: `verified`；合并后的线上注册表发布 54 项 Capability、27 个唯一 `required_scope`，但生产 `AI_NATIVE_OACT_ALLOWED_SCOPES` 与当前技能登录默认值仍保留此前 51 项能力对应的 26 个 scope。
+- impact: 正式服务主体 OACT、既有治理投影和其他 53 项能力不受影响；通过 `semattice-cli` 人类登录换取的 OACT 不能调用 `identity.principal.sync`。
+- next_action: 取得明确权限扩展授权后，同步更新生产 allowlist、技能默认 scope/目录与版本，并以人类 PKCE 登录和 Principal 自同步做正负验收。
 
 ## 已解决问题
 

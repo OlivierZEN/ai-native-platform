@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-03T01:19:37Z
-updated_by: root after merged-main regression validation
-phase: merged-identity-governance-verified
+updated_at: 2026-08-03T01:48:58Z
+updated_by: root after merged production rollout and remote publication observation
+phase: merged-production-live-browser-login-pending
 active_task: "TASK-050"
-next_action: "后续以新 release 同时恢复手动元数据发布、零字段控制台修复和研发身份治理，再完成真实 Chrome 验收。"
+next_action: "等待用户在保留的 Keycloak 页面完成登录，再复核联系人和大书包对象页并关闭 ISSUE-002；ISSUE-003 的 scope 扩展需单独授权。"
 read_next:
   goals: true
   decisions: true
@@ -19,13 +19,15 @@ read_next:
 
 ## 快照
 
-- TASK-050 / ISSUE-002 修复提交`36e1c0a32b2ed0e00755a6b2fd857969868e586c`已发布为`/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e`，二进制SHA-256为`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`。四项服务active、Nginx和健康/匿名负例通过、错误日志为0，线上静态契约包含新归一逻辑。真实Chrome旧Session已过期，Keycloak未保留前台SSO，页面已交回用户登录；登录后仍需最终点击验收。
+- TASK-050 / ISSUE-002 已随合并提交 `dba665e` 和迁移校验和兼容修复 `df308b1` 发布为 `/opt/semattice/releases/20260803T013913Z-web-oidc-df308b1b981f`，二进制 SHA-256 为 `4fb9abdd5b05c170b2a637b19741d1c2e08c5cf1c6dde0977c1514c10c316a03`。四项服务 active、Nginx、健康/匿名负例、54 项能力、migration 17、JWKS 和零错误日志均通过，线上静态契约包含 `fields` 数组归一逻辑。真实 Chrome 刷新后确认旧 Session 已失效并停在 Keycloak 登录页；用户登录后仍需最终页面验收。
 
 - TASK-051 / FEAT-035：已完成目标租户研发身份与强制授权治理。产品总监 HUMAN 绑定 AgentCiCi 全局用户 `18611892001`；产品经理和开发者 SERVICE 均投影其 owner，三者状态 active 且分别绑定“产品总监 / 产品经理 / 开发者”角色。活动元数据版本 `019fbde4-76cf-73d9-b36a-324692b10d05` 为 5 个对象、42 个字段，5 个对象策略全部 enforced，三类主体均有研发交付部 primary membership。独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下的开发者投影暂停会阻断 CLI，自恢复被禁止；人类管理员恢复后 CLI 成功，审计记录两次状态写入。JWKS 私网/公网路径与固定 issuer 配置已上线，生产服务 active。
 
-- 本地 `main` 已合并手动元数据发布、零字段控制台修复与研发身份治理三条提交线，并通过全量 race、vet、module、Linux 构建和状态校验；当前生产 release `20fe64e` 不包含提交 `34023d0` 和 `36e1c0a`，后续需从合并提交构建新 release 后再执行联合生产验收。
+- 手动元数据发布、零字段控制台修复与研发身份治理三条提交线现已由同一 `df308b1` 生产 release 承载；发布前全量 race、vet、module、Linux 构建和幂等 migration 1–17 检查通过，上一 `20fe64e` release 和本次静态/Nginx 备份均保留。
 
-- CodeUp `origin/main` 已刷新至 `874f3fd`，其研发身份治理提交线已纳入本地合并结果；本次不推送远端，也不改写历史。
+- ISSUE-003：线上 54 项 Capability 共需 27 个唯一 scope，但现有 `semattice-cli` 换票 allowlist 仍为 26 项且不含 `identity.principal.sync`。现有服务主体治理与本次只读验收不受影响；扩大人类 CLI 换票权限和更新技能目录需单独授权。
+
+- CodeUp `origin/main` 已于发布期间由外部 push 快进至生产代码提交 `df308b1`；本次会话未执行 `git push`。生产证据文档提交保留在本地 `main`，不改写已发布代码历史。
 
 - TASK-049 / FEAT-046 已完成：提交`34023d0a55981761ed0642809b82a5f5b2f7db9f`发布为`/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制SHA-256为`6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`。`metadata.version.publish`现在接受用户明确提供的非空手动`approval_id`并在发布事务中持久审计，其他高风险能力仍校验可信OACT审批声明。四项服务active、Nginx和健康检查通过、错误日志为0；Skill开发/安装副本均为`1.4.0`。
 
@@ -66,7 +68,7 @@ read_next:
 - TASK-033 / FEAT-033 已启动：AgentCiCi `2.8.20` 已发布统一 Principal 基座和机器责任模型，但 Semattice 当前仅把官方 OACT `sub` 直接作为 actor，尚未承载 `principal_id` / `principal_type`。本任务将保持 OACT/JWKS 本地验签，拒绝 Keycloak Service Account token 直连，并将新官方 human/service OACT 映射为数据平台本地 Principal。Keycloak Realm 尚未配置 SMTP，自动人类邀请不提前启用。
 
 - 术语边界已确认并写入项目规范：后续“数据平台”始终且仅指本仓库的 CloudCC Semattice（语义格，`/Volumes/AISpace/codehouse/AI-Native-Platform`）；Agent CC / AgentCiCi 与 CloudCC CRM 均是外部应用或集成方，不得混称。规范来源为根目录 `README.md` 与 `AGENTS.md`。
-- `TASK-032` Semattice 企业管理中心第一版已由 TASK-040 真实数据投影替代：当前 release 为 `/opt/semattice/releases/20260731T012059Z-console`。顶栏产品菜单仍可直接回到 `https://x.agentcici.com/admin`，不传递或储存 OACT；控制台 HTML、CSS 与 JS 使用 no-store 响应。匿名治理 API 为 401，受管理 scope 保护的 API 才可读取当前租户真实治理事实。
+- `TASK-032` Semattice 企业管理中心第一版已由 TASK-040 真实数据投影替代；其历史 release 为 `/opt/semattice/releases/20260731T012059Z-console`。顶栏产品菜单仍可直接回到 `https://x.agentcici.com/admin`，不传递或储存 OACT；控制台 HTML、CSS 与 JS 使用 no-store 响应。匿名治理 API 为 401，受管理 scope 保护的 API 才可读取当前租户真实治理事实。
 - 用户指定的阿里云 CodeUp 仓库已作为独立 `codeup` remote 接入，当前项目快照首次发布到其 `main` 分支；GitHub `origin` 保持不变，本地工作分支与 upstream 未被改写。
 - 用户已确认并于 2026-07-24 明确授权官方应用身份互通实施（ADR-014、FEAT-028、FEAT-029）：Keycloak 是唯一 IdP；官方应用使用短期、单租户的 OACT 在 API/MCP/CLI 间互通，登录/切换公司/续期时换发而非逐请求交换；第三方只能使用独立 Keycloak Service Account 的数据平台最小权限 Token。当前执行 TASK-029，允许在 ECS `115.29.222.70` 部署 Keycloak、配置 `sso.agentcici.com`，并在此授权范围内实施跨仓库运行时改造和生产发布。
 - TASK-029 已完成基础链路发布：Keycloak 26.7.0 运行于授权 ECS 的 loopback `:8180`，Nginx 经现有 `*.agentcici.com` TLS 证书公开 `https://sso.agentcici.com`；独立 PostgreSQL `keycloak` 数据库/role、非特权 systemd、业务 Realm 和首批 client 已创建。AgentCiCi `2.8.11` 已切换至 Keycloak OIDC，24 个全局账户存在一对一外部身份映射，OACT JWKS 公开为 RS256。Semattice release `20260724T094721Z-keycloak-jwks` 已上线，固定信任 AgentCiCi OACT issuer/audience/JWKS 并保留旧 HS256 兼容；真实 RS256 技术烟测调用成功，未逐请求回调 Keycloak。

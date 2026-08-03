@@ -1,13 +1,25 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-03T01:19:37Z
-updated_by: root after origin/main merge validation
-last_run_at: 2026-08-03T01:19:37Z
+updated_at: 2026-08-03T01:46:01Z
+updated_by: root after merged production rollout verification
+last_run_at: 2026-08-03T01:46:01Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-03 合并 release 生产发布验收
+
+- 部署前发现 migration 17 源文件格式清理改变已发布校验和；提交 `df308b1b981f6f8e6267e4274640f13aff59641a` 显式恢复运行时字节并以回归测试锁定生产值 `add7e8042c8a177431849080d4bb519212d49c288cf48b39ab02ee8b1f8fed20`。定向测试、全量 `go test -race ./... -count=1`、`go vet ./...`、`go mod verify` 和 `git diff --check` 通过。
+- Linux amd64 CGO-free 制品 SHA-256 为 `4fb9abdd5b05c170b2a637b19741d1c2e08c5cf1c6dde0977c1514c10c316a03`；切换前在生产数据库以新制品执行幂等 `db migrate` 返回 `succeeded`，migration 仍为 1–17 且无新增变更。
+- release `/opt/semattice/releases/20260803T013913Z-web-oidc-df308b1b981f` 已原子切换；Semattice、Nginx、PostgreSQL 16 和 Keycloak 均 active，Semattice 重启计数为 0，Nginx 配置有效，发布后错误日志和关键失败消息均为 0。
+- Edge 健康/首页/HTTP 跳转/控制台分别为 200/200/301/200；匿名 overview、换票、Capability 调用均为 401，OIDC 登录为 303；Keycloak discovery 为 200，公网 health/metrics 均为 404。
+- JWKS 路径按固定规则 301 到 `https://x.agentcici.com/.well-known/agentcici-oact-jwks.json`，跟随重定向后返回有效公钥集合；静态站包含 `Array.isArray(item.fields)` 归一逻辑，发布前静态站和 Nginx 备份均存在。
+- 生产本机注册表为 54 项能力，包含三项 `identity.principal.*` 与 `metadata.version.publish`；正式短期 OACT 调用 `system.capability.list` 返回 `succeeded`，审计标识 `audit:req-e63a80ec-4814-4896-ba1b-32bd59f4c431`。
+- 同一 OACT 的 `tenant.get-status` 返回 Native `active`，审计标识 `audit:req-ff851cd8-53db-474b-995b-f2498cda889a`；`metadata.version.get` 回读已发布版本、2 个对象，审计标识 `audit:req-98304c52-8ed5-43c2-91e3-532e15172a8b`。未执行业务写入。
+- 真实 Chrome 刷新后旧管理会话失效，Keycloak 无前台 SSO，页面已保留在统一登录表单；未输入或读取凭据。登录后的联系人/大书包页面与浏览器零错误仍待用户完成登录后验收。
+- 一致性检查确认线上 54 项能力需要 27 个唯一 scope，而生产人类 CLI 换票 allowlist 仍为 26 项且不含 `identity.principal.sync`；已登记 ISSUE-003，本次未擅自扩大授权。
 
 ## 2026-08-03 origin/main 合并验证
 

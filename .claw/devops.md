@@ -1,16 +1,23 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-03T01:13:35Z
-updated_by: root after merging local and origin/main release histories
+updated_at: 2026-08-03T01:46:01Z
+updated_by: root after merged production rollout
 verification_status: passed
 ---
 
 # 项目部署运维手册
 
+## 2026-08-03 合并版本生产基线
+
+- 当前 release 为 `/opt/semattice/releases/20260803T013913Z-web-oidc-df308b1b981f`，从提交 `df308b1b981f6f8e6267e4274640f13aff59641a` 构建；二进制 SHA-256 为 `4fb9abdd5b05c170b2a637b19741d1c2e08c5cf1c6dde0977c1514c10c316a03`。
+- 该 release 同时包含手动元数据发布确认、零字段控制台修复、migration 17 / Principal 治理、私网 JWKS 路由和 54 项 Capability。生产数据库仍为 migration 1–17，version 17 校验和固定为 `add7e8042c8a177431849080d4bb519212d49c288cf48b39ab02ee8b1f8fed20`。
+- 上一 release `/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2`、本次静态站备份 `/var/www/semattice-backups/20260803T013913Z-web-oidc-df308b1b981f` 和 Nginx 备份 `/etc/nginx/conf.d/semattice.conf.backup.20260803T013913Z-web-oidc-df308b1b981f` 均保留。
+- 生产注册表现有 54 项公开 Capability、27 个唯一 scope；`semattice-cli` 换票 allowlist 暂仍为 26 项且不含 `identity.principal.sync`。该权限扩展按 ISSUE-003 单独授权和发布，不在代码部署时隐式扩大。
+
 ## 2026-08-01 TASK-051 研发身份治理生产基线
 
-- 当前 release 为 `/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2`，migration 17 已应用；源码中的私网 JWKS 路由修复为 `4f5580a` 并已推送 GitHub/CodeUp。
+- TASK-051 当时发布的 release 为 `/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2`，现作为当前合并 release 的上一回滚点；migration 17 与私网 JWKS 路由继续由新 release 承载。
 - 目标 tenant `cbcb9ad2-1ac1-50b2-a833-605884b566c1` 对应 company `org5nszpgj99jaysxv6y`；活动 metadata `019fbde4-76cf-73d9-b36a-324692b10d05` 固定为 5 objects / 42 fields。
 - OACT verifier 的 JWKS 配置使用 `https://semattice.agentcici.com/.well-known/agentcici-oact-jwks.json`，Nginx 将其 301 到固定 AgentCiCi JWKS；服务端仍只信任配置的 issuer/audience/JWKS，不信任 token 自带地址。
 - 研发交付部 organization ID 为 `8ed52e19-be8e-492a-bea7-ab1b2adba0b2`；三类 Principal 均有 active primary membership，5 个研发对象授权策略均为 enforced/private。
@@ -35,7 +42,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 当前部署制品 SHA-256：`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`。
+- 当前部署制品 SHA-256：`4fb9abdd5b05c170b2a637b19741d1c2e08c5cf1c6dde0977c1514c10c316a03`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动
@@ -60,18 +67,18 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 2026-07-31 TASK-040 真实租户治理控制台曾发布为 `/opt/semattice/releases/20260731T012059Z-console`。发布脚本交叉编译 Linux amd64 二进制、校验 SHA-256、原子切换 `/opt/semattice/current` 并保留上一 release / 静态站备份。控制台已不再使用内存 fixture；OACT 会话经 runtime RLS 读取真实租户 published metadata、RBAC、组织和审计。该版本线上验证为 active、Nginx valid、edge health 200、匿名治理 API 401；目标研发交付公司读取为 metadata v1 / 5 objects / 37 active fields，本地成员、角色和组织投影均为 0。
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- 当前 release 目录：`/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2`；当前链接：`/opt/semattice/current`。该 release 包含 migration 17 的受治理 Principal 投影、控制台身份/角色读取和固定 JWKS 验签；旧 release 继续保留为原子回滚点。
-- 历史 release `/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e` 包含零字段控制台修复；更早的 `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598` 包含手动元数据发布确认。当前 `20fe64e` release 不以二者为祖先；合并后的源码须构建新 release 才能同时承载三条交付线。
+- 当前 release 目录：`/opt/semattice/releases/20260803T013913Z-web-oidc-df308b1b981f`；当前链接：`/opt/semattice/current`。该 release 包含合并后的三条交付线；上一 `20fe64e` release 继续保留为原子回滚点。
+- 历史 release `/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e` 包含零字段控制台修复；更早的 `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598` 包含手动元数据发布确认。两者的代码现已由当前 `df308b1` 合并 release 统一承载。
 - 合并后的 `metadata.version.publish` 仍为高风险、异步、要求 `metadata.publish` scope 和非空 `approval_id`，但该能力不再要求手动标识存在于 OACT `approvals` 声明中。服务端在发布事务内记录 `approval_id`、`approval_mode=manual` 和版本 ID；其他审批能力的可信声明校验不变。
 - 网站OIDC环境备份为`/etc/semattice/semattice.env.backup.20260731T074537Z-before-web-oidc`；Nginx与静态站使用同一release标识创建发布前备份。Keycloak `semattice-cli` client历史备份仍为`/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - `semattice-web`是confidential server-side client。现有Client Secret仅保存于`/etc/semattice/secrets/semattice-web-client-secret`，Secret目录必须为`root:semattice 0750`，文件为`root:semattice 0640`；环境仅以`AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE`引用该文件，不得把Secret写入env、日志、仓库或浏览器。
 - 网站登录入口为`GET /auth/oidc/login`，callback为`https://semattice.agentcici.com/auth/oidc/callback`。登录使用Authorization Code + S256 PKCE、state和nonce；成功后只创建最长15分钟的`Secure; HttpOnly; SameSite=Lax`签名Session Cookie，不在Cookie中保存Keycloak Token。真实Chrome登录已验证回到`/console/`并显示当前租户和退出按钮。
 - Semattice不再配置或调用 AgentCiCi开户/OACT接口。`/v1/auth/token` 固定验证 Keycloak issuer、`semattice-api` audience、JWKS、`azp=semattice-cli` 和唯一 Organization alias，再映射 active `tenant_registry.company_id` 并签发 Semattice短期 OACT。
-- `semattice-cli` 必须保持 public、Authorization Code、PKCE S256、`http://127.0.0.1` redirect；`semattice-api-audience` mapper必须唯一且写入 access token，`organization` client scope必须分配。当前OACT allowlist包含51项公开Capability所需的全部26个唯一scope；scope只是入口上限，Principal/RBAC、RLS、审批和审计继续独立执行。TASK-044配置备份为 `/etc/semattice/semattice.env.backup.20260731T052514Z-all-capability-scopes`。
+- `semattice-cli` 必须保持 public、Authorization Code、PKCE S256、`http://127.0.0.1` redirect；`semattice-api-audience` mapper必须唯一且写入 access token，`organization` client scope必须分配。当前生产注册表为54项公开Capability/27个唯一scope，但人类CLI换票allowlist仍为此前26项且不含`identity.principal.sync`；按ISSUE-003单独治理。scope只是入口上限，Principal/RBAC、RLS、审批和审计继续独立执行。TASK-044配置备份为 `/etc/semattice/semattice.env.backup.20260731T052514Z-all-capability-scopes`。
 - systemd unit：`/etc/systemd/system/semattice.service`；仓库模板为 `deploy/semattice/semattice.service`。
 - Nginx server block：`/etc/nginx/conf.d/semattice.conf`；仓库模板为 `deploy/semattice/nginx.conf`。
 - Streamable HTTP MCP：Nginx `location = /mcp` 代理至 `127.0.0.1:8080`，必须透传 `Authorization`、将上游 `Host` 固定为 `127.0.0.1`，并关闭 `proxy_buffering`、`proxy_request_buffering`、`proxy_cache`。这使 SDK loopback DNS-rebinding 防护继续有效；当前远程配置备份为 `/etc/nginx/conf.d/semattice.conf.backup.20260724T153300Z` 与 `.backup.20260724T155400Z-mcp-host`。
-- 静态说明与控制台：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。控制台根页和静态资产均以 `Cache-Control: no-store` 发送，HTML 通过带版本的 CSS/JS URL 防止客户端复用旧样式。当前发布前静态站备份位于`/var/www/semattice-backups/20260731T080337Z-web-oidc-ffdbec4fada7`，对应Nginx备份为`/etc/nginx/conf.d/semattice.conf.backup.20260731T080337Z-web-oidc-ffdbec4fada7`。
+- 静态说明与控制台：`/var/www/semattice`；TLS：`/etc/semattice/tls`，私钥 mode `0600`。控制台根页和静态资产均以 `Cache-Control: no-store` 发送，HTML 通过带版本的 CSS/JS URL 防止客户端复用旧样式。当前发布前静态站备份位于`/var/www/semattice-backups/20260803T013913Z-web-oidc-df308b1b981f`，对应Nginx备份为`/etc/nginx/conf.d/semattice.conf.backup.20260803T013913Z-web-oidc-df308b1b981f`。
 - 管理中心：`https://semattice.agentcici.com/console/`。`GET /console/session` 无 Cookie 返回 200 的公开 `authenticated:false` 状态；所有 `/console/api/*` 必须为短时签名 Cookie，匿名为 401。`POST /console/session` 仅接收 OACT Bearer，伪造/过期 Token 为 401。顶栏产品菜单回到 `https://x.agentcici.com/admin`，不传递或持久化 OACT。运行环境必须配置独立的 `AI_NATIVE_CONSOLE_SESSION_HMAC_KEY`，不得输出其值。
 - Keycloak 当前 release：`/opt/keycloak/releases/keycloak-26.7.0`，当前链接为 `/opt/keycloak/current`；systemd unit 为 `/etc/systemd/system/keycloak.service`，Nginx vhost 为 `/etc/nginx/conf.d/sso.agentcici.com.conf`。受控安装前备份在 `/root/keycloak-backups/20260724T083102Z-before-keycloak`。
 - Keycloak 登录主题源码为 `deploy/keycloak/themes/agentcici`；在 Keycloak 主机上以 root 运行 `deploy/keycloak/apply-agentcici-login-theme.sh <theme-source>`。脚本会备份现有主题和 realm 的 `loginTheme` 字段、原子替换 `/opt/keycloak/current/themes/agentcici`、设置 `agentcici` Realm 的 theme/中文 locale 并重启 Keycloak。主题只改变浏览器外观，绝不复制或输出密码、Token、client secret 或数据库配置。
@@ -80,7 +87,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 业务 Realm 为 `agentcici`；已登记 `agentcici-bff`、`semattice-api`、`official-access-context`、`followup-worker`。本次只创建非秘密 client 注册，后续应用接入再按最小权限读取并安全分发所需 secret。
 - 更新时先安装新的不可变 release 目录，核对 checksum，再原子切换 `/opt/semattice/current` 并重启 `semattice`。不要覆盖或删除旧 release。
 - 回滚时将 `current` 指回前一 release 并重启；数据库 migration 不自动回滚，数据目录不得删除。
-- 独立登录生产 smoke：匿名 `POST /v1/auth/token` 必须为401；真实 `semattice-cli` Authorization Code + S256 PKCE登录只向Semattice换取短期OACT，返回scope必须与线上51项公开Capability归并出的26个唯一`required_scope`完全一致，并使用`system.capability.list`与至少一个非发现类只读能力验证。旧 `/internal/v1/company-provisionings` 已删除，不再作为活动发布门禁。
+- 独立登录生产 smoke：匿名 `POST /v1/auth/token` 必须为401；真实 `semattice-cli` Authorization Code + S256 PKCE登录只向Semattice换取短期OACT，返回scope必须与受控换票allowlist一致，并使用`system.capability.list`与至少一个非发现类只读能力验证。当前allowlist为26项，线上注册表为54项/27个唯一scope，差异由ISSUE-003跟踪；旧 `/internal/v1/company-provisionings` 已删除，不再作为活动发布门禁。
 
 ## 排障
 

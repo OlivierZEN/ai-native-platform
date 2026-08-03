@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-03T01:13:35Z
-updated_by: root after merging parallel task histories
+updated_at: 2026-08-03T01:46:01Z
+updated_by: root after merged production rollout
 board_status: active
 ---
 
@@ -50,7 +50,7 @@ board_status: active
 
 #### Next Action
 
-- The former `36e1c0a` release passed server smoke, but production now runs the later independent `20fe64e` identity-governance release. Build a new release from merged `main`, then verify both objects and zero browser errors.
+- Merged release `20260803T013913Z-web-oidc-df308b1b981f` is live and server/API smoke passed. Wait for the user to complete Keycloak login in the retained Chrome tab, then verify both objects and zero browser errors before closing ISSUE-002.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
