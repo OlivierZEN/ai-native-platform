@@ -5,7 +5,7 @@ title: DEV Autopilot governed identity roster
 status: verified
 owner_role: integration-agent
 task_ids: TASK-053
-related_decisions: ADR-016
+related_decisions: ADR-014
 related_issues: none
 updated_at: 2026-08-03T12:44:26Z
 updated_by: root
@@ -47,4 +47,3 @@ updated_by: root
 - 后羿与悟空均可通过 DEV Autopilot CLI 获取开发任务。
 - 大乔凭据调用开发者 CLI 被拒绝。
 - 生产健康检查保持 integrated，审计中可追踪本次身份、角色和组织投影。
-
