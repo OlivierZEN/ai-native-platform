@@ -158,7 +158,7 @@ func (reader *PostgresReader) members(ctx context.Context, tx pgx.Tx, tenant ten
 		left join authorization_role r on r.role_id=a.role_id and r.lifecycle_state='active'
 		left join principal_org_membership m on m.principal_id=p.principal_id and m.membership_state='active' and m.is_primary
 		left join organization_node o on o.organization_id=m.organization_id
-		group by p.principal_id,p.principal_type,p.display_name,p.public_id,p.client_id,p.owner_principal_id,p.status
+		group by p.principal_id,p.principal_type,p.display_name,p.public_id,p.client_id,p.owner_principal_id,p.status,p.created_at
 		order by p.created_at,p.principal_id`)
 	if err != nil {
 		return nil, err

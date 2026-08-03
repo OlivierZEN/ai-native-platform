@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-01T15:46:00Z
+updated_at: 2026-08-03T04:56:06Z
 updated_by: root
 board_status: active
 ---
@@ -27,6 +27,29 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-050 - 修复管理中心成员与角色查询
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-049`
+- blocked_by: `none`
+- related_issues: `ISSUE-002`
+- scope_files: `internal/console/reader.go, internal/console/reader_test.go, project state and production release evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- PostgreSQL 成员聚合查询不再违反 GROUP BY 规则，真实 reader 回归测试可捕获该错误。
+- 生产 `/console/api/members` 返回三类研发身份和三个角色，服务、健康、匿名负例与其他控制台接口无回归。
+
+#### Next Action
+
+- 本地实现与验证通过；提交并发布不可变 release，随后执行真实登录会话验收。
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
