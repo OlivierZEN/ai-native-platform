@@ -73,6 +73,8 @@ func Builtin() []Migration {
 		{Version: 14, Name: "usage_metering", SQL: usageMeteringSQL},
 		{Version: 15, Name: "usage_rollups", SQL: usageRollupsSQL},
 		{Version: 16, Name: "physical_storage_samples", SQL: physicalStorageSamplesSQL},
-		{Version: 17, Name: "governed_principal_projection", SQL: governedPrincipalProjectionSQL},
+		// Migration 17 was published with one trailing blank line. Preserve its
+		// exact runtime bytes even though the source file is formatting-clean.
+		{Version: 17, Name: "governed_principal_projection", SQL: governedPrincipalProjectionSQL + "\n"},
 	}
 }
