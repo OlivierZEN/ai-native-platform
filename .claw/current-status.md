@@ -1,7 +1,7 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-03T05:16:39Z
+updated_at: 2026-08-03T05:19:55Z
 updated_by: root
 phase: unified-production-release-verified
 active_task: "TASK-050"
@@ -27,7 +27,7 @@ read_next:
 
 - 本地 `main` 的统一提交 `2329787` 同时包含手动元数据发布、零字段控制台修复、研发身份治理、migration 17 checksum 兼容和 members 修复；全量验证与联合生产验收通过。
 
-- GitHub 与 CodeUp 待以普通快进同步统一提交，禁止 force push 或改写历史。
+- GitHub 与 CodeUp 已分别通过普通快进同步同一交付历史，远端回读一致；未使用 force push 或改写历史。
 
 - TASK-049 / FEAT-046 已完成：提交`34023d0a55981761ed0642809b82a5f5b2f7db9f`发布为`/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制SHA-256为`6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`。`metadata.version.publish`现在接受用户明确提供的非空手动`approval_id`并在发布事务中持久审计，其他高风险能力仍校验可信OACT审批声明。四项服务active、Nginx和健康检查通过、错误日志为0；Skill开发/安装副本均为`1.4.0`。
 

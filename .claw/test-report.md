@@ -1,9 +1,9 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-03T05:16:39Z
+updated_at: 2026-08-03T05:19:55Z
 updated_by: root
-last_run_at: 2026-08-03T05:16:39Z
+last_run_at: 2026-08-03T05:19:55Z
 last_run_status: passed
 ---
 
@@ -25,6 +25,7 @@ last_run_status: passed
 - 合并提交 `2329787b57ff` 已发布为 `/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff`；线上二进制 SHA-256 为 `bdbd5e9547654c4c1142206b46fc8fa129efc61d72e3519b03b471eee6fd027c`，临时 release 仍保留为回滚点。
 - 最终线上 members=200，精确返回三名研发主体和三个角色；overview 为 3 members / 3 roles / 1 organization / 5 objects / 42 fields，5 个研发对象的 fields 均为数组。
 - 另一已发布元数据租户回读确认 `contact.fields=[]`、`large_backpack` 为 2 字段；Semattice、Nginx、PostgreSQL 16、Keycloak active，匿名 members=401，Nginx 有效且发布后 warning 日志为空。
+- CodeUp 从 `df308b1`、GitHub 从 `4e2bc62` 分别普通快进至交付提交 `9644cb634362fe435a3fea280a763610c29cf8b1`，两个远端回读与本地一致；未使用 force push。
 
 ## 2026-08-03 origin/main 合并验证
 
