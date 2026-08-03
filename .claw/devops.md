@@ -1,12 +1,21 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-07-31T10:35:02Z
-updated_by: root after TASK-050 console fix rollout
+updated_at: 2026-08-03T01:13:35Z
+updated_by: root after merging local and origin/main release histories
 verification_status: passed
 ---
 
 # 项目部署运维手册
+
+## 2026-08-01 TASK-051 研发身份治理生产基线
+
+- 当前 release 为 `/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2`，migration 17 已应用；源码中的私网 JWKS 路由修复为 `4f5580a` 并已推送 GitHub/CodeUp。
+- 目标 tenant `cbcb9ad2-1ac1-50b2-a833-605884b566c1` 对应 company `org5nszpgj99jaysxv6y`；活动 metadata `019fbde4-76cf-73d9-b36a-324692b10d05` 固定为 5 objects / 42 fields。
+- OACT verifier 的 JWKS 配置使用 `https://semattice.agentcici.com/.well-known/agentcici-oact-jwks.json`，Nginx 将其 301 到固定 AgentCiCi JWKS；服务端仍只信任配置的 issuer/audience/JWKS，不信任 token 自带地址。
+- 研发交付部 organization ID 为 `8ed52e19-be8e-492a-bea7-ab1b2adba0b2`；三类 Principal 均有 active primary membership，5 个研发对象授权策略均为 enforced/private。
+- Principal status 只能由 HUMAN manager 通过 `identity.principal.set-status` 并携带已验签独立审批 ID 修改；SERVICE 不能自恢复。生产开发者必须保持 active，异常演练后立即恢复并以 CLI 读任务复核。
+- 数据库只读验收使用 `ai_native_runtime` 并显式设置 `app.tenant_id` / `app.tenant_bucket`，不得使用 migrator、关闭 RLS 或输出数据库 URL。
 
 `devops.md` 是构建、运行、部署和运维知识的事实源。
 
@@ -51,8 +60,9 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 2026-07-31 TASK-040 真实租户治理控制台曾发布为 `/opt/semattice/releases/20260731T012059Z-console`。发布脚本交叉编译 Linux amd64 二进制、校验 SHA-256、原子切换 `/opt/semattice/current` 并保留上一 release / 静态站备份。控制台已不再使用内存 fixture；OACT 会话经 runtime RLS 读取真实租户 published metadata、RBAC、组织和审计。该版本线上验证为 active、Nginx valid、edge health 200、匿名治理 API 401；目标研发交付公司读取为 metadata v1 / 5 objects / 37 active fields，本地成员、角色和组织投影均为 0。
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- 当前 release 目录：`/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e`；当前链接：`/opt/semattice/current`。该 release 从提交 `36e1c0a32b2ed0e00755a6b2fd857969868e586c` 构建，修复零字段已发布对象在管理中心返回`fields:null`并触发前端错误的问题；上一 release `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598` 保留可原子回滚。
-- `metadata.version.publish` 仍为高风险、异步、要求 `metadata.publish` scope 和非空 `approval_id`，但该能力不再要求手动标识存在于 OACT `approvals` 声明中。服务端在发布事务内记录 `approval_id`、`approval_mode=manual` 和版本 ID；其他审批能力的可信声明校验不变。
+- 当前 release 目录：`/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2`；当前链接：`/opt/semattice/current`。该 release 包含 migration 17 的受治理 Principal 投影、控制台身份/角色读取和固定 JWKS 验签；旧 release 继续保留为原子回滚点。
+- 历史 release `/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e` 包含零字段控制台修复；更早的 `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598` 包含手动元数据发布确认。当前 `20fe64e` release 不以二者为祖先；合并后的源码须构建新 release 才能同时承载三条交付线。
+- 合并后的 `metadata.version.publish` 仍为高风险、异步、要求 `metadata.publish` scope 和非空 `approval_id`，但该能力不再要求手动标识存在于 OACT `approvals` 声明中。服务端在发布事务内记录 `approval_id`、`approval_mode=manual` 和版本 ID；其他审批能力的可信声明校验不变。
 - 网站OIDC环境备份为`/etc/semattice/semattice.env.backup.20260731T074537Z-before-web-oidc`；Nginx与静态站使用同一release标识创建发布前备份。Keycloak `semattice-cli` client历史备份仍为`/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - `semattice-web`是confidential server-side client。现有Client Secret仅保存于`/etc/semattice/secrets/semattice-web-client-secret`，Secret目录必须为`root:semattice 0750`，文件为`root:semattice 0640`；环境仅以`AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE`引用该文件，不得把Secret写入env、日志、仓库或浏览器。
 - 网站登录入口为`GET /auth/oidc/login`，callback为`https://semattice.agentcici.com/auth/oidc/callback`。登录使用Authorization Code + S256 PKCE、state和nonce；成功后只创建最长15分钟的`Secure; HttpOnly; SameSite=Lax`签名Session Cookie，不在Cookie中保存Keycloak Token。真实Chrome登录已验证回到`/console/`并显示当前租户和退出按钮。
@@ -92,7 +102,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 应用真实检查：使用统一身份服务签发的短期 JWT 调用 `POST /v1/capabilities/system.capability.list/invoke`，预期 `status=succeeded`。
 - MCP Streamable HTTP：不带 Bearer 的 `initialize`、`notifications/initialized`、`tools/list` 预期成功；不带 Bearer 的 `tools/call` 预期 401；使用有效短期 Bearer JWT 的客户端执行真实 tool call 验证。MCP stdio 仍可通过受信主机启动 `/usr/local/bin/semattice mcp stdio` 使用。
 - Keycloak：`GET https://sso.agentcici.com/realms/agentcici/.well-known/openid-configuration` 与 `/protocol/openid-connect/certs` 均应 HTTPS 200；公网 `/health` 和 `/metrics` 必须为 404，本机 `/health/ready` 必须为 UP。
-- 官方 OACT：Semattice 环境变量 `AI_NATIVE_IDENTITY_TRUSTED_ISSUERS` 固定为 `official_access|https://x.agentcici.com|semattice-api|https://x.agentcici.com/.well-known/agentcici-oact-jwks.json`；不得接受 Token 自带的 issuer、audience 或 JWKS URL。JWKS 缓存 5 分钟、未知 `kid` 仅刷新一次。
+- 官方 OACT：Semattice 环境变量 `AI_NATIVE_IDENTITY_TRUSTED_ISSUERS` 固定为 `official_access|https://x.agentcici.com|semattice-api|https://semattice.agentcici.com/.well-known/agentcici-oact-jwks.json`；不得接受 Token 自带的 issuer、audience 或 JWKS URL。JWKS 缓存 5 分钟、未知 `kid` 仅刷新一次。
 
 ## 维护规则
 

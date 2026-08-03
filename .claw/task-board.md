@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-07-31T10:35:02Z
-updated_by: root after TASK-050 production rollout and server smoke
+updated_at: 2026-08-03T01:13:35Z
+updated_by: root after merging parallel task histories
 board_status: active
 ---
 
@@ -50,7 +50,7 @@ board_status: active
 
 #### Next Action
 
-- Release `20260731T101946Z-web-oidc-36e1c0a32b2e` is live and server smoke passed. Wait for the user to complete Keycloak login in the handed-off Chrome tab, then verify both objects and zero browser errors.
+- The former `36e1c0a` release passed server smoke, but production now runs the later independent `20fe64e` identity-governance release. Build a new release from merged `main`, then verify both objects and zero browser errors.
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
@@ -211,6 +211,30 @@ board_status: active
 #### Handoff Note
 
 - Commit `34023d0a55981761ed0642809b82a5f5b2f7db9f` is deployed as `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`. Version `019fb736-8c34-7f0c-a0e8-82f385ffd9b0` was published with both `contact` and `large_backpack`; publish audit ID is `audit:req-f7b19407-5c65-48b3-8eaa-fdd6369c063b`.
+
+### TASK-051 - 建立 DEV Autopilot 研发身份投影与角色治理
+
+- status: `done`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-035-governed-development-principal-projection.md`
+- depends_on: `TASK-033, AgentCiCi TASK-262`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `identity projection capabilities, migration 0017, console reader, tests and production role bootstrap`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- HUMAN/SERVICE OACT can safely self-project without caller-supplied identity claims.
+- Product director, product manager and developer projections, owner relation and least-privilege roles exist in the target tenant.
+- Console shows the three real identities and no demo governance identities.
+
+#### Next Action
+
+- 已发布 migration 17、Principal 能力与控制台投影；目标租户三类身份、角色、组织、字段权限、5 个 enforced 策略和生命周期负例均完成生产回读。
 
 ### TASK-041 - Add Keycloak PKCE login to cloudcc-semattice skill
 
@@ -715,33 +739,6 @@ board_status: active
 #### Handoff Note
 
 - PoC 使用绑定 127.0.0.1 的专用临时 PostgreSQL 16.13；未连接生产/共享数据库，未执行 HA、备份或恢复。
-
-### TASK-013 - Design the metadata core model
-
-- status: `done`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-013-metadata-core-model.md`
-- depends_on: `TASK-010`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `metadata version, object, field, relation, immutable publication, snapshot, API/MCP/CLI`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- UUIDv7 元数据版本、对象、字段和关系模型具有同租户/同版本复合约束及 FORCE RLS
-- draft-only 变更、批准发布、发布后不可变、确定性 snapshot/digest 与六能力三入口 parity 测试通过
-
-#### Next Action
-
-- 已完成；`TASK-014` 已在此不可变元数据版本之上实现 Changeset 治理，后续任务继续保持本任务核心约束。
-
-#### Handoff Note
-
-- 元数据 CRUD/publish 始终使用严格 `ai_native_runtime` TenantContext；只有路由解析使用独立 control pool。跨租户、跨版本和已发布修改均 fail closed。
 
 ## 维护规则
 

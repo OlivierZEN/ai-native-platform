@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-07-31T10:35:02Z
-updated_by: root after TASK-050 production rollout and server smoke
-phase: cross-product-identity-live
+updated_at: 2026-08-03T01:19:37Z
+updated_by: root after merged-main regression validation
+phase: merged-identity-governance-verified
 active_task: "TASK-050"
-next_action: "等待用户在已打开的Keycloak页面完成登录，然后在真实Chrome复测对象与字段页并关闭ISSUE-002。"
+next_action: "后续以新 release 同时恢复手动元数据发布、零字段控制台修复和研发身份治理，再完成真实 Chrome 验收。"
 read_next:
   goals: true
   decisions: true
@@ -21,7 +21,11 @@ read_next:
 
 - TASK-050 / ISSUE-002 修复提交`36e1c0a32b2ed0e00755a6b2fd857969868e586c`已发布为`/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e`，二进制SHA-256为`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`。四项服务active、Nginx和健康/匿名负例通过、错误日志为0，线上静态契约包含新归一逻辑。真实Chrome旧Session已过期，Keycloak未保留前台SSO，页面已交回用户登录；登录后仍需最终点击验收。
 
-- CodeUp `origin/main` 已通过普通快进从`27020e3`发布至`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`，包含网站OIDC、租户名称顶栏、生产发布证据和联系人草稿验证共5个提交；本地HEAD、tracking ref与远端分支回读一致，未使用force push。
+- TASK-051 / FEAT-035：已完成目标租户研发身份与强制授权治理。产品总监 HUMAN 绑定 AgentCiCi 全局用户 `18611892001`；产品经理和开发者 SERVICE 均投影其 owner，三者状态 active 且分别绑定“产品总监 / 产品经理 / 开发者”角色。活动元数据版本 `019fbde4-76cf-73d9-b36a-324692b10d05` 为 5 个对象、42 个字段，5 个对象策略全部 enforced，三类主体均有研发交付部 primary membership。独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下的开发者投影暂停会阻断 CLI，自恢复被禁止；人类管理员恢复后 CLI 成功，审计记录两次状态写入。JWKS 私网/公网路径与固定 issuer 配置已上线，生产服务 active。
+
+- 本地 `main` 已合并手动元数据发布、零字段控制台修复与研发身份治理三条提交线，并通过全量 race、vet、module、Linux 构建和状态校验；当前生产 release `20fe64e` 不包含提交 `34023d0` 和 `36e1c0a`，后续需从合并提交构建新 release 后再执行联合生产验收。
+
+- CodeUp `origin/main` 已刷新至 `874f3fd`，其研发身份治理提交线已纳入本地合并结果；本次不推送远端，也不改写历史。
 
 - TASK-049 / FEAT-046 已完成：提交`34023d0a55981761ed0642809b82a5f5b2f7db9f`发布为`/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制SHA-256为`6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`。`metadata.version.publish`现在接受用户明确提供的非空手动`approval_id`并在发布事务中持久审计，其他高风险能力仍校验可信OACT审批声明。四项服务active、Nginx和健康检查通过、错误日志为0；Skill开发/安装副本均为`1.4.0`。
 

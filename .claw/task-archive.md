@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-07-31T09:27:37Z
-updated_by: root after archiving oldest completed task for TASK-049
+updated_at: 2026-08-03T01:13:35Z
+updated_by: root after merging parallel task histories
 archive_status: active
 ---
 
@@ -460,6 +460,33 @@ archive_status: active
 #### Handoff Note
 
 - migrations 5/6、十项 Changeset 能力、候选版本新写投影、按对象有界回填、revision 冲突恢复、required/index/unique/reference coverage、predecessor 转换、purge/tombstone 和版本化 service-tier 配额均已在真实 PostgreSQL 16 下通过。通用 worker/outbox 属于 `TASK-017`；最终容量数值属于 `TASK-019`。
+
+### TASK-013 - Design the metadata core model
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-013-metadata-core-model.md`
+- depends_on: `TASK-010`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `metadata version, object, field, relation, immutable publication, snapshot, API/MCP/CLI`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- UUIDv7 元数据版本、对象、字段和关系模型具有同租户/同版本复合约束及 FORCE RLS
+- draft-only 变更、批准发布、发布后不可变、确定性 snapshot/digest 与六能力三入口 parity 测试通过
+
+#### Next Action
+
+- 已完成；`TASK-014` 已在此不可变元数据版本之上实现 Changeset 治理，后续任务继续保持本任务核心约束。
+
+#### Handoff Note
+
+- 元数据 CRUD/publish 始终使用严格 `ai_native_runtime` TenantContext；只有路由解析使用独立 control pool。跨租户、跨版本和已发布修改均 fail closed。
 
 ## 维护规则
 

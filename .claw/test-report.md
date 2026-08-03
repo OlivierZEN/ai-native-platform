@@ -1,13 +1,21 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-07-31T10:35:02Z
-updated_by: root after TASK-050 production server smoke
-last_run_at: 2026-07-31T10:35:02Z
+updated_at: 2026-08-03T01:19:37Z
+updated_by: root after origin/main merge validation
+last_run_at: 2026-08-03T01:19:37Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-03 origin/main 合并验证
+
+- `origin/main` 的 6 个提交与本地 5 个提交已在本地 `main` 合并；5 个冲突均限于 `.claw` 状态文件，源码 `internal/console/reader.go` 自动合并成功，最终不存在冲突标记。
+- 并行历史重复使用的研发身份治理 `TASK-049` 已按时间顺序调整为 `TASK-051`，对应任务卡、FEAT-035、看板、测试与运维引用一致；状态 validator 通过。
+- `GOTOOLCHAIN=go1.26.5 go test ./internal/principal ./internal/console ./cmd/ai-native-platform -count=1` 与 `go test -race ./... -count=1` 通过。
+- `GOTOOLCHAIN=go1.26.5 go vet ./...`、`go mod verify`、Linux amd64 CGO-free 构建、`node --check deploy/semattice/www/console/console.js`、`bash -n scripts/release-console.sh` 和 `git diff --cached --check` 全部通过。
+- 本次仅完成本地合并与验证；未推送远端、未部署生产。当前生产 `20fe64e` 不包含本地 `34023d0` 与 `36e1c0a`，联合生产验收需等待新的合并 release。
 
 ## 2026-07-31 TASK-050 无字段对象控制台修复验证
 
@@ -48,6 +56,16 @@ last_run_status: passed
 - `metadata.field.upsert`创建必填、索引的`text`字段`name / 书包名称`，字段ID为`019fb75e-d8fb-70ef-9275-1c90a31dd3b1`，审计标识为`audit:req-ef84b628-547f-44c6-b9c5-32f66ac70e52`；约束为1至200个Unicode字符。
 - `metadata.field.upsert`创建可选、索引的`text`字段`color / 颜色`，字段ID为`019fb75e-dbc9-7576-9889-e0a67ad3902c`，审计标识为`audit:req-45f00d9d-a0f8-465f-a82f-e9297bce81ff`；约束为1至100个Unicode字符。
 - 最终`metadata.version.get`回读返回`succeeded`，审计标识为`audit:req-378fd751-00f7-4762-9b8a-d9adc9f46dd1`；草稿为2对象、2字段、0关系，两个新字段均为`active`且索引状态为`active`。未调用发布、记录、权限、共享或其他高影响写能力。
+
+## 2026-08-01 TASK-051 DEV Autopilot 研发身份与 PDP 生产验收
+
+- `GOTOOLCHAIN=go1.26.5 go test ./internal/principal ./internal/console ./cmd/ai-native-platform -count=1`、项目状态 validator 与 `git diff --check` 均通过。
+- migration 17 已应用，生产 release `/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2` active；`https://semattice.agentcici.com/healthz` 返回 200，Nginx 配置有效。
+- 生产 runtime RLS 回读为 3 个 active Principal：产品总监 HUMAN、产品经理 SERVICE、开发者 SERVICE；两台 SERVICE 的 owner 均为产品总监 account `25deaf62-73c7-40cc-a107-99c56cff2ec9`，display/public/client ID 未被 CLI 同步覆盖。
+- 活动 metadata 精确为 5 objects / 42 fields；3 个 active role assignment、3 个 primary organization membership、5 个 `enforced/private` 对象策略均存在。
+- 正向：产品经理可创建项目/需求/任务/变更；开发者 CLI 可读取、认领、回报进度与 2.5h 工时并完成任务。负向：开发者直接创建项目和调用 `identity.principal.list` 均为 HTTP 403。
+- 生命周期：独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下，`identity.principal.set-status` 的 suspended/active 各成功一次；suspended 时 `identity.principal.sync` fail closed，管理员恢复后 CLI 成功。
+- 审计回读：产品经理/开发者 actor 的 `identity.principal.sync=12`、`runtime.record.create=5`、`runtime.record.get=11`、`runtime.record.query=2`、`runtime.record.update=5`，均为 succeeded；未输出 OACT、secret 或私钥。
 
 ## 2026-07-31 CodeUp main发布验证
 

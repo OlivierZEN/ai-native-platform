@@ -50,6 +50,9 @@ var usageRollupsSQL string
 //go:embed sql/0016_physical_storage_samples.sql
 var physicalStorageSamplesSQL string
 
+//go:embed sql/0017_governed_principal_projection.sql
+var governedPrincipalProjectionSQL string
+
 // Builtin returns the ordered migrations compiled into this binary. Domain
 // migrations are added here as their owning tasks are implemented.
 func Builtin() []Migration {
@@ -70,5 +73,6 @@ func Builtin() []Migration {
 		{Version: 14, Name: "usage_metering", SQL: usageMeteringSQL},
 		{Version: 15, Name: "usage_rollups", SQL: usageRollupsSQL},
 		{Version: 16, Name: "physical_storage_samples", SQL: physicalStorageSamplesSQL},
+		{Version: 17, Name: "governed_principal_projection", SQL: governedPrincipalProjectionSQL},
 	}
 }
