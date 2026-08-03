@@ -71,6 +71,19 @@ func TestApplySerializesConcurrentRunners(t *testing.T) {
 	}
 }
 
+func TestBuiltinPreservesPublishedMigration17Checksum(t *testing.T) {
+	const publishedChecksum = "add7e8042c8a177431849080d4bb519212d49c288cf48b39ab02ee8b1f8fed20"
+	for _, migration := range Builtin() {
+		if migration.Version == 17 {
+			if actual := checksum(migration.SQL); actual != publishedChecksum {
+				t.Fatalf("migration 17 checksum=%s, want published %s", actual, publishedChecksum)
+			}
+			return
+		}
+	}
+	t.Fatal("migration 17 is not registered")
+}
+
 func migrationTestPool(t *testing.T) *pgxpool.Pool {
 	t.Helper()
 	url := os.Getenv("TEST_DATABASE_URL")

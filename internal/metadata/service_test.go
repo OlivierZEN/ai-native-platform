@@ -65,8 +65,18 @@ func TestMetadataCoreDeterministicPublishAndIsolation(t *testing.T) {
 		t.Fatalf("deterministic compilation drift: digest1=%s digest2=%s\n%s\n%s", digest1, digest2, encoded1, encoded2)
 	}
 
+	missingApproval := invokeMetadata(t, invoker, principal, "metadata.version.publish", map[string]any{
+		"metadata_version_id": version1.MetadataVersionID,
+	})
+	assertMetadataError(t, missingApproval, capability.CodeFailedPrecondition)
+	blankApproval := invokeMetadata(t, invoker, principal, "metadata.version.publish", map[string]any{
+		"metadata_version_id": version1.MetadataVersionID, "approval_id": "   ",
+	})
+	assertMetadataError(t, blankApproval, capability.CodeFailedPrecondition)
+
+	const manualApprovalID = "manual-first-version-confirmation"
 	publishedResponse := invokeMetadata(t, invoker, principal, "metadata.version.publish", map[string]any{
-		"metadata_version_id": version1.MetadataVersionID, "approval_id": "approval-metadata-1",
+		"metadata_version_id": version1.MetadataVersionID, "approval_id": manualApprovalID,
 	})
 	if publishedResponse.Status != capability.StatusSucceeded {
 		t.Fatalf("publish response=%#v", publishedResponse)
@@ -78,10 +88,20 @@ func TestMetadataCoreDeterministicPublishAndIsolation(t *testing.T) {
 	if published.Status != "published" || published.SnapshotDigest != digest1 || len(published.Snapshot) == 0 {
 		t.Fatalf("published version=%#v", published)
 	}
-	missingApproval := invokeMetadata(t, invoker, principal, "metadata.version.publish", map[string]any{
-		"metadata_version_id": version2.MetadataVersionID, "approval_id": "not-approved",
+	var auditedApprovalID, approvalMode, auditedVersionID string
+	if err := admin.QueryRow(context.Background(),
+		"select event_data->>'approval_id',event_data->>'approval_mode',event_data->>'metadata_version_id' from audit_event where capability_id='metadata.version.publish' and operation_id=$1 and status='published'",
+		version1.MetadataVersionID,
+	).Scan(&auditedApprovalID, &approvalMode, &auditedVersionID); err != nil {
+		t.Fatalf("read publish audit: %v", err)
+	}
+	if auditedApprovalID != manualApprovalID || approvalMode != "manual" || auditedVersionID != version1.MetadataVersionID {
+		t.Fatalf("publish audit approval=%q mode=%q version=%q", auditedApprovalID, approvalMode, auditedVersionID)
+	}
+	changesetRequired := invokeMetadata(t, invoker, principal, "metadata.version.publish", map[string]any{
+		"metadata_version_id": version2.MetadataVersionID, "approval_id": "another-manual-confirmation",
 	})
-	assertMetadataError(t, missingApproval, capability.CodeFailedPrecondition)
+	assertMetadataError(t, changesetRequired, capability.CodeFailedPrecondition)
 
 	immutable := invokeMetadata(t, invoker, principal, "metadata.object.upsert", map[string]any{
 		"metadata_version_id": version1.MetadataVersionID, "object_id": customerID.String(), "api_name": "customer", "label": "Changed",

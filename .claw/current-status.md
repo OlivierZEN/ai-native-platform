@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-03T05:02:04Z
+updated_at: 2026-08-03T05:13:45Z
 updated_by: root
-phase: console-members-query-hotfix-complete
-active_task: "none"
-next_action: "TASK-050 已完成；监控成员与角色接口及 release 运行状态。"
+phase: merged-production-line-validation
+active_task: "TASK-052"
+next_action: "统一主线全量验证通过；提交合并并构建发布最终不可变 release。"
 read_next:
   goals: true
   decisions: true
@@ -19,13 +19,19 @@ read_next:
 
 ## 快照
 
-- TASK-050 / ISSUE-002 已完成：`p.created_at` 已纳入成员聚合分组，并新增真实 PostgreSQL reader 回归测试。release `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47` 已上线；生产 HTTPS members=200，精确返回三名研发主体和三个角色，概览为 3 members / 3 roles / 1 organization / 5 objects / 42 fields，服务及发布后 warning 日志正常。
+- TASK-052 / ISSUE-003：members 聚合排序修复已在临时 release 验证；CodeUp `df308b1` 的手动元数据发布、零字段对象和 migration 17 校验和兼容已合并。PostgreSQL 16 全仓、全量 race、vet、module、16 项 Skill 测试、JS/Shell 和 Linux 构建通过，等待提交并发布最终统一 release。
 
-- TASK-049 / FEAT-035：已完成目标租户研发身份与强制授权治理。产品总监 HUMAN 绑定 AgentCiCi 全局用户 `18611892001`；产品经理和开发者 SERVICE 均投影其 owner，三者状态 active 且分别绑定“产品总监 / 产品经理 / 开发者”角色。活动元数据版本 `019fbde4-76cf-73d9-b36a-324692b10d05` 为 5 个对象、42 个字段，5 个对象策略全部 enforced，三类主体均有研发交付部 primary membership。独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下的开发者投影暂停会阻断 CLI，自恢复被禁止；人类管理员恢复后 CLI 成功，审计记录两次状态写入。JWKS 私网/公网路径与固定 issuer 配置已上线，生产服务 active。
+- TASK-050 / ISSUE-002 修复提交`36e1c0a32b2ed0e00755a6b2fd857969868e586c`已发布为`/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e`，二进制SHA-256为`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`。四项服务active、Nginx和健康/匿名负例通过、错误日志为0，线上静态契约包含新归一逻辑。真实Chrome旧Session已过期，Keycloak未保留前台SSO，页面已交回用户登录；登录后仍需最终点击验收。
 
-- CodeUp `origin/main` 已通过普通快进从`27020e3`发布至`63484d36a5ffeaadd5162f4d9d13481cfe8ac99c`，包含网站OIDC、租户名称顶栏、生产发布证据和联系人草稿验证共5个提交；本地HEAD、tracking ref与远端分支回读一致，未使用force push。
+- TASK-051 / FEAT-035：已完成目标租户研发身份与强制授权治理。产品总监 HUMAN 绑定 AgentCiCi 全局用户 `18611892001`；产品经理和开发者 SERVICE 均投影其 owner，三者状态 active 且分别绑定“产品总监 / 产品经理 / 开发者”角色。活动元数据版本 `019fbde4-76cf-73d9-b36a-324692b10d05` 为 5 个对象、42 个字段，5 个对象策略全部 enforced，三类主体均有研发交付部 primary membership。独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下的开发者投影暂停会阻断 CLI，自恢复被禁止；人类管理员恢复后 CLI 成功，审计记录两次状态写入。JWKS 私网/公网路径与固定 issuer 配置已上线，生产服务 active。
 
-- 用户授权的生产元数据写入已完成：当前OACT绑定企业`orgx2x8awt02djpp5xdp`与租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`。`metadata.version.create`创建序号1草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`，`metadata.object.upsert`创建`contact / 联系人`对象`019fb736-c3cb-7e1b-8f98-b93614102672`；`metadata.version.get`回读确认草稿仅含该对象、0字段、0关系。未发布元数据，未创建业务记录或修改授权。
+- 本地 `main` 已合并手动元数据发布、零字段控制台修复与研发身份治理三条提交线，并通过全量 race、vet、module、Linux 构建和状态校验；当前生产 release `20fe64e` 不包含提交 `34023d0` 和 `36e1c0a`，后续需从合并提交构建新 release 后再执行联合生产验收。
+
+- CodeUp `origin/main` 已刷新至 `874f3fd`，其研发身份治理提交线已纳入本地合并结果；本次不推送远端，也不改写历史。
+
+- TASK-049 / FEAT-046 已完成：提交`34023d0a55981761ed0642809b82a5f5b2f7db9f`发布为`/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制SHA-256为`6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`。`metadata.version.publish`现在接受用户明确提供的非空手动`approval_id`并在发布事务中持久审计，其他高风险能力仍校验可信OACT审批声明。四项服务active、Nginx和健康检查通过、错误日志为0；Skill开发/安装副本均为`1.4.0`。
+
+- 用户已明确确认并发布生产元数据首版本：当前OACT绑定企业`orgx2x8awt02djpp5xdp`与租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`。版本`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`现在为`published`，包含`contact / 联系人`对象`019fb736-c3cb-7e1b-8f98-b93614102672`，以及`large_backpack / 大书包`对象`019fb75e-29db-7726-8ff0-8c5033ae08d8`；后者包含active索引字段`name / 书包名称`和`color / 颜色`。快照摘要为`9d56197d04962a3ab6ad60b4610fc4035dd51b2cb6b9f049d719eb88c9953f4f`，发布审计标识为`audit:req-f7b19407-5c65-48b3-8eaa-fdd6369c063b`。未创建业务记录或修改授权。
 
 - TASK-048 已完成：提交`ffdbec4fada7aa0169d75dd785bac8607cf927b8`发布为`/opt/semattice/releases/20260731T080337Z-web-oidc-ffdbec4fada7`，二进制SHA-256为`0e31e75dc59487c6bdf02a9eed169f826fa918d2427e3373a304c2584d8f57f0`。四个服务active、健康和匿名负例通过，真实Chrome顶栏精确显示“应用开发组织”且控制台零错误；上一release、Nginx和静态站备份均保留。
 

@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-03T05:02:04Z
+updated_at: 2026-08-03T05:13:45Z
 updated_by: root
 board_status: active
 ---
@@ -27,6 +27,53 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-050 - Render published objects with no fields in the administration console
+
+- status: `review`
+- priority: `critical`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-040`
+- blocked_by: `none`
+- related_issues: `ISSUE-002`
+- scope_files: `internal/console reader and tests, console JavaScript, production release and browser verification`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Published objects with zero fields are returned with `fields: []`, never `null`.
+- The object list and field matrix render safely even if an older or malformed response contains a non-array `fields` value.
+- Focused and repository regression checks pass, and production Chrome renders both `contact` and `large_backpack` without console errors.
+
+#### Next Action
+
+- The former `36e1c0a` release passed server smoke, but production now runs the later independent `20fe64e` identity-governance release. Build a new release from merged `main`, then verify both objects and zero browser errors.
+
+### TASK-052 - 修复管理中心成员与角色查询
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-051`
+- blocked_by: `none`
+- related_issues: `ISSUE-003`
+- scope_files: `internal/console/reader.go, internal/console/reader_test.go, project state and production release evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- PostgreSQL 成员聚合查询不再违反 GROUP BY 规则，真实 reader 回归测试可捕获该错误。
+- 最终统一 release 同时保留 CodeUp 主线能力，生产 `/console/api/members` 返回三类研发身份和三个角色。
+
+#### Next Action
+
+- 合并后的统一主线验证通过；提交 merge 并发布最终不可变 release。
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
@@ -160,30 +207,35 @@ board_status: active
 
 ## Completed Tasks
 
-### TASK-050 - 修复管理中心成员与角色查询
+### TASK-049 - Support manual confirmation for direct metadata publication
 
 - status: `done`
-- priority: `high`
-- owner_role: `fullstack-agent`
+- priority: `critical`
+- owner_role: `backend-agent`
 - claimed_by: `root`
-- spec_path: `none`
-- depends_on: `TASK-049`
+- spec_path: `docs/specs/FEAT-046-manual-direct-metadata-publish-confirmation.md`
+- depends_on: `TASK-013, TASK-043`
 - blocked_by: `none`
-- related_issues: `ISSUE-002`
-- scope_files: `internal/console/reader.go, internal/console/reader_test.go, project state and production release evidence`
+- related_issues: `none`
+- scope_files: `metadata publish service and audit, Capability contract, tests, cloudcc-semattice skill, production release and verification`
 - branch: `main`
 - pr_url: `n/a`
 
 #### Done When
 
-- PostgreSQL 成员聚合查询不再违反 GROUP BY 规则，真实 reader 回归测试可捕获该错误。
-- 生产 `/console/api/members` 返回三类研发身份和三个角色，服务、健康、匿名负例与其他控制台接口无回归。
+- `metadata.version.publish` accepts an explicitly supplied non-empty manual `approval_id` and audits it transactionally.
+- All other approval-gated capabilities retain trusted OACT approval verification.
+- Local regression, Skill validation, production deployment and health checks pass.
 
 #### Next Action
 
-- 已发布并通过生产验收；常规监控。
+- Completed. The user explicitly confirmed and published the complete two-object production version.
 
-### TASK-049 - 建立 DEV Autopilot 研发身份投影与角色治理
+#### Handoff Note
+
+- Commit `34023d0a55981761ed0642809b82a5f5b2f7db9f` is deployed as `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`. Version `019fb736-8c34-7f0c-a0e8-82f385ffd9b0` was published with both `contact` and `large_backpack`; publish audit ID is `audit:req-f7b19407-5c65-48b3-8eaa-fdd6369c063b`.
+
+### TASK-051 - 建立 DEV Autopilot 研发身份投影与角色治理
 
 - status: `done`
 - priority: `critical`

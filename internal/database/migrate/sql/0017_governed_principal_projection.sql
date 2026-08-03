@@ -22,4 +22,3 @@ create unique index principal_projection_client_id_idx
 create index principal_projection_owner_idx
 	on principal_projection(tenant_bucket,tenant_id,owner_principal_id)
 	where owner_principal_id is not null;
-

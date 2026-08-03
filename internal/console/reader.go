@@ -291,7 +291,7 @@ func (reader *PostgresReader) objects(ctx context.Context, tx pgx.Tx, tenant ten
 	}
 	for _, row := range objectRows {
 		objects = append(objects, map[string]any{
-			"id": row.apiName, "name": row.label, "label": "已发布研发交付模型", "version": fmt.Sprintf("v%d", sequence), "fields": fieldsByObject[row.databaseID],
+			"id": row.apiName, "name": row.label, "label": "已发布研发交付模型", "version": fmt.Sprintf("v%d", sequence), "fields": objectFields(fieldsByObject[row.databaseID]),
 			"inspector": map[string]any{"source": "Semattice 已发布元数据", "owner": "受控发布", "related": row.related, "status": "已发布", "description": row.description},
 		})
 	}
@@ -300,6 +300,13 @@ func (reader *PostgresReader) objects(ctx context.Context, tx pgx.Tx, tenant ten
 		result["selected"] = objects[0]["id"]
 	}
 	return result, nil
+}
+
+func objectFields(fields []map[string]string) []map[string]string {
+	if fields == nil {
+		return make([]map[string]string, 0)
+	}
+	return fields
 }
 
 func (reader *PostgresReader) auditEvents(ctx context.Context, tx pgx.Tx, tenant tenantProjection) (any, error) {

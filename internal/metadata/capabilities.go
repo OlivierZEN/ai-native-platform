@@ -42,7 +42,7 @@ func CapabilityDefinitions(service *Service) []capability.Definition {
 			}
 			return service.UpsertRelation(ctx, request, input)
 		}),
-		definition("metadata.version.publish", "Publish an immutable deterministic metadata snapshot after independent approval.", "high", "metadata.publish", publishSchema(), capability.ExecutionPolicy{Mode: capability.ExecutionAsynchronous, ApprovalRequired: true}, func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+		definition("metadata.version.publish", "Publish the first immutable metadata snapshot with an explicit manual approval ID.", "high", "metadata.publish", publishSchema(), capability.ExecutionPolicy{Mode: capability.ExecutionAsynchronous, ApprovalRequired: true}, func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
 			var input PublishInput
 			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
 				return nil, stableErr

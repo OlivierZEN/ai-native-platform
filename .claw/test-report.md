@@ -1,26 +1,77 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-03T05:02:04Z
+updated_at: 2026-08-03T05:13:45Z
 updated_by: root
-last_run_at: 2026-08-03T05:02:04Z
+last_run_at: 2026-08-03T05:13:45Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-## 2026-08-03 TASK-050 成员与角色查询及生产发布验证
+## 2026-08-03 TASK-052 成员与角色查询及临时生产发布验证
 
 - 生产只读复现确认原 SQL 因 `p.created_at` 未加入 GROUP BY 而失败；修正后同租户可返回三名研发主体和三个角色。
 - 新增真实 PostgreSQL reader 回归测试，覆盖 control 租户解析、runtime TenantContext/RLS、成员聚合结果与角色查询；旧 SQL 会在该测试中返回数据库错误。
 - `./scripts/test-postgres.sh run`：PostgreSQL 16 全仓库集成测试通过，`internal/console` 用时 8.781s。
 - `GOTOOLCHAIN=go1.26.5 go vet ./...`、`go mod verify`、`CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath`和`git diff --check`：通过。
 - 验证构建 SHA-256 为 `08b654e8cfceca3c31b5dc446ed8bd5a6c7b587127f004a75922ff03fc705c68`。
-- 提交 `2b29dc5efb47` 已发布为 `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`；线上二进制 SHA-256 为 `36fbd1451d211865599ba6e0b0bcbb0d0de435cd35fddf57505f80e09bbb4749`。
+- 提交 `2b29dc5efb47` 已发布为临时验证 release `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`；线上二进制 SHA-256 为 `36fbd1451d211865599ba6e0b0bcbb0d0de435cd35fddf57505f80e09bbb4749`。
 - Semattice、Nginx、PostgreSQL 16、Keycloak 均 active，Nginx 配置有效，健康 200，匿名 members=401，发布后 Semattice warning 日志为空。
 - 服务器内使用受保护会话密钥生成未输出、未落盘的 5 分钟租户只读烟测会话；HTTPS members=200，精确返回三名研发主体和三个角色。overview 为 members=3、roles=3、organizations=1、objects=5、fields=42；organizations 和 objects 接口同时通过。
+- 发现 CodeUp `main=df308b1` 含 7 个独有生产提交后，普通快进门禁阻止覆盖；已通过 merge 保留手工元数据发布、零字段对象、研发身份、migration 17 checksum 和本次 members 修复。
+- 合并后 `./scripts/test-postgres.sh run` 与 `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1` 全仓通过；`internal/console` 同时覆盖空字段数组和 members 真实数据库查询。
+- 合并后 vet、module verify、16 项 Skill Python 测试、Node 语法、release shell 语法、状态 validator、diff check 与 Linux/amd64 CGO-free 构建全部通过；构建 SHA-256 为 `b9e79c0b43645a274fcb69e8f6d844b2e926553fda2d99e722abab6405952425`。
 
-## 2026-08-01 TASK-049 DEV Autopilot 研发身份与 PDP 生产验收
+## 2026-08-03 origin/main 合并验证
+
+- `origin/main` 的 6 个提交与本地 5 个提交已在本地 `main` 合并；5 个冲突均限于 `.claw` 状态文件，源码 `internal/console/reader.go` 自动合并成功，最终不存在冲突标记。
+- 并行历史重复使用的研发身份治理 `TASK-049` 已按时间顺序调整为 `TASK-051`，对应任务卡、FEAT-035、看板、测试与运维引用一致；状态 validator 通过。
+- `GOTOOLCHAIN=go1.26.5 go test ./internal/principal ./internal/console ./cmd/ai-native-platform -count=1` 与 `go test -race ./... -count=1` 通过。
+- `GOTOOLCHAIN=go1.26.5 go vet ./...`、`go mod verify`、Linux amd64 CGO-free 构建、`node --check deploy/semattice/www/console/console.js`、`bash -n scripts/release-console.sh` 和 `git diff --cached --check` 全部通过。
+- 本次仅完成本地合并与验证；未推送远端、未部署生产。当前生产 `20fe64e` 不包含本地 `34023d0` 与 `36e1c0a`，联合生产验收需等待新的合并 release。
+
+## 2026-07-31 TASK-050 无字段对象控制台修复验证
+
+- 根因回归测试确认nil字段集合经JSON编码为`fields: []`，并确认已有字段原样保留；`GOTOOLCHAIN=go1.26.5 go test ./internal/console -count=1`通过。
+- Node行为测试以`fields: null`调用真实`objectPage`函数，确认不抛异常且响应对象被归一为长度0的数组；`node --check deploy/semattice/www/console/console.js`通过。
+- `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`和`go mod verify`全部通过。
+- Linux amd64 CGO-free发布构建通过，验证制品SHA-256为`25f9f08d0b92baa9d4ce00b5567f57fcd194e5a87c602711d806d16907ed98d4`；`bash -n scripts/release-console.sh`与`git diff --check`通过。
+- 提交`36e1c0a32b2ed0e00755a6b2fd857969868e586c`已原子发布为`/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e`，生产二进制SHA-256为`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`；上一release和静态站/Nginx备份均由发布脚本保留。
+- Semattice、Nginx、PostgreSQL 16和Keycloak均为active，Semattice重启计数为0，Nginx配置有效，`/healthz`与`/console/`为200，匿名对象API和匿名换票为401，近10分钟Semattice错误日志为0。
+- 线上HTML引用`console.js?v=20260731-03`，线上JavaScript包含`Array.isArray(item.fields)`归一逻辑。真实Chrome旧管理会话已过期且Keycloak前台SSO未保留，已停在官方登录页等待用户登录；未输入或读取凭据，登录后页面验收仍待执行。
+
+## 2026-07-31 生产元数据首版本发布验收
+
+- 用户明确确认发布当前完整草稿中的全部对象和字段。发布前`system.capability.list`确认`metadata.version.publish`仍要求`metadata.publish`scope、高风险、异步、`approval_required=true`以及两个必填输入；能力发现审计标识为`audit:req-88eb9816-fc56-4967-9837-9cd6f0490722`。
+- 发布前`tenant.get-status`确认企业`orgx2x8awt02djpp5xdp`、租户`ce85dabd-68be-503d-9d1b-9b63c536fa78`和Native生命周期均为active；`metadata.version.get`以审计标识`audit:req-2f290dc4-9334-4f79-a2e9-9c957a2bdf9a`确认目标仍为序号1草稿、2对象、2字段、0关系。
+- 写操作先完成无Token dry-run，实际调用使用稳定幂等键`idem-publish-metadata-v1-manual-20260731`和手动确认标识`manual-draft-v1-user-confirmation-20260731`。`metadata.version.publish`返回`succeeded / published`，发布审计标识为`audit:req-f7b19407-5c65-48b3-8eaa-fdd6369c063b`。
+- 不可变快照摘要为`9d56197d04962a3ab6ad60b4610fc4035dd51b2cb6b9f049d719eb88c9953f4f`；包含`contact / 联系人`与`large_backpack / 大书包`两个对象，后者包含`name / 书包名称`和`color / 颜色`两个text字段，零关系。
+- 发布后`metadata.version.get`回读审计标识为`audit:req-8e8de8fb-72cf-463f-8936-38587349e4bc`，版本状态为`published`、快照摘要一致，两个字段均为`lifecycle_state=active`、`index_state=active`；随后`tenant.get-status`仍为active，审计标识为`audit:req-7fe4c51f-bd00-4b0d-8f21-eec9d406f3a1`。
+- 追加管理中心UI验收时，既有Chrome管理中心Session已过期并跳转统一登录页；未代用户输入账号、密码或其他凭据。真实Capability API发布与回读验证已经完成，用户重新登录管理中心后可查看已发布模型。
+
+## 2026-07-31 TASK-049 手动元数据发布确认生产验收
+
+- 定向PostgreSQL用例验证：不在Principal `approvals`声明中的手动ID可完成首版本发布并在同一事务写入`approval_id`、`approval_mode=manual`和版本ID；缺失/空白ID失败，已有活动版本仍要求Changeset，未验证的Changeset审批仍fail closed。
+- 临时`postgres:16`全仓`go test ./... -count=1`、全量`go test -race ./... -count=1`、`go vet ./...`、`go mod verify`、16项Skill Python测试、官方Skill校验和无Token发布dry-run全部通过；临时数据库容器已清理。
+- 实现提交`34023d0a55981761ed0642809b82a5f5b2f7db9f`构建并原子发布为`/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制SHA-256为`6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`；上一release`20260731T080337Z-web-oidc-ffdbec4fada7`保留。
+- Semattice、Nginx、PostgreSQL 16和Keycloak均为active，Semattice重启计数为0，Nginx配置有效，发布后Semattice错误日志为0；边缘健康和首页为200，匿名治理API与匿名换票均为401。
+- 线上`system.capability.list`返回`succeeded`和51项能力；`metadata.version.publish`描述已更新为显式手动确认，仍要求`metadata.publish`、高风险、异步、`approval_required=true`，输入继续必填`metadata_version_id`与`approval_id`。
+- 空白`approval_id`实际负例返回`FAILED_PRECONDITION / a manual approval id is required`，审计标识为`audit:req-7e8ae6fc-bb30-4de9-9fe9-a45f5d60ffdd`，没有改变草稿。
+- Skill开发副本经预览后同步到本机安装目录，两边逐文件一致、官方校验通过且版本均为`1.4.0`；未同步或发布独立GitHub Skill仓库。
+- 最终`metadata.version.get`回读审计标识为`audit:req-8323d1a2-83d5-4e51-a735-55ca06534d86`，草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`仍为`draft`，包含`contact`和`large_backpack`两个对象、后者两个字段、零关系。由于原发布授权发生在只有联系人对象时，本轮没有扩大授权并发布整版。
+
+## 2026-07-31 生产大书包草稿对象验证
+
+- 当前CLI会话为`authenticated`，绑定企业`orgx2x8awt02djpp5xdp`和生产地址`https://semattice.agentcici.com`；未在命令、输出或状态文件中暴露Token。
+- `system.capability.list`返回`succeeded`、51项能力和26个唯一scope；线上Schema确认`metadata.object.upsert`和`metadata.field.upsert`均为中风险、同步、无需审批，要求`metadata.definition.write`。
+- `metadata.version.get`先回读可信草稿`019fb736-8c34-7f0c-a0e8-82f385ffd9b0`为`draft`，当时仅含`contact / 联系人`对象；审计标识为`audit:req-c6017c92-025a-42f1-91ae-4a1d1ec05fa0`。
+- 对象和两项字段写入均先完成无Token dry-run并使用稳定幂等键。`metadata.object.upsert`创建`large_backpack / 大书包`对象`019fb75e-29db-7726-8ff0-8c5033ae08d8`，审计标识为`audit:req-89a97093-2e38-4bb5-b24a-ac8181a1ca62`。
+- `metadata.field.upsert`创建必填、索引的`text`字段`name / 书包名称`，字段ID为`019fb75e-d8fb-70ef-9275-1c90a31dd3b1`，审计标识为`audit:req-ef84b628-547f-44c6-b9c5-32f66ac70e52`；约束为1至200个Unicode字符。
+- `metadata.field.upsert`创建可选、索引的`text`字段`color / 颜色`，字段ID为`019fb75e-dbc9-7576-9889-e0a67ad3902c`，审计标识为`audit:req-45f00d9d-a0f8-465f-a82f-e9297bce81ff`；约束为1至100个Unicode字符。
+- 最终`metadata.version.get`回读返回`succeeded`，审计标识为`audit:req-378fd751-00f7-4762-9b8a-d9adc9f46dd1`；草稿为2对象、2字段、0关系，两个新字段均为`active`且索引状态为`active`。未调用发布、记录、权限、共享或其他高影响写能力。
+
+## 2026-08-01 TASK-051 DEV Autopilot 研发身份与 PDP 生产验收
 
 - `GOTOOLCHAIN=go1.26.5 go test ./internal/principal ./internal/console ./cmd/ai-native-platform -count=1`、项目状态 validator 与 `git diff --check` 均通过。
 - migration 17 已应用，生产 release `/opt/semattice/releases/20260801T143342Z-web-oidc-20fe64ee83e2` active；`https://semattice.agentcici.com/healthz` 返回 200，Nginx 配置有效。

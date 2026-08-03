@@ -1,7 +1,7 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-08-03T05:02:04Z
+updated_at: 2026-08-03T05:10:00Z
 updated_by: root
 archive_status: active
 ---
@@ -11,20 +11,6 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
-
-### TASK-013 - Design the metadata core model
-
-- status: `done`
-- owner_role: `backend-agent`
-- spec_path: `docs/specs/FEAT-013-metadata-core-model.md`
-- handoff: UUIDv7 元数据版本、对象、字段、关系、draft-only 变更、批准发布、发布后不可变、确定性 snapshot/digest、FORCE RLS 和六能力三入口 parity 已完成；后续 Changeset 治理由 TASK-014 承接。
-
-### TASK-014 - Validate the Changeset publisher
-
-- status: `done`
-- owner_role: `backend-agent`
-- spec_path: `docs/specs/FEAT-014-changeset-and-dynamic-field-evolution.md`
-- handoff: migrations 5/6、Changeset 审批/发布/回滚、动态字段回填与 coverage、predecessor 转换、purge/tombstone 已在 PostgreSQL 16 通过；容量认证由 TASK-019 承担。
 
 ### TASK-048 - Deploy tenant name in the console topbar
 
@@ -446,6 +432,61 @@ archive_status: active
 #### Handoff Note
 
 - 五项 `runtime.record.*` 能力、migration 4、五类 640 typed partitions、durable write idempotency 和真实 bounded query planner 已通过本地 maker 验证。100 万记录为单机物理路径证据；50 并发与 8/16 GiB 容量仍由 TASK-019 验收。
+
+### TASK-014 - Validate the Changeset publisher
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-014-changeset-and-dynamic-field-evolution.md`
+- depends_on: `TASK-013, TASK-015`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `changeset state machine, dynamic field/index lifecycle, versioned quota gates, candidate projection, resumable backfill/coverage, unique/reference validation, purge/tombstone`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- Changeset 可预检、模拟、审批、发布、审计与受限回滚，并有版本一致性测试
+- required/indexed/unique/reference、改名、改类型和删除均通过分阶段迁移，覆盖率未达 100% 时不能激活
+- 每对象动态字段/索引和记录 JSONB 边界在 API、MCP、CLI 中一致执行，回填可恢复且不绕过 TenantContext/RLS
+
+#### Next Action
+
+- 已完成。下一阶段创建并批准 `TASK-016` 的授权与共享独立规格；`TASK-019` 继续负责 8/16 GiB 容量认证，不重新打开本任务。
+
+#### Handoff Note
+
+- migrations 5/6、十项 Changeset 能力、候选版本新写投影、按对象有界回填、revision 冲突恢复、required/index/unique/reference coverage、predecessor 转换、purge/tombstone 和版本化 service-tier 配额均已在真实 PostgreSQL 16 下通过。通用 worker/outbox 属于 `TASK-017`；最终容量数值属于 `TASK-019`。
+
+### TASK-013 - Design the metadata core model
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-013-metadata-core-model.md`
+- depends_on: `TASK-010`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `metadata version, object, field, relation, immutable publication, snapshot, API/MCP/CLI`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- UUIDv7 元数据版本、对象、字段和关系模型具有同租户/同版本复合约束及 FORCE RLS
+- draft-only 变更、批准发布、发布后不可变、确定性 snapshot/digest 与六能力三入口 parity 测试通过
+
+#### Next Action
+
+- 已完成；`TASK-014` 已在此不可变元数据版本之上实现 Changeset 治理，后续任务继续保持本任务核心约束。
+
+#### Handoff Note
+
+- 元数据 CRUD/publish 始终使用严格 `ai_native_runtime` TenantContext；只有路由解析使用独立 control pool。跨租户、跨版本和已发布修改均 fail closed。
 
 ## 维护规则
 

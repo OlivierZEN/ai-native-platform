@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"regexp"
+	"strings"
 
 	"github.com/OlivierZEN/ai-native-platform/internal/capability"
 	"github.com/OlivierZEN/ai-native-platform/internal/database"
@@ -303,8 +304,9 @@ func (service *Service) Publish(ctx context.Context, request capability.Request,
 	if stableErr != nil {
 		return Version{}, stableErr
 	}
-	if input.ApprovalID == "" || request.Principal == nil || !contains(request.Principal.Approvals, input.ApprovalID) {
-		return Version{}, preconditionError("a verified independent approval is required")
+	approvalID := strings.TrimSpace(input.ApprovalID)
+	if approvalID == "" {
+		return Version{}, preconditionError("a manual approval id is required")
 	}
 	tenantContext, stableErr := service.tenantContext(ctx, request)
 	if stableErr != nil {
@@ -346,6 +348,13 @@ func (service *Service) Publish(ctx context.Context, request capability.Request,
 			return err
 		}
 		if _, err := tx.Exec(ctx, "update tenant_registry set metadata_version_id=$2,updated_at=clock_timestamp() where tenant_id=$1", tenantContext.TenantID, versionID); err != nil {
+			return err
+		}
+		if err := insertMetadataAudit(ctx, tx, request, tenantContext, versionID.String(), "published", map[string]any{
+			"approval_id":         approvalID,
+			"approval_mode":       "manual",
+			"metadata_version_id": versionID.String(),
+		}); err != nil {
 			return err
 		}
 		return scanVersion(tx.QueryRow(ctx, "select "+versionColumns+" from metadata_version where metadata_version_id=$1", versionID), &result)

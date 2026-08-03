@@ -1,15 +1,15 @@
 ---
 kind: task-status
-task_id: TASK-049
+task_id: TASK-051
 status: done
-updated_at: 2026-08-01T15:46:00Z
-updated_by: root
+updated_at: 2026-08-03T01:13:35Z
+updated_by: root after resolving parallel task-id collision
 assignee: root
 owner_role: integration-agent
 spec_path: docs/specs/FEAT-035-governed-development-principal-projection.md
 ---
 
-# TASK-049 - 建立 DEV Autopilot 研发身份投影与角色治理
+# TASK-051 - 建立 DEV Autopilot 研发身份投影与角色治理
 
 ## Current State
 

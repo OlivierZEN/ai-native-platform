@@ -1,14 +1,14 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-01T15:46:00Z
-updated_by: root
+updated_at: 2026-08-03T01:13:35Z
+updated_by: root after merging local and origin/main release histories
 verification_status: passed
 ---
 
 # 项目部署运维手册
 
-## 2026-08-01 TASK-049 研发身份治理生产基线
+## 2026-08-01 TASK-051 研发身份治理生产基线
 
 - 当前 release 为 `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`，二进制 SHA-256 为 `36fbd1451d211865599ba6e0b0bcbb0d0de435cd35fddf57505f80e09bbb4749`；migration 17 已应用。该 release 修复控制台 members 聚合排序并保留此前的 Principal/JWKS 能力。
 - 目标 tenant `cbcb9ad2-1ac1-50b2-a833-605884b566c1` 对应 company `org5nszpgj99jaysxv6y`；活动 metadata `019fbde4-76cf-73d9-b36a-324692b10d05` 固定为 5 objects / 42 fields。
@@ -35,7 +35,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 当前部署制品 SHA-256：`0e31e75dc59487c6bdf02a9eed169f826fa918d2427e3373a304c2584d8f57f0`。
+- 当前部署制品 SHA-256：`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动
@@ -61,6 +61,8 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
 - 当前 release 目录：`/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`；当前链接：`/opt/semattice/current`。该 release 包含 migration 17 的受治理 Principal 投影、控制台身份/角色读取、members 聚合排序修复和固定 JWKS 验签；旧 release 继续保留为原子回滚点。
+- 历史 release `/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e` 包含零字段控制台修复；更早的 `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598` 包含手动元数据发布确认。当前 `20fe64e` release 不以二者为祖先；合并后的源码须构建新 release 才能同时承载三条交付线。
+- 合并后的 `metadata.version.publish` 仍为高风险、异步、要求 `metadata.publish` scope 和非空 `approval_id`，但该能力不再要求手动标识存在于 OACT `approvals` 声明中。服务端在发布事务内记录 `approval_id`、`approval_mode=manual` 和版本 ID；其他审批能力的可信声明校验不变。
 - 网站OIDC环境备份为`/etc/semattice/semattice.env.backup.20260731T074537Z-before-web-oidc`；Nginx与静态站使用同一release标识创建发布前备份。Keycloak `semattice-cli` client历史备份仍为`/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - `semattice-web`是confidential server-side client。现有Client Secret仅保存于`/etc/semattice/secrets/semattice-web-client-secret`，Secret目录必须为`root:semattice 0750`，文件为`root:semattice 0640`；环境仅以`AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE`引用该文件，不得把Secret写入env、日志、仓库或浏览器。
 - 网站登录入口为`GET /auth/oidc/login`，callback为`https://semattice.agentcici.com/auth/oidc/callback`。登录使用Authorization Code + S256 PKCE、state和nonce；成功后只创建最长15分钟的`Secure; HttpOnly; SameSite=Lax`签名Session Cookie，不在Cookie中保存Keycloak Token。真实Chrome登录已验证回到`/console/`并显示当前租户和退出按钮。

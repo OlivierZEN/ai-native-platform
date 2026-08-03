@@ -45,8 +45,8 @@ python3 scripts/semattice_api.py \
 2. 调用 `metadata.object.upsert` 创建对象。
 3. 对每个字段调用 `metadata.field.upsert`。
 4. 需要对象关联时调用 `metadata.relation.upsert`。
-5. 使用 `metadata.version.get` 回读草稿并核对完整定义。
-6. 首次简单发布可在取得独立审批后调用 `metadata.version.publish`。
+5. 使用 `metadata.version.get` 回读草稿并核对完整定义；发布会包含该版本的全部对象、字段和关系。
+6. 首次简单发布可在用户明确确认整版内容并提供非空手动 `approval_id` 后调用 `metadata.version.publish`。服务端会持久审计该标识，但不会要求它存在于 OACT 的 `approvals` 声明中。
 7. 已有活动版本或记录演进时，改用下方变更集流程。
 
 对象输入示例：
@@ -221,7 +221,7 @@ python3 scripts/semattice_api.py \
 - 可复用受让者集合：先创建 `authorization.group.create`，再用 `authorization.group.set-membership` 管理成员。
 - 按数据组织批量共享：创建 `record.sharing-rule.upsert`，然后重复 `record.sharing-rule.refresh` 直到投影完成；失败时使用 `record.sharing-rule.retry`。
 
-每个高风险调用都必须携带真实 `approval_id`，并在调用后保存 `audit_id` 和资源 ID。
+除 `metadata.version.publish` 的首版本手动确认外，每个要求 `approval_id` 的高风险调用都必须携带可信令牌中已验证的真实审批标识；调用后保存 `audit_id` 和资源 ID。
 
 ## 查看租户和用量
 
