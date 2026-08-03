@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-03T05:19:55Z
+updated_at: 2026-08-03T12:44:26Z
 updated_by: root
 phase: unified-production-release-verified
 active_task: "TASK-050"
-next_action: "TASK-052 已完成；TASK-050 仅待用户登录后的真实浏览器零错误验收。"
+next_action: "TASK-053 已完成；常规监控研发身份生命周期和 CLI 审计。TASK-050 仍待用户登录后的真实浏览器零错误验收。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-053 / FEAT-047 已完成：目标租户现有 4 名 active 成员——HUMAN 产品总监 Oliver、SERVICE 产品经理大乔、SERVICE 开发者悟空和新增 SERVICE 开发者后羿。三名机器主体的人类负责人均为 Oliver；后羿已绑定开发者角色和研发交付部 primary membership。已认证控制台精确回读 4 members / 3 roles / 1 organization / 5 objects / 42 fields；后羿和悟空 CLI 正向、大乔 CLI 越权负向均通过。
 
 - TASK-052 / ISSUE-003 已完成：CodeUp `df308b1` 与 members 修复线合并为 `2329787`，最终 release `/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff` 已上线。生产 members=200，精确返回三名研发主体和三个角色；overview 为 3 members / 3 roles / 1 organization / 5 objects / 42 fields，四项服务与 warning 日志正常。
 

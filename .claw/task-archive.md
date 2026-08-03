@@ -495,6 +495,34 @@ archive_status: active
 
 - 元数据 CRUD/publish 始终使用严格 `ai_native_runtime` TenantContext；只有路由解析使用独立 control pool。跨租户、跨版本和已发布修改均 fail closed。
 
+### TASK-016 - Implement role-centered authorization and record sharing
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-016-role-centered-rbac-organization-data-sharing.md`
+- depends_on: `TASK-012, TASK-013, TASK-015`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `principal/organization/role/permission-set models, object/field/record PDP, organization data scopes, Owner, teams, share grants/rules, snapshots and audit`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- 角色中心的对象、字段、Capability 和平台管理权限由 Permission Set 可复用组合，并强制最小权限与职责分离
+- 记录权限由 Owner、数据归属组织范围、团队、显式共享和规则共享联合计算；组织层级不传播功能权限
+- 对象、字段、记录、共享、调岗、组织合并和跨租户越权场景均有真实 PostgreSQL 与三入口验证
+
+#### Next Action
+
+- 已完成：角色中心 RBAC、组织数据范围、Owner、组/团队/直接共享、规则 `record × group` 投影及失败恢复、条件策略、职责分离、重组、解释审计、三入口、跨租户负向和本地百万记录验证均通过。通用 worker/outbox 与 200 活跃用户/热点公平性容量验收是 TASK-017/TASK-019 的独立工作。
+
+#### Handoff Note
+
+- 已完成并由本地 PostgreSQL 证据验证。Profile 不进入业务授权模型；组织树只计算数据范围与记录共享，禁止 `record × user` ACL 物化。规则投影只存 record-to-group 边且未 ready 时 fail closed；构建结束会检查缺边，access group disabled 会撤销其共享路径；组织合并不物理删除。通用自动运行/告警与完整容量验收已明确拆分至 TASK-017/TASK-019。
+
 ## 维护规则
 
 - 这里只归档 `done` 或 `canceled` 的任务。

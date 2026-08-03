@@ -9,6 +9,15 @@ last_run_status: passed
 
 # 测试报告
 
+## 2026-08-03 TASK-053 DEV Autopilot 研发身份花名册生产验收
+
+- AgentCiCi 权威身份回读：Oliver、大乔、悟空、后羿均为 active；后羿为 SERVICE / AUTOMATION，owner 为 Oliver，client_id 为 `dev-autopilot-developer-houyi`。
+- Semattice `identity.principal.sync` 成功投影四名 Principal；后羿复用开发者角色 `8cb76dc3-04ed-4371-98da-87cb9ec081e1`，并拥有研发交付部 `8ed52e19-be8e-492a-bea7-ab1b2adba0b2` 的 primary membership。
+- 独立审批 `9e5783ea-7713-462f-8388-24b763eca4a0` 已由不同于申请人的组织管理员批准；身份、角色和组织变更均有审计记录。
+- 使用真实短期控制台 Session 调用 `/console/api/members` 与 `/console/api/overview`：返回 4 members / 3 roles / 1 organization / 5 objects / 42 fields；四名成员名称、角色、组织、状态和 owner 均与 FEAT-047 一致。
+- 使用后羿和悟空各自机器凭据调用 DEV Autopilot CLI `tasks list --human`：均成功列出开发任务；使用大乔产品经理凭据调用同一入口返回退出码 3、`FORBIDDEN`。
+- DEV Autopilot 公网 `/devautopilot/api/health` 返回 200、`mode=integrated`、AgentCiCi/Semattice 集成均为 true。全过程未输出 OACT、client secret、私钥或一次性凭据。
+
 ## 2026-08-03 TASK-052 成员与角色查询及统一生产发布验证
 
 - 生产只读复现确认原 SQL 因 `p.created_at` 未加入 GROUP BY 而失败；修正后同租户可返回三名研发主体和三个角色。
