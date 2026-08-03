@@ -1,7 +1,7 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-08-03T05:10:00Z
+updated_at: 2026-08-03T05:16:39Z
 updated_by: root
 archive_status: active
 ---
@@ -11,6 +11,13 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-012 - Validate the PostgreSQL shard baseline
+
+- status: `done`
+- owner_role: `backend-agent`
+- spec_path: `docs/specs/FEAT-012-postgresql-shard-isolation-poc.md`
+- handoff: PostgreSQL 16.13、128 bucket、分区裁剪、FORCE RLS、事务级 TenantContext、连接池清理、跨租户关系拒绝及 runtime/control 最小权限已验证；完整容量验收由 TASK-019 承接。
 
 ### TASK-048 - Deploy tenant name in the console topbar
 

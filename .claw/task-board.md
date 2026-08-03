@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-03T05:13:45Z
+updated_at: 2026-08-03T05:16:39Z
 updated_by: root
 board_status: active
 ---
@@ -50,30 +50,7 @@ board_status: active
 
 #### Next Action
 
-- The former `36e1c0a` release passed server smoke, but production now runs the later independent `20fe64e` identity-governance release. Build a new release from merged `main`, then verify both objects and zero browser errors.
-
-### TASK-052 - 修复管理中心成员与角色查询
-
-- status: `in_progress`
-- priority: `high`
-- owner_role: `fullstack-agent`
-- claimed_by: `root`
-- spec_path: `none`
-- depends_on: `TASK-051`
-- blocked_by: `none`
-- related_issues: `ISSUE-003`
-- scope_files: `internal/console/reader.go, internal/console/reader_test.go, project state and production release evidence`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- PostgreSQL 成员聚合查询不再违反 GROUP BY 规则，真实 reader 回归测试可捕获该错误。
-- 最终统一 release 同时保留 CodeUp 主线能力，生产 `/console/api/members` 返回三类研发身份和三个角色。
-
-#### Next Action
-
-- 合并后的统一主线验证通过；提交 merge 并发布最终不可变 release。
+- 统一 release `20260803T051441Z-web-oidc-2329787b57ff` 已上线，HTTPS API 确认 `contact.fields=[]`、`large_backpack` 为 2 字段；待用户登录后补真实浏览器零错误验收。
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
@@ -206,6 +183,29 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-052 - 修复管理中心成员与角色查询
+
+- status: `done`
+- priority: `high`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-051`
+- blocked_by: `none`
+- related_issues: `ISSUE-003`
+- scope_files: `internal/console/reader.go, internal/console/reader_test.go, project state and production release evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- PostgreSQL 成员聚合查询不再违反 GROUP BY 规则，真实 reader 回归测试可捕获该错误。
+- 最终统一 release 同时保留 CodeUp 主线能力，生产 `/console/api/members` 返回三类研发身份和三个角色。
+
+#### Next Action
+
+- 已完成并发布；常规监控。
 
 ### TASK-049 - Support manual confirmation for direct metadata publication
 
@@ -735,33 +735,6 @@ board_status: active
 #### Handoff Note
 
 - 已完成并由本地 PostgreSQL 证据验证。Profile 不进入业务授权模型；组织树只计算数据范围与记录共享，禁止 `record × user` ACL 物化。规则投影只存 record-to-group 边且未 ready 时 fail closed；构建结束会检查缺边，access group disabled 会撤销其共享路径；组织合并不物理删除。通用自动运行/告警与完整容量验收已明确拆分至 TASK-017/TASK-019。
-
-### TASK-012 - Validate the PostgreSQL shard baseline
-
-- status: `done`
-- priority: `critical`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-012-postgresql-shard-isolation-poc.md`
-- depends_on: `TASK-010`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `PostgreSQL 16.13 schema, 128 LIST partitions, FORCE RLS, TenantContext, pool isolation tests`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- migrations 1/2/3 可从空库执行，128 bucket、分区裁剪、FORCE RLS、事务级 TenantContext、连接池清理和跨租户关系拒绝均有 PostgreSQL 16 实证
-- runtime/control 角色最小权限和无上下文 fail-closed 测试通过
-
-#### Next Action
-
-- 已完成隔离与分区基线；8/16 GiB 下的 50 并发、200 活跃用户和 100 万记录完整容量验收保留给 `TASK-019`。
-
-#### Handoff Note
-
-- PoC 使用绑定 127.0.0.1 的专用临时 PostgreSQL 16.13；未连接生产/共享数据库，未执行 HA、备份或恢复。
 
 ## 维护规则
 

@@ -1,7 +1,7 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-08-03T05:10:00Z
+updated_at: 2026-08-03T05:16:39Z
 updated_by: root
 ---
 
@@ -21,7 +21,7 @@ updated_by: root
 - root_cause: `verified`；reader仅为存在字段的对象填充`fieldsByObject`，零字段对象取得nil slice并编码为JSON `null`，前端直接访问`item.fields.length`。
 - impact: 已发布元数据本身正确，但当前租户的“对象与字段”页面无法渲染。
 - fix: TASK-050 将后端空集合规范化为`[]`，并为前端与零字段场景补防御和回归测试。
-- verification: 修复制品已上线且服务/静态契约smoke通过；待用户完成Keycloak登录后执行真实页面验收，再转为`verified`。
+- verification: 最终统一 release 已上线；HTTPS API 确认 `contact.fields=[]`、`large_backpack` 为 2 字段，服务与静态契约通过。待用户完成 Keycloak 登录后执行真实页面零错误验收，再转为`verified`。
 
 ## 已解决问题
 
@@ -30,8 +30,8 @@ updated_by: root
 - severity: `high`
 - status: `closed`
 - root_cause: `verified` — `internal/console/reader.go` 的成员聚合查询按未加入 GROUP BY 的 `p.created_at` 排序，PostgreSQL 拒绝执行。
-- resolution: TASK-052 将 `p.created_at` 纳入 GROUP BY，新增真实 PostgreSQL reader 回归测试，并发布临时验证 release `20260803T045726Z-web-oidc-2b29dc5efb47`；最终统一主线 release 正在验证。
-- evidence: PostgreSQL 16 全量集成通过；生产 HTTPS members=200，返回三名研发主体与三个角色；概览、组织、对象、匿名 401、服务健康和 warning 日志均通过。
+- resolution: TASK-052 将 `p.created_at` 纳入 GROUP BY，新增真实 PostgreSQL reader 回归测试，并将修复与 CodeUp 生产主线合并发布为最终统一 release `20260803T051441Z-web-oidc-2329787b57ff`。
+- evidence: PostgreSQL 16 与全量 race 通过；生产 HTTPS members=200，返回三名研发主体与三个角色；概览、组织、对象、匿名 401、服务健康和 warning 日志均通过。
 
 ### ISSUE-001 - 当前生产 release 尚未包含合并后的控制台与登录组合
 

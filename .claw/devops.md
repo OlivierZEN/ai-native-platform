@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-03T01:13:35Z
-updated_by: root after merging local and origin/main release histories
+updated_at: 2026-08-03T05:16:39Z
+updated_by: root
 verification_status: passed
 ---
 
@@ -10,7 +10,7 @@ verification_status: passed
 
 ## 2026-08-01 TASK-051 研发身份治理生产基线
 
-- 当前 release 为 `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`，二进制 SHA-256 为 `36fbd1451d211865599ba6e0b0bcbb0d0de435cd35fddf57505f80e09bbb4749`；migration 17 已应用。该 release 修复控制台 members 聚合排序并保留此前的 Principal/JWKS 能力。
+- 当前 release 为 `/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff`，二进制 SHA-256 为 `bdbd5e9547654c4c1142206b46fc8fa129efc61d72e3519b03b471eee6fd027c`；migration 17 已应用。该统一 release 包含 Principal/JWKS、手工元数据发布、零字段对象和 members 聚合排序修复。
 - 目标 tenant `cbcb9ad2-1ac1-50b2-a833-605884b566c1` 对应 company `org5nszpgj99jaysxv6y`；活动 metadata `019fbde4-76cf-73d9-b36a-324692b10d05` 固定为 5 objects / 42 fields。
 - OACT verifier 的 JWKS 配置使用 `https://semattice.agentcici.com/.well-known/agentcici-oact-jwks.json`，Nginx 将其 301 到固定 AgentCiCi JWKS；服务端仍只信任配置的 issuer/audience/JWKS，不信任 token 自带地址。
 - 研发交付部 organization ID 为 `8ed52e19-be8e-492a-bea7-ab1b2adba0b2`；三类 Principal 均有 active primary membership，5 个研发对象授权策略均为 enforced/private。
@@ -35,7 +35,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 当前部署制品 SHA-256：`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`。
+- 当前部署制品 SHA-256：`bdbd5e9547654c4c1142206b46fc8fa129efc61d72e3519b03b471eee6fd027c`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动
@@ -60,8 +60,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 2026-07-31 TASK-040 真实租户治理控制台曾发布为 `/opt/semattice/releases/20260731T012059Z-console`。发布脚本交叉编译 Linux amd64 二进制、校验 SHA-256、原子切换 `/opt/semattice/current` 并保留上一 release / 静态站备份。控制台已不再使用内存 fixture；OACT 会话经 runtime RLS 读取真实租户 published metadata、RBAC、组织和审计。该版本线上验证为 active、Nginx valid、edge health 200、匿名治理 API 401；目标研发交付公司读取为 metadata v1 / 5 objects / 37 active fields，本地成员、角色和组织投影均为 0。
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- 当前 release 目录：`/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`；当前链接：`/opt/semattice/current`。该 release 包含 migration 17 的受治理 Principal 投影、控制台身份/角色读取、members 聚合排序修复和固定 JWKS 验签；旧 release 继续保留为原子回滚点。
-- 历史 release `/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e` 包含零字段控制台修复；更早的 `/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598` 包含手动元数据发布确认。当前 `20fe64e` release 不以二者为祖先；合并后的源码须构建新 release 才能同时承载三条交付线。
+- 当前 release 目录：`/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff`；当前链接：`/opt/semattice/current`。该统一 release 包含 migration 17 受治理 Principal、控制台身份/角色、members 聚合排序、零字段对象、手工元数据发布和固定 JWKS 验签；旧 release `20260803T045726Z-web-oidc-2b29dc5efb47` 继续保留为原子回滚点。
 - 合并后的 `metadata.version.publish` 仍为高风险、异步、要求 `metadata.publish` scope 和非空 `approval_id`，但该能力不再要求手动标识存在于 OACT `approvals` 声明中。服务端在发布事务内记录 `approval_id`、`approval_mode=manual` 和版本 ID；其他审批能力的可信声明校验不变。
 - 网站OIDC环境备份为`/etc/semattice/semattice.env.backup.20260731T074537Z-before-web-oidc`；Nginx与静态站使用同一release标识创建发布前备份。Keycloak `semattice-cli` client历史备份仍为`/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - `semattice-web`是confidential server-side client。现有Client Secret仅保存于`/etc/semattice/secrets/semattice-web-client-secret`，Secret目录必须为`root:semattice 0750`，文件为`root:semattice 0640`；环境仅以`AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE`引用该文件，不得把Secret写入env、日志、仓库或浏览器。

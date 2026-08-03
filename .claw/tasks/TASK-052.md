@@ -1,8 +1,8 @@
 ---
 kind: task-status
 task_id: TASK-052
-status: in_progress
-updated_at: 2026-08-03T05:13:45Z
+status: done
+updated_at: 2026-08-03T05:16:39Z
 updated_by: root
 assignee: root
 owner_role: fullstack-agent
@@ -28,7 +28,9 @@ spec_path: none
 - 临时 release 线上 members=200，返回三名研发主体和三个角色；overview 为 3/3/1/5/42。
 - 合并主线：CodeUp `df308b1` + members 修复提交线；无冲突标记，状态 validator 通过。
 - 合并后 `./scripts/test-postgres.sh run`、`go test -race ./...`、vet、module verify、16 项 Skill Python 测试、JS/Shell 和 Linux/amd64 构建全部通过；构建 SHA-256 `b9e79c0b43645a274fcb69e8f6d844b2e926553fda2d99e722abab6405952425`。
+- 最终 production release：`/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff`；二进制 SHA-256 `bdbd5e9547654c4c1142206b46fc8fa129efc61d72e3519b03b471eee6fd027c`。
+- 最终线上 members=200，返回三名研发主体与三个角色；overview 为 3/3/1/5/42，研发对象字段均为数组，另租户 `contact.fields=[]`、`large_backpack` 为 2 字段。
 
 ## Next Action
 
-- 提交合并，发布最终统一 release 并重新验收。
+- 已完成；常规监控当前 release 和 members 接口。

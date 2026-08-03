@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-03T05:13:45Z
+updated_at: 2026-08-03T05:16:39Z
 updated_by: root
-phase: merged-production-line-validation
-active_task: "TASK-052"
-next_action: "统一主线全量验证通过；提交合并并构建发布最终不可变 release。"
+phase: unified-production-release-verified
+active_task: "TASK-050"
+next_action: "TASK-052 已完成；TASK-050 仅待用户登录后的真实浏览器零错误验收。"
 read_next:
   goals: true
   decisions: true
@@ -19,15 +19,15 @@ read_next:
 
 ## 快照
 
-- TASK-052 / ISSUE-003：members 聚合排序修复已在临时 release 验证；CodeUp `df308b1` 的手动元数据发布、零字段对象和 migration 17 校验和兼容已合并。PostgreSQL 16 全仓、全量 race、vet、module、16 项 Skill 测试、JS/Shell 和 Linux 构建通过，等待提交并发布最终统一 release。
+- TASK-052 / ISSUE-003 已完成：CodeUp `df308b1` 与 members 修复线合并为 `2329787`，最终 release `/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff` 已上线。生产 members=200，精确返回三名研发主体和三个角色；overview 为 3 members / 3 roles / 1 organization / 5 objects / 42 fields，四项服务与 warning 日志正常。
 
-- TASK-050 / ISSUE-002 修复提交`36e1c0a32b2ed0e00755a6b2fd857969868e586c`已发布为`/opt/semattice/releases/20260731T101946Z-web-oidc-36e1c0a32b2e`，二进制SHA-256为`f26f18994494365efe030bbe29739967b9c60c704dbfea189e28d8fee5e11528`。四项服务active、Nginx和健康/匿名负例通过、错误日志为0，线上静态契约包含新归一逻辑。真实Chrome旧Session已过期，Keycloak未保留前台SSO，页面已交回用户登录；登录后仍需最终点击验收。
+- TASK-050 / ISSUE-002 已纳入最终统一 release：线上 HTTPS 对已发布元数据租户回读确认 `contact.fields=[]`、`large_backpack` 保留 2 个字段，前后端静态契约已上线；真实浏览器会话因未登录仍待用户补充零错误页面验收。
 
 - TASK-051 / FEAT-035：已完成目标租户研发身份与强制授权治理。产品总监 HUMAN 绑定 AgentCiCi 全局用户 `18611892001`；产品经理和开发者 SERVICE 均投影其 owner，三者状态 active 且分别绑定“产品总监 / 产品经理 / 开发者”角色。活动元数据版本 `019fbde4-76cf-73d9-b36a-324692b10d05` 为 5 个对象、42 个字段，5 个对象策略全部 enforced，三类主体均有研发交付部 primary membership。独立审批 `f1591286-71bb-49ed-b874-80a7c7640fa9` 下的开发者投影暂停会阻断 CLI，自恢复被禁止；人类管理员恢复后 CLI 成功，审计记录两次状态写入。JWKS 私网/公网路径与固定 issuer 配置已上线，生产服务 active。
 
-- 本地 `main` 已合并手动元数据发布、零字段控制台修复与研发身份治理三条提交线，并通过全量 race、vet、module、Linux 构建和状态校验；当前生产 release `20fe64e` 不包含提交 `34023d0` 和 `36e1c0a`，后续需从合并提交构建新 release 后再执行联合生产验收。
+- 本地 `main` 的统一提交 `2329787` 同时包含手动元数据发布、零字段控制台修复、研发身份治理、migration 17 checksum 兼容和 members 修复；全量验证与联合生产验收通过。
 
-- CodeUp `origin/main` 已刷新至 `874f3fd`，其研发身份治理提交线已纳入本地合并结果；本次不推送远端，也不改写历史。
+- GitHub 与 CodeUp 待以普通快进同步统一提交，禁止 force push 或改写历史。
 
 - TASK-049 / FEAT-046 已完成：提交`34023d0a55981761ed0642809b82a5f5b2f7db9f`发布为`/opt/semattice/releases/20260731T092534Z-web-oidc-34023d0a5598`，二进制SHA-256为`6a24e4434b4eb97157d30e4284c0537147d3f8032ad2f1d10cd4e8a920a721f3`。`metadata.version.publish`现在接受用户明确提供的非空手动`approval_id`并在发布事务中持久审计，其他高风险能力仍校验可信OACT审批声明。四项服务active、Nginx和健康检查通过、错误日志为0；Skill开发/安装副本均为`1.4.0`。
 

@@ -1,15 +1,15 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-03T05:13:45Z
+updated_at: 2026-08-03T05:16:39Z
 updated_by: root
-last_run_at: 2026-08-03T05:13:45Z
+last_run_at: 2026-08-03T05:16:39Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-## 2026-08-03 TASK-052 成员与角色查询及临时生产发布验证
+## 2026-08-03 TASK-052 成员与角色查询及统一生产发布验证
 
 - 生产只读复现确认原 SQL 因 `p.created_at` 未加入 GROUP BY 而失败；修正后同租户可返回三名研发主体和三个角色。
 - 新增真实 PostgreSQL reader 回归测试，覆盖 control 租户解析、runtime TenantContext/RLS、成员聚合结果与角色查询；旧 SQL 会在该测试中返回数据库错误。
@@ -22,6 +22,9 @@ last_run_status: passed
 - 发现 CodeUp `main=df308b1` 含 7 个独有生产提交后，普通快进门禁阻止覆盖；已通过 merge 保留手工元数据发布、零字段对象、研发身份、migration 17 checksum 和本次 members 修复。
 - 合并后 `./scripts/test-postgres.sh run` 与 `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1` 全仓通过；`internal/console` 同时覆盖空字段数组和 members 真实数据库查询。
 - 合并后 vet、module verify、16 项 Skill Python 测试、Node 语法、release shell 语法、状态 validator、diff check 与 Linux/amd64 CGO-free 构建全部通过；构建 SHA-256 为 `b9e79c0b43645a274fcb69e8f6d844b2e926553fda2d99e722abab6405952425`。
+- 合并提交 `2329787b57ff` 已发布为 `/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff`；线上二进制 SHA-256 为 `bdbd5e9547654c4c1142206b46fc8fa129efc61d72e3519b03b471eee6fd027c`，临时 release 仍保留为回滚点。
+- 最终线上 members=200，精确返回三名研发主体和三个角色；overview 为 3 members / 3 roles / 1 organization / 5 objects / 42 fields，5 个研发对象的 fields 均为数组。
+- 另一已发布元数据租户回读确认 `contact.fields=[]`、`large_backpack` 为 2 字段；Semattice、Nginx、PostgreSQL 16、Keycloak active，匿名 members=401，Nginx 有效且发布后 warning 日志为空。
 
 ## 2026-08-03 origin/main 合并验证
 
