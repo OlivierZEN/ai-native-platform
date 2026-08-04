@@ -2,13 +2,13 @@
 kind: feature-spec
 feature_id: FEAT-051
 title: Discover the current published metadata bundle
-status: approved
+status: completed
 owner_role: integration-agent
 task_ids: TASK-060
 related_decisions: ADR-003, ADR-014
 related_issues: ISSUE-005
-updated_at: 2026-08-04T07:18:00Z
-updated_by: root during implementation
+updated_at: 2026-08-04T07:20:13Z
+updated_by: root after production and Skill release verification
 ---
 
 # FEAT-051 - 当前已发布元数据发现
@@ -68,7 +68,9 @@ updated_by: root during implementation
 ## 实现进展
 
 - 用户已批准方案与发布顺序；平台 Capability、租户指针读取、错误映射、三入口/隔离测试和 Skill v1.5.0 开发副本已完成。
-- 定向 PostgreSQL、全量 PostgreSQL、Go test/race/vet/module/build、Skill 认证 19 项、结构校验和无 Token dry-run 已通过；待提交、生产发布、线上回读和独立 Skill 标签发布。
+- 定向 PostgreSQL、全量 PostgreSQL、Go test/race/vet/module/build、Skill 认证 19 项、结构校验和无 Token dry-run 已通过。
+- CodeUp `main` 已合并并推送为 `0398ebebe3b97e343a49bb342d07d4d7d61e3226`；生产 release `20260804T071457Z-web-oidc-0398ebebe3b9` 上线，线上发现 56 项能力并以空输入回读当前两个对象。
+- 独立 Skill 仓库以提交 `685687e71e41d2e08fd157e8fce9729b8d25c174` 原子发布 `main + v1.5.0`；远程和本机安装副本均验证为 1.5.0。
 
 ## 交接说明
 

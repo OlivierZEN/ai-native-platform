@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T07:18:00Z
-updated_by: root after integrating concurrent CodeUp work during TASK-060
+updated_at: 2026-08-04T07:20:13Z
+updated_by: root after archiving completed TASK-060
 board_status: active
 ---
 
@@ -28,35 +28,6 @@ board_status: active
 
 ## Active Tasks
 
-### TASK-060 - Add current metadata discovery and publish Skill v1.5.0
-
-- status: `in_progress`
-- priority: `high`
-- owner_role: `integration-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-051-current-metadata-discovery.md`
-- depends_on: `none`
-- blocked_by: `none`
-- related_issues: `ISSUE-005`
-- scope_files: `metadata Capability service/contract/tests, main registry count, cloudcc-semattice workflow/catalog/version, production and Skill release evidence`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- `metadata.version.get-current` returns the tenant's pointer-selected metadata Bundle with low-risk `metadata.read` semantics and no caller-supplied identity or version ID.
-- Empty-current, draft-not-current, cross-tenant, schema and API/MCP/CLI registry behavior have real test evidence.
-- Production capability discovery and current-object readback succeed without project-state or console fallbacks.
-- `cloudcc-semattice` v1.5.0 is validated, atomically published with an immutable tag, and synchronized to the local installation.
-
-#### Next Action
-
-- Commit and push the validated platform/Skill source change, then deploy the platform before publishing Skill v1.5.0.
-
-#### Handoff Note
-
-- The user approved platform-first publication followed by Skill v1.5.0. Reuse `tenant_registry.metadata_version_id` and the existing Bundle; do not add version listing or mutate `metadata.version.get`.
-
 ### TASK-059 - Govern active-metadata permission bootstrap
 
 - status: `review`
@@ -78,7 +49,7 @@ board_status: active
 
 #### Next Action
 
-- 提交并发布 Semattice，再恢复目标租户权限初始化与在线负向验收。
+- 代码已随 release `20260804T071457Z-web-oidc-0398ebebe3b9` 上线；恢复目标租户权限初始化与在线负向验收。
 
 ### TASK-058 - Support native Windows login in the Semattice skill
 
@@ -136,7 +107,7 @@ board_status: active
 
 #### Handoff Note
 
-- CodeUp `main` and production are synchronized through `26d40f84e55f40863d3c86e081664aecbd63af2c`. Release `/opt/semattice/releases/20260804T050808Z-web-oidc-26d40f84e55f` is healthy and publishes a SHA-verified downloadable binary. GitHub rejected both available SSH identities with an explicit permission error; no history was modified there.
+- CodeUp `main` and production are synchronized through `0398ebebe3b97e343a49bb342d07d4d7d61e3226`. Release `/opt/semattice/releases/20260804T071457Z-web-oidc-0398ebebe3b9` is healthy and publishes a SHA-verified downloadable binary. GitHub rejected both available SSH identities with an explicit permission error; no history was modified there.
 
 ### TASK-050 - Render published objects with no fields in the administration console
 

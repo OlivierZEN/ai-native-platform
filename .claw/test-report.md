@@ -1,13 +1,23 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T06:34:03Z
-updated_by: ai after merging cloudcc-semattice v1.4.2 release verification
-last_run_at: 2026-08-04T06:34:03Z
+updated_at: 2026-08-04T07:20:13Z
+updated_by: root after TASK-060 release verification
+last_run_at: 2026-08-04T07:20:13Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-060 当前元数据发现与 Skill v1.5.0 发布验证
+
+- 新能力定向用例覆盖无当前版本 `FAILED_PRECONDITION`、额外输入拒绝、草稿不影响当前指针、跨租户隔离和 API/MCP/CLI parity；主程序注册表断言更新为 56 项。
+- `./scripts/test-postgres.sh run` 全仓 PostgreSQL 16 通过；全量 `go test ./...`、`go test -race ./...`、`go vet ./...`、`go mod verify`、Linux amd64 CGO-free 构建、状态 validator 和 `git diff --check` 通过。并发 CodeUp 变更以真实 merge 保留后再次执行同一 Go/PostgreSQL 门禁通过。
+- Skill 认证模块 19/19 通过；`quick_validate.py`、YAML、Python 入口语法、CLI help、无 Token `metadata.version.get-current --dry-run`、SemVer/README、私钥/JWT 扫描和开发/发布目录一致性通过。
+- CodeUp `main` 回读为 `0398ebebe3b97e343a49bb342d07d4d7d61e3226`。生产 release `/opt/semattice/releases/20260804T071457Z-web-oidc-0398ebebe3b9` 二进制 SHA-256 为 `ed58228e1f3f893b387eb5b6a0892a39fe6d5c672423a49134eb57d70fba9c3c`；四项服务 active、Semattice `NRestarts=0`、warning 日志为空、edge health 正常、匿名治理 API 为 401。
+- 线上 `system.capability.list` 返回 56 项并确认新能力为 v1、`metadata.read`、低风险、同步、无审批、空对象 Schema；审计标识 `audit:req-653e5aa2-30e9-4c9d-80c4-4df46e99cf40`。
+- 本机安装 Skill 1.5.0 以空输入成功回读 published 版本 `019fb736-8c34-7f0c-a0e8-82f385ffd9b0`：`contact / 联系人` 0 字段、`large_backpack / 大书包` 2 字段；审计标识 `audit:req-e15ead80-a8e3-43ec-9575-c48fcc7ecd89`。
+- 独立 Skill release 提交 `685687e71e41d2e08fd157e8fce9729b8d25c174` 已原子推送 `main + v1.5.0`；本地 HEAD、`origin/main` 和 tag peeled commit 一致，远程 HEAD 指向 main，仓库/标签页为 200，main/tag raw VERSION 均为 1.5.0，发布仓库 clean。本机旧 1.4.2 备份位于 `/Users/xuhm/.codex/skill-backups/cloudcc-semattice-1.4.2-20260804T0720Z`。
 
 ## 2026-08-04 TASK-059 活动元数据首次权限引导本地验证
 
