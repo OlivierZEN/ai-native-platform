@@ -338,12 +338,54 @@ curl -sS \
         <div class="method-body">
           <div class="method-title">
             <div>
-              <p class="eyebrow">NON-INTERACTIVE</p>
-              <h3>Agent CLI</h3>
+              <p class="eyebrow">CODEX SKILL + NON-INTERACTIVE</p>
+              <h3>Skill 与 Agent CLI</h3>
             </div>
             <span class="availability local">受信主机</span>
           </div>
-          <p>CLI 没有菜单或确认提示，只读取 flags/stdin JSON，并向 stdout 输出单个 JSON。当前 CLI 在进程内加载 Capability Runtime，完整业务能力需要受控数据库与身份环境。</p>
+          <p>Codex 用户可先安装官方 <code>cloudcc-semattice</code> Skill，用自然语言完成产品理解、方案设计和受控 Capability 调用；需要进程级集成时，再使用下方二进制 CLI。</p>
+
+          <div class="skill-guide" aria-labelledby="skill-guide-title">
+            <div class="skill-guide-head">
+              <div>
+                <p class="eyebrow">OFFICIAL CODEX SKILL</p>
+                <h4 id="skill-guide-title">两步接入 Semattice Skill</h4>
+                <p>安装到 Codex 技能目录后，在任务中通过 <code>$cloudcc-semattice</code> 调用。Skill 会遵守 OAuth、RBAC、租户隔离、审批、幂等和审计边界。</p>
+              </div>
+              <a class="skill-repo" href="https://github.com/CloudCCAI/cloudcc-semattice" target="_blank" rel="noreferrer">GitHub 仓库 <span>↗</span></a>
+            </div>
+
+            <div class="skill-steps">
+              <div class="skill-step">
+                <span class="skill-step-label">01 / INSTALL</span>
+                <h5>安装固定版本</h5>
+                <div class="code-shell compact">
+                  <div class="code-bar"><span>shell</span><button class="copy" data-copy="skill-install-code">复制</button></div>
+                  <pre id="skill-install-code"><code>git clone \
+  --branch v1.1.0 \
+  --depth 1 \
+  https://github.com/CloudCCAI/cloudcc-semattice.git \
+  ~/.codex/skills/cloudcc-semattice</code></pre>
+                </div>
+              </div>
+
+              <div class="skill-step">
+                <span class="skill-step-label">02 / USE IN CODEX</span>
+                <h5>在任务中调用</h5>
+                <div class="code-shell compact">
+                  <div class="code-bar"><span>Codex prompt</span><button class="copy" data-copy="skill-use-code">复制</button></div>
+                  <pre id="skill-use-code"><code>$cloudcc-semattice
+请先发现当前 Semattice 环境的可用能力，
+然后读取当前租户状态。</code></pre>
+                </div>
+              </div>
+            </div>
+
+            <p class="skill-note">需要 Python 3.10+。不要把 Token、密码或可复用凭据写入提示词、命令参数、技能目录、Git 仓库或日志；详细配置、能力范围和升级方式以 GitHub README 为准。</p>
+          </div>
+
+          <p class="method-subheading">BINARY CLI / TRUSTED HOST</p>
+          <p>二进制 CLI 没有菜单或确认提示，只读取 flags/stdin JSON，并向 stdout 输出单个 JSON。当前 CLI 在进程内加载 Capability Runtime，完整业务能力需要受控数据库与身份环境。</p>
           <div class="code-shell">
             <div class="code-bar"><span>shell</span><button class="copy" data-copy="cli-code">复制</button></div>
             <pre id="cli-code"><code>chmod 700 ./semattice-linux-amd64

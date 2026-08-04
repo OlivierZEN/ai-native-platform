@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T03:25:00Z
-updated_by: ai
+updated_at: 2026-08-04T03:52:22Z
+updated_by: root after local website Skill guidance verification
 board_status: active
 ---
 
@@ -27,6 +27,30 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-055 - Add cloudcc-semattice Skill installation and usage guidance to the website
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `frontend-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `deploy/semattice/www/index.html, deploy/semattice/www/styles.css, static page verification and website rollout`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- The `#cli` section links to the official `CloudCCAI/cloudcc-semattice` repository and shows the current published fixed-version installation command.
+- Codex users can see how to invoke `$cloudcc-semattice` without exposing tokens or reusable secrets.
+- Desktop and mobile layouts render without overflow, existing copy controls work, and the production page serves the new guidance.
+
+#### Next Action
+
+- Local structural, responsive and browser checks passed. Commit and push the website source, then publish the static files with a recoverable backup and verify the public HTTPS page.
 
 ### TASK-050 - Render published objects with no fields in the administration console
 

@@ -1,13 +1,20 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T03:25:00Z
-updated_by: ai
-last_run_at: 2026-08-04T03:25:00Z
+updated_at: 2026-08-04T03:52:22Z
+updated_by: root after local website Skill guidance verification
+last_run_at: 2026-08-04T03:52:22Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-055 官网 Skill 安装说明本地验证
+
+- GitHub raw README 与仓库页面 HTTPS 回读通过；当前公开固定版本为 `v1.1.0`，安装目标为 `~/.codex/skills/cloudcc-semattice`，调用名为 `$cloudcc-semattice`。
+- 首页 HTML 解析、`node --check deploy/semattice/www/app.js`、GitHub 链接 200、`git diff --check` 均通过。
+- 真实 Chrome 分别以 1440px 与 390px 宽度渲染 `#cli`；Skill 卡片为双列/单列，目标区域无横向溢出，长安装命令只在代码框内部滚动，两处新增复制按钮均实际显示“已复制”。
+- `go test ./...`、`go vet ./...`、`go mod verify` 与项目状态 validator 全部通过；本轮未修改运行时代码、Skill 发布仓库或生产系统。
 
 ## 2026-08-04 TASK-054 组织成员关系能力与哪吒生产验收
 

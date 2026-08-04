@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T03:25:00Z
-updated_by: ai
-phase: governed-organization-membership-production-verified
-active_task: "TASK-050"
-next_action: "保持组织成员关系能力和哪吒休息状态的生产监控；TASK-050 等待用户登录后补浏览器零错误验收。"
+updated_at: 2026-08-04T03:52:22Z
+updated_by: root after local website Skill guidance verification
+phase: website-skill-guidance-release-ready
+active_task: "TASK-055"
+next_action: "提交并推送已验证的官网 Skill 安装说明，再按静态站备份与回滚约束发布并执行 HTTPS 回读。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-055 本地实现已完成：官网 `#cli` 区域新增 `cloudcc-semattice` Codex Skill 的 GitHub 安装入口、`v1.1.0` 固定版本安装命令、`$cloudcc-semattice` 调用示例和凭据安全提醒；桌面/390px 手机真实 Chrome 渲染、内部滚动和复制按钮均通过，待生产发布与 HTTPS 回读。
 
 - TASK-054 / FEAT-048 已完成：正式能力 `identity.principal.set-organization-membership` 已发布，要求 `authorization.manage`、HUMAN 管理主体和已验签独立审批；数据库集成、全量 race/vet、55 项线上能力发现均通过。release `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a` 已上线，二进制 SHA-256 为 `1187b727e05582cba2c4d8b9251895ddcb95da2eef997ef378d7e8136c808e6b`。
 
