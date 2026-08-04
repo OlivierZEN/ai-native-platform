@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-03T12:44:26Z
-updated_by: root
+updated_at: 2026-08-04T03:05:00Z
+updated_by: ai
 board_status: active
 ---
 
@@ -27,6 +27,30 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-054 - Add governed Principal organization membership capability
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `ai`
+- spec_path: `docs/specs/FEAT-048-governed-principal-organization-membership.md`
+- depends_on: `TASK-051, TASK-053`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `internal/principal, main wiring, capability catalog, production release and DEV Autopilot identity verification`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- `identity.principal.set-organization-membership` 作为正式高风险 Capability 发布，要求 HUMAN 管理主体、`authorization.manage` 和已验签独立审批。
+- 能力可幂等建立或结束指定 Principal 的组织成员关系，并维持每个主体至多一个 active primary membership。
+- 数据库集成测试、全量回归和生产能力发现通过；新增开发者哪吒通过该能力归属研发交付部。
+
+#### Next Action
+
+- 先添加失败测试，再实现组织成员关系写入、快照失效和审计。
 
 ### TASK-050 - Render published objects with no fields in the administration console
 

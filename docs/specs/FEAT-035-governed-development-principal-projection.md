@@ -26,7 +26,7 @@ FEAT-033 已验证 OACT 的 HUMAN/SERVICE claims，但当前 `principal_projecti
 - 扩展 `principal_projection`：显示名、公共编号、SERVICE owner、client ID、权威来源和最后同步时间。
 - `identity.principal.sync` 只根据已验签 OACT 投影当前调用者，禁止请求体指定另一个 principal ID、类型、owner 或 client ID。
 - SERVICE 同步必须携带 AgentCiCi 签发的 `owner_principal_id` 和 `client_id`，且 owner 已是同租户有效 HUMAN 投影。
-- `identity.principal.list` 和 `identity.principal.set-status` 供持有 `authorization.manage` 的人类管理主体查询、暂停、恢复或禁用投影。
+- `identity.principal.list`、`identity.principal.set-status` 和 `identity.principal.set-organization-membership` 供持有 `authorization.manage` 的人类管理主体查询、暂停、恢复、禁用投影或管理组织归属。
 - 管理中心展示真实账号名称、类型、公共编号/client ID、负责人、角色和状态。
 - 生产建立产品总监、产品经理、开发者投影，配置产品总监、产品经理、开发者三个最小权限角色并完成审计。
 
@@ -50,6 +50,7 @@ FEAT-033 已验证 OACT 的 HUMAN/SERVICE claims，但当前 `principal_projecti
 - `identity.principal.sync`，scope `identity.principal.sync`，输入：`display_name`、`public_id`（可选显示元数据）；输出当前投影。
 - `identity.principal.list`，scope `authorization.manage`，输入可按 type/status 过滤。
 - `identity.principal.set-status`，scope `authorization.manage`，高风险审批能力，输入 `principal_id`、`status=active|suspended|disabled`、`reason`、`approval_id`；审批必须出现在已验签 OACT `approvals` 中。
+- `identity.principal.set-organization-membership`，scope `authorization.manage`，高风险审批能力，输入 `principal_id`、`organization_id`、`active`、`primary`、`approval_id`；只接受 HUMAN 管理主体与已验签审批，并在变更后失效目标主体的权限快照。
 
 投影状态变化不修改 AgentCiCi 的全局 Principal。全局恢复后仍须由 Semattice 管理主体显式恢复租户投影，形成双层停用保护。
 

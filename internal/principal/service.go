@@ -37,6 +37,22 @@ type SetStatusInput struct {
 	ApprovalID  string `json:"approval_id"`
 }
 
+type SetOrganizationMembershipInput struct {
+	PrincipalID    string `json:"principal_id"`
+	OrganizationID string `json:"organization_id"`
+	Active         bool   `json:"active"`
+	Primary        bool   `json:"primary"`
+	ApprovalID     string `json:"approval_id"`
+}
+
+type OrganizationMembership struct {
+	MembershipID   string `json:"membership_id"`
+	PrincipalID    string `json:"principal_id"`
+	OrganizationID string `json:"organization_id"`
+	Status         string `json:"status"`
+	Primary        bool   `json:"primary"`
+}
+
 type Projection struct {
 	PrincipalID      string     `json:"principal_id"`
 	PrincipalType    string     `json:"principal_type"`
@@ -213,15 +229,8 @@ func (service *Service) SetStatus(ctx context.Context, request capability.Reques
 	if stableErr != nil {
 		return Projection{}, stableErr
 	}
-	approved := false
-	for _, candidate := range request.Principal.Approvals {
-		if candidate == approvalID {
-			approved = true
-			break
-		}
-	}
-	if !approved {
-		return Projection{}, &capability.StableError{Code: capability.CodeUnauthorized, Message: "verified approval is required"}
+	if stableErr := requireVerifiedApproval(request, approvalID); stableErr != nil {
+		return Projection{}, stableErr
 	}
 	tenant, stableErr := service.route(ctx, request)
 	if stableErr != nil {
@@ -245,6 +254,105 @@ func (service *Service) SetStatus(ctx context.Context, request capability.Reques
 	})
 	if err != nil {
 		return Projection{}, mapError(err)
+	}
+	return result, nil
+}
+
+func (service *Service) SetOrganizationMembership(ctx context.Context, request capability.Request, input SetOrganizationMembershipInput) (OrganizationMembership, *capability.StableError) {
+	if stableErr := requireHumanManager(request); stableErr != nil {
+		return OrganizationMembership{}, stableErr
+	}
+	principalID := strings.TrimSpace(input.PrincipalID)
+	if principalID == "" || len(principalID) > 200 {
+		return OrganizationMembership{}, validation("principal_id is required")
+	}
+	organizationID, err := uuid.Parse(strings.TrimSpace(input.OrganizationID))
+	if err != nil || organizationID == uuid.Nil {
+		return OrganizationMembership{}, validation("organization_id must be a UUID")
+	}
+	approvalID, stableErr := requiredText(input.ApprovalID, 200, "approval_id")
+	if stableErr != nil {
+		return OrganizationMembership{}, stableErr
+	}
+	if stableErr := requireVerifiedApproval(request, approvalID); stableErr != nil {
+		return OrganizationMembership{}, stableErr
+	}
+	tenant, stableErr := service.route(ctx, request)
+	if stableErr != nil {
+		return OrganizationMembership{}, stableErr
+	}
+	var result OrganizationMembership
+	err = database.WithTenant(ctx, service.pool, tenant, func(tx pgx.Tx) error {
+		var principalStatus string
+		if err := tx.QueryRow(ctx, `select status from principal_projection
+			where tenant_bucket=$1 and tenant_id=$2 and principal_id=$3 for update`, tenant.Bucket, tenant.TenantID, principalID).Scan(&principalStatus); err != nil {
+			return err
+		}
+		var organizationStatus string
+		if err := tx.QueryRow(ctx, `select lifecycle_state from organization_node
+			where tenant_bucket=$1 and tenant_id=$2 and organization_id=$3`, tenant.Bucket, tenant.TenantID, organizationID).Scan(&organizationStatus); err != nil {
+			return err
+		}
+		if input.Active && organizationStatus != "active" {
+			return precondition("organization must be active")
+		}
+		if input.Active {
+			if input.Primary {
+				if _, err := tx.Exec(ctx, `update principal_org_membership
+					set membership_state='ended',effective_to=clock_timestamp(),is_primary=false,updated_at=clock_timestamp()
+					where tenant_bucket=$1 and tenant_id=$2 and principal_id=$3 and organization_id<>$4
+					  and membership_state='active' and is_primary`, tenant.Bucket, tenant.TenantID, principalID, organizationID); err != nil {
+					return err
+				}
+			}
+			var membershipID uuid.UUID
+			err := tx.QueryRow(ctx, `select membership_id from principal_org_membership
+				where tenant_bucket=$1 and tenant_id=$2 and principal_id=$3 and organization_id=$4 and membership_state='active'
+				order by created_at,membership_id limit 1 for update`, tenant.Bucket, tenant.TenantID, principalID, organizationID).Scan(&membershipID)
+			switch {
+			case errors.Is(err, pgx.ErrNoRows):
+				membershipID = uuid.New()
+				if _, err := tx.Exec(ctx, `insert into principal_org_membership(
+					tenant_bucket,tenant_id,membership_id,principal_id,organization_id,is_primary)
+					values($1,$2,$3,$4,$5,$6)`, tenant.Bucket, tenant.TenantID, membershipID, principalID, organizationID, input.Primary); err != nil {
+					return err
+				}
+			case err != nil:
+				return err
+			default:
+				if _, err := tx.Exec(ctx, `update principal_org_membership set is_primary=$5,updated_at=clock_timestamp()
+					where tenant_bucket=$1 and tenant_id=$2 and membership_id=$3 and principal_id=$4`, tenant.Bucket, tenant.TenantID, membershipID, principalID, input.Primary); err != nil {
+					return err
+				}
+			}
+		} else {
+			tag, err := tx.Exec(ctx, `update principal_org_membership
+				set membership_state='ended',effective_to=clock_timestamp(),is_primary=false,updated_at=clock_timestamp()
+				where tenant_bucket=$1 and tenant_id=$2 and principal_id=$3 and organization_id=$4 and membership_state='active'`, tenant.Bucket, tenant.TenantID, principalID, organizationID)
+			if err != nil {
+				return err
+			}
+			if tag.RowsAffected() == 0 {
+				return pgx.ErrNoRows
+			}
+		}
+		if err := scanOrganizationMembership(tx.QueryRow(ctx, `select membership_id,principal_id,organization_id,membership_state,is_primary
+			from principal_org_membership where tenant_bucket=$1 and tenant_id=$2 and principal_id=$3 and organization_id=$4
+			order by created_at desc,membership_id desc limit 1`, tenant.Bucket, tenant.TenantID, principalID, organizationID), &result); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(ctx, `delete from permission_snapshot where tenant_bucket=$1 and tenant_id=$2 and principal_id=$3`, tenant.Bucket, tenant.TenantID, principalID); err != nil {
+			return err
+		}
+		return insertAudit(ctx, tx, request, tenant, map[string]any{
+			"target_principal_id": principalID,
+			"organization_id":     organizationID.String(),
+			"membership_status":   result.Status,
+			"primary":             result.Primary,
+		})
+	})
+	if err != nil {
+		return OrganizationMembership{}, mapError(err)
 	}
 	return result, nil
 }
@@ -283,11 +391,27 @@ func scanProjection(row interface{ Scan(...any) error }, target *Projection) err
 	return nil
 }
 
+func scanOrganizationMembership(row interface{ Scan(...any) error }, target *OrganizationMembership) error {
+	return row.Scan(&target.MembershipID, &target.PrincipalID, &target.OrganizationID, &target.Status, &target.Primary)
+}
+
 func requireHumanManager(request capability.Request) *capability.StableError {
 	if request.Principal == nil || strings.ToUpper(request.Principal.PrincipalType) != "HUMAN" {
 		return &capability.StableError{Code: capability.CodeUnauthorized, Message: "a HUMAN management principal is required"}
 	}
 	return nil
+}
+
+func requireVerifiedApproval(request capability.Request, approvalID string) *capability.StableError {
+	if request.Principal == nil {
+		return &capability.StableError{Code: capability.CodeUnauthorized, Message: "verified approval is required"}
+	}
+	for _, candidate := range request.Principal.Approvals {
+		if candidate == approvalID {
+			return nil
+		}
+	}
+	return &capability.StableError{Code: capability.CodeUnauthorized, Message: "verified approval is required"}
 }
 
 func physicalType(value string) (string, *capability.StableError) {

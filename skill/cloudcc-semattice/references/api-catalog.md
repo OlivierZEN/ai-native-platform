@@ -80,6 +80,15 @@
 | `runtime.record.delete` | v1 | 使用乐观锁软删除记录 | `runtime.record.delete` | 中/同步 | 必填 `object_api_name`、`record_id`、`expected_revision` |
 | `runtime.record.query` | v1 | 通过有界类型化索引 DSL 查询活动记录 | `runtime.record.read` | 低/同步 | 必填 `object_api_name`；可选 `filters`、`after`、`limit` |
 
+## 身份投影能力（4）
+
+| 能力 ID | 版本 | 用途 | scope | 风险/执行 | `input` |
+|---|---:|---|---|---|---|
+| `identity.principal.sync` | v1 | 将当前已验证 AgentCiCi Principal 投影到租户 | `identity.principal.sync` | 中/同步 | 可选 `display_name`、`public_id`；主体、租户、owner 和 client 只取可信令牌 |
+| `identity.principal.list` | v1 | 列出当前租户受治理的 Principal 投影 | `authorization.manage` | 低/同步 | 可选 `principal_type`、`status` |
+| `identity.principal.set-status` | v1 | 暂停、恢复或禁用目标 Principal 投影 | `authorization.manage` | 高/异步/审批 | 必填 `principal_id`、`status`、`reason`、`approval_id` |
+| `identity.principal.set-organization-membership` | v1 | 建立、更新或结束目标 Principal 的组织成员关系 | `authorization.manage` | 高/异步/审批 | 必填 `principal_id`、`organization_id`、`active`、`primary`、`approval_id` |
+
 ## 角色、权限和对象策略能力（8）
 
 | 能力 ID | 版本 | 用途 | scope | 风险/执行 | `input` |
@@ -135,5 +144,6 @@
 | 元数据 | 16 |
 | 用量 | 3 |
 | 记录 | 5 |
+| 身份投影 | 4 |
 | 授权、组织和共享 | 21 |
-| 合计 | 51 |
+| 合计 | 55 |
