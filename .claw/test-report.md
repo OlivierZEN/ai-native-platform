@@ -1,13 +1,21 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T06:25:00Z
-updated_by: root after Windows skill login verification
-last_run_at: 2026-08-04T06:25:00Z
+updated_at: 2026-08-04T06:34:03Z
+updated_by: root after cloudcc-semattice v1.4.2 release verification
+last_run_at: 2026-08-04T06:34:03Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-058 Skill v1.4.2 发布验证
+
+- 项目 `main` 在发布前与 CodeUp `origin/main` 无分叉；Windows 相关在内的 18 项认证回归、Skill 官方校验、Python/YAML/版本、CLI help/dry-run、状态 validator、敏感信息、缓存与 diff 检查通过。实现提交 `109dcbf61847b9f7148a9db86959af7e6c182acb` 已推送 CodeUp `main`。
+- 独立技能仓库在同步前 clean 且与 `origin/main` 一致；`rsync --dry-run` 仅涉及 5 个预期技能文件，无删除项。真实同步后与项目开发副本 `diff -qr --exclude=.git` 完全一致，发布前校验通过。
+- 技能发布提交 `101faa8556453486517b12afd52c71bff0507227` 已通过 atomic push 同时更新 GitHub `main` 并创建 annotated tag `v1.4.2`；未 force push、未移动历史标签。
+- 发布后本地 HEAD、`origin/main` 和 `v1.4.2^{}` 三者一致，远程 HEAD 指向 main；仓库页与标签页 HTTP 200，main/tag raw VERSION 均为 `1.4.2`，raw README 包含当前版本、安装标签和 Windows Credential Manager 说明；发布仓库最终 clean。
+- 当前工作站不能执行原生 Windows Credential Manager，真实 Windows 四步冒烟仍待完成，TASK-058 保持 review。
 
 ## 2026-08-04 TASK-058 Windows Skill 登录支持验证
 
@@ -15,7 +23,7 @@ last_run_status: passed
 - 排除 ISSUE-005 的既有固定数量断言后，认证模块其余 18 项全部通过，覆盖 PKCE、loopback state、Bearer redirect 拒绝、登录换票、refresh token轮换、logout、401 单次重试、POSIX缓存门禁和显式Token优先级。
 - 未排除任何用例的完整认证模块实测为 19 项中 18 项通过、1 项失败；唯一失败是当前目录已解析出 55 项能力但 HEAD 仍断言 51。默认 scope集合仍与目录 scope集合一致；该既有漂移已登记 ISSUE-005，未混入 Windows 补丁。
 - 官方 `skill-creator` `quick_validate.py`、三个 Python 入口 AST、`agents/openai.yaml`、SemVer/README `1.4.2` 一致性、CLI help、无 Token dry-run、项目状态 validator、secret pattern扫描和 `git diff --check` 均通过。
-- GitHub `v1.4.2` 标签预检为空；未提交、打标签、推送或修改独立发布仓库。当前工作站不是 Windows，真实 `login/status/read-only call/logout` 冒烟仍待 Windows 用户执行。
+- GitHub `v1.4.2` 标签预检当时为空；该版本随后按上述发布流程完成。当前工作站不是 Windows，真实 `login/status/read-only call/logout` 冒烟仍待 Windows 用户执行。
 
 ## 2026-08-04 TASK-057 全代码同步与生产发布验证
 

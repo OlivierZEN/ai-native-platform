@@ -7,8 +7,8 @@ owner_role: integration-agent
 task_ids: TASK-058
 related_decisions: ADR-014
 related_issues: none
-updated_at: 2026-08-04T06:25:00Z
-updated_by: root after Windows credential implementation
+updated_at: 2026-08-04T06:34:03Z
+updated_by: root after cloudcc-semattice v1.4.2 release
 ---
 
 # FEAT-049 - Semattice Skill Windows 登录支持
@@ -40,3 +40,9 @@ updated_by: root after Windows credential implementation
 - 当前开发环境不是 Windows，Win32 API 行为由 ctypes 合约级回归测试覆盖，仍需真实 Windows 冒烟。
 - Credential Manager 不可用时继续 fail closed，不回退到明文 refresh token。
 - 回滚到 1.4.1 会恢复 Windows 不支持状态，不影响 macOS/Linux 已有凭据。
+
+## 发布状态
+
+- 项目实现提交：`109dcbf61847b9f7148a9db86959af7e6c182acb`，已推送 CodeUp `main`。
+- Skill 发布提交：`101faa8556453486517b12afd52c71bff0507227`，已原子推送至 GitHub `main` 和 annotated tag `v1.4.2`。
+- 远程版本、README、默认分支、仓库页和标签页已验证；真实 Windows 四步冒烟仍是从 implemented 提升为 verified 的唯一剩余门禁。

@@ -51,11 +51,11 @@ board_status: active
 
 #### Next Action
 
-- Run the four-command smoke verification in a native Windows Codex session, then publish the prepared immutable `v1.4.2` skill release if it passes.
+- Install immutable `v1.4.2` in a native Windows Codex session and run login, status, one read-only call and logout; mark TASK-058 verified only after that evidence passes.
 
 #### Handoff Note
 
-- Local implementation and ctypes contract-level tests are complete. This workstation cannot execute the real Windows Credential Manager API, so TASK-058 remains in review pending native Windows smoke evidence; `v1.4.2` was confirmed unpublished before preparation.
+- Project commit `109dcbf61847b9f7148a9db86959af7e6c182acb` is on CodeUp `main`. Skill release commit `101faa8556453486517b12afd52c71bff0507227` is GitHub `main` and immutable `v1.4.2`; remote raw files and pages passed post-release verification. This workstation cannot execute the real Windows Credential Manager API, so TASK-058 remains in review pending native Windows smoke evidence.
 
 ### TASK-057 - Synchronize all code remotes and deploy current main
 

@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T06:25:00Z
-updated_by: root after native Windows skill login implementation
-phase: windows-skill-login-awaiting-native-smoke
+updated_at: 2026-08-04T06:34:03Z
+updated_by: root after cloudcc-semattice v1.4.2 release
+phase: windows-skill-login-released-awaiting-native-smoke
 active_task: "TASK-058"
-next_action: "在原生 Windows Codex 会话完成 login、status、一次只读调用和 logout 冒烟；通过后按唯一发布流程发布尚未占用的 v1.4.2。"
+next_action: "在原生 Windows Codex 会话安装 v1.4.2，完成 login、status、一次只读调用和 logout 冒烟；通过后将 TASK-058 / FEAT-049 提升为 verified。"
 read_next:
   goals: true
   decisions: true
@@ -19,7 +19,7 @@ read_next:
 
 ## 快照
 
-- TASK-058 / FEAT-049 已完成本地实现并进入 Windows 冒烟评审：`cloudcc-semattice` 1.4.2 使用 Win32 Credential API 将 refresh token 保存到当前用户 Credential Manager，Windows 会话缓存默认位于 LocalAppData 且不再误用 POSIX mode-bit 判断；Skill 明确使用原生 Python 入口而非 WSL。ctypes 合约级 Windows 保存/读取/删除、平台路由和缓存测试已通过，真实 Windows `login/status/read-only call/logout` 尚待执行；`v1.4.2` 远程标签预检为空，尚未提交、打标签或发布。全量认证测试的唯一失败是既有 51/55 能力数量漂移，已单独登记为 ISSUE-005，本次未混入修复。
+- TASK-058 / FEAT-049 已发布 `cloudcc-semattice` v1.4.2：项目实现提交 `109dcbf61847b9f7148a9db86959af7e6c182acb` 已推送 CodeUp `main`；独立技能发布提交 `101faa8556453486517b12afd52c71bff0507227` 已通过 atomic push 同时更新 GitHub `main` 和不可移动标签 `v1.4.2`。远程 HEAD、raw VERSION/README、仓库页、标签页和发布仓库 clean 均验证通过。ctypes 合约级 Windows 测试已通过，真实 Windows `login/status/read-only call/logout` 仍待执行；既有 51/55 数量漂移继续由 ISSUE-005 独立跟踪。
 
 - TASK-057 生产交付已完成、GitHub 镜像同步受 ISSUE-004 阻塞：CodeUp `main` 已同步至 `26d40f84e55f40863d3c86e081664aecbd63af2c`，生产 release `20260804T050808Z-web-oidc-26d40f84e55f` 健康且下载制品 SHA 校验通过。GitHub `main=4bb3d733` 无独有提交，但 `androidxhm` 与 CloudCCAI 两个现有 SSH 身份均被仓库拒绝写入；未强推或改写历史。
 
