@@ -1,13 +1,22 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-03T05:19:55Z
-updated_by: root
-last_run_at: 2026-08-03T05:19:55Z
+updated_at: 2026-08-04T03:25:00Z
+updated_by: ai
+last_run_at: 2026-08-04T03:25:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-054 组织成员关系能力与哪吒生产验收
+
+- 新增正式高风险能力 `identity.principal.set-organization-membership`，要求 `authorization.manage`、HUMAN 管理主体和 OACT 内已验签独立审批；SERVICE、自审、缺失审批和跨租户输入均 fail closed。
+- 定向 Principal/main wiring 测试、独立 PostgreSQL 集成测试、`./scripts/test-postgres.sh run`、`GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`、状态 validator 与 diff check 全部通过。
+- 提交 `3a0d9daa281a` 已发布为 `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a`，二进制 SHA-256 为 `1187b727e05582cba2c4d8b9251895ddcb95da2eef997ef378d7e8136c808e6b`；上一 release 保留。
+- 发布后服务 active，公网 edge health 通过，本机未鉴权 Capability 请求返回预期 401；受认证 `system.capability.list` 返回 55 项且包含新能力。
+- DEV Autopilot 哪吒 Principal 通过审批 `33f86ce8-6161-4ce0-a35b-60f527940556` 获得开发者角色和研发交付部 active primary membership，最终状态为 `suspended`。
+- 受认证治理控制台精确返回 5 名成员；哪吒为 `SERVICE / dev-autopilot-developer-nezha / 开发者 / 研发交付部 / suspended / owner=Oliver`。全过程未输出 Token、client secret、数据库 URL 或私钥。
 
 ## 2026-08-03 TASK-053 DEV Autopilot 研发身份花名册生产验收
 

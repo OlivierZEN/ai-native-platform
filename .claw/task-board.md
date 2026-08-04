@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T03:05:00Z
+updated_at: 2026-08-04T03:25:00Z
 updated_by: ai
 board_status: active
 ---
@@ -27,30 +27,6 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
-
-### TASK-054 - Add governed Principal organization membership capability
-
-- status: `in_progress`
-- priority: `high`
-- owner_role: `integration-agent`
-- claimed_by: `ai`
-- spec_path: `docs/specs/FEAT-048-governed-principal-organization-membership.md`
-- depends_on: `TASK-051, TASK-053`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `internal/principal, main wiring, capability catalog, production release and DEV Autopilot identity verification`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- `identity.principal.set-organization-membership` 作为正式高风险 Capability 发布，要求 HUMAN 管理主体、`authorization.manage` 和已验签独立审批。
-- 能力可幂等建立或结束指定 Principal 的组织成员关系，并维持每个主体至多一个 active primary membership。
-- 数据库集成测试、全量回归和生产能力发现通过；新增开发者哪吒通过该能力归属研发交付部。
-
-#### Next Action
-
-- 先添加失败测试，再实现组织成员关系写入、快照失效和审计。
 
 ### TASK-050 - Render published objects with no fields in the administration console
 
@@ -207,6 +183,35 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-054 - Add governed Principal organization membership capability
+
+- status: `done`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `ai`
+- spec_path: `docs/specs/FEAT-048-governed-principal-organization-membership.md`
+- depends_on: `TASK-051, TASK-053`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `internal/principal, main wiring, capability catalog, production release and DEV Autopilot identity verification`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- `identity.principal.set-organization-membership` 作为正式高风险 Capability 发布，要求 HUMAN 管理主体、`authorization.manage` 和已验签独立审批。
+- 能力可幂等建立或结束指定 Principal 的组织成员关系，并维持每个主体至多一个 active primary membership。
+- 数据库集成测试、全量回归和生产能力发现通过；新增开发者哪吒通过该能力归属研发交付部。
+
+#### Next Action
+
+- 已完成；进入生产监控。
+
+#### Handoff Note
+
+- 提交 `3a0d9daa281a` 已发布为 `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a`，线上能力发现为 55 项。
+- 哪吒通过独立审批 `33f86ce8-6161-4ce0-a35b-60f527940556` 获得开发者角色和研发交付部 primary membership，随后被治理为 `suspended` 休息状态。
 
 ### TASK-053 - 调整 DEV Autopilot 研发身份花名册
 
@@ -727,34 +732,6 @@ board_status: active
 #### Handoff Note
 
 - 已部署分组精确为 `6 tenant + 6 semantic metadata + 10 changeset + 5 record runtime + 12 authorization + 9 sharing/organization + 1 system = 49`；每项 ID、scope 和风险均通过运行时 parity。页面没有描述尚未实现的远程 HTTP MCP、outbox/worker、HA 或生产 SLA。
-
-### TASK-022 - Deploy CloudCC Semattice to the authorized ECS
-
-- status: `done`
-- priority: `critical`
-- owner_role: `release-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
-- depends_on: `TASK-010, TASK-011, TASK-012, TASK-013, TASK-014, TASK-015, TASK-016`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `deploy/semattice/**, docs/specs/FEAT-022-*, .claw/devops.md; authorized ECS 115.29.222.70`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- PostgreSQL 16、迁移、独立数据库角色、Semattice systemd 服务和 Nginx TLS 在授权 ECS 上运行
-- `semattice.agentcici.com` 展示 API/CLI/MCP 使用说明，HTTPS API 真实可调用
-- 公网 HTTPS、未授权拒绝、CLI、MCP stdio 和服务重启均有真实验证证据
-
-#### Next Action
-
-- 已完成。后续只进行证书续期、版本升级或故障处理；新功能继续使用独立任务。
-
-#### Handoff Note
-
-- PostgreSQL 16.13、Nginx 1.30.2 和 Semattice systemd 已启用；公网首页/HTTPS/API、CLI 下载、短期 JWT API、CLI、MCP stdio 与服务重启均验证通过。三入口发现 49 项能力，MCP 实际调用 `system_capability_list` 成功。凭据不在仓库；MCP 当前仍为 stdio，不伪装成 HTTP transport。
 
 ## 维护规则
 

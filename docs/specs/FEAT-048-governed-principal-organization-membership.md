@@ -2,12 +2,12 @@
 kind: feature-spec
 feature_id: FEAT-048
 title: Governed Principal organization membership
-status: implemented
+status: verified
 owner_role: integration-agent
 task_ids: TASK-054
 related_decisions: ADR-014
 related_issues: none
-updated_at: 2026-08-04T03:05:00Z
+updated_at: 2026-08-04T03:25:00Z
 updated_by: ai
 ---
 

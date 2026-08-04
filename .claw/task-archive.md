@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-08-03T05:16:39Z
-updated_by: root
+updated_at: 2026-08-04T03:25:00Z
+updated_by: ai
 archive_status: active
 ---
 
@@ -11,6 +11,13 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-022 - Deploy CloudCC Semattice to the authorized ECS
+
+- status: `done`
+- owner_role: `release-agent`
+- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
+- handoff: PostgreSQL 16.13、Nginx 1.30.2 和 Semattice systemd 已启用；公网 HTTPS/API、CLI 下载、短期 JWT、MCP stdio 与服务重启均验证通过。后续版本由不可变 release 延续，凭据不进入仓库。
 
 ### TASK-012 - Validate the PostgreSQL shard baseline
 

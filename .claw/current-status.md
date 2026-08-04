@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T03:05:00Z
+updated_at: 2026-08-04T03:25:00Z
 updated_by: ai
-phase: governed-organization-membership-capability
-active_task: "TASK-054"
-next_action: "实现并发布需 HUMAN 管理主体与独立审批的 identity.principal.set-organization-membership，再用于新增哪吒研发身份。"
+phase: governed-organization-membership-production-verified
+active_task: "TASK-050"
+next_action: "保持组织成员关系能力和哪吒休息状态的生产监控；TASK-050 等待用户登录后补浏览器零错误验收。"
 read_next:
   goals: true
   decisions: true
@@ -19,7 +19,9 @@ read_next:
 
 ## 快照
 
-- TASK-054 / FEAT-048 已启动：补齐受治理 Principal 组织成员关系正式能力，替代新增开发者时的数据库手工写入；能力必须要求 `authorization.manage`、HUMAN 管理主体和已验签独立审批。
+- TASK-054 / FEAT-048 已完成：正式能力 `identity.principal.set-organization-membership` 已发布，要求 `authorization.manage`、HUMAN 管理主体和已验签独立审批；数据库集成、全量 race/vet、55 项线上能力发现均通过。release `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a` 已上线，二进制 SHA-256 为 `1187b727e05582cba2c4d8b9251895ddcb95da2eef997ef378d7e8136c808e6b`。
+
+- DEV Autopilot 哪吒研发身份已通过独立审批 `33f86ce8-6161-4ce0-a35b-60f527940556` 完成开发者角色、研发交付部 primary membership 和 `suspended` 状态；控制台精确回读 5 名成员，哪吒 owner 为 Oliver，应用显示“休息 · 不可派单”。
 
 - TASK-053 / FEAT-047 已完成：目标租户现有 4 名 active 成员——HUMAN 产品总监 Oliver、SERVICE 产品经理大乔、SERVICE 开发者悟空和新增 SERVICE 开发者后羿。三名机器主体的人类负责人均为 Oliver；后羿已绑定开发者角色和研发交付部 primary membership。已认证控制台精确回读 4 members / 3 roles / 1 organization / 5 objects / 42 fields；后羿和悟空 CLI 正向、大乔 CLI 越权负向均通过。
 
