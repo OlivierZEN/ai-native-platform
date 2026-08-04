@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-08-04T03:55:36Z
-updated_by: root after archiving the oldest completed task
+updated_at: 2026-08-04T07:20:13Z
+updated_by: root after archiving TASK-060
 archive_status: active
 ---
 
@@ -11,6 +11,13 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-060 - Add current metadata discovery and publish Skill v1.5.0
+
+- status: `done`
+- owner_role: `integration-agent`
+- spec_path: `docs/specs/FEAT-051-current-metadata-discovery.md`
+- handoff: `metadata.version.get-current` 已在生产以低风险同步 `metadata.read` 能力发布，空输入返回当前 published Bundle；生产目录为 56 项，真实当前对象回读通过。Skill `v1.5.0` 的 GitHub main、不可移动标签和本机安装副本一致，发布提交为 `685687e71e41d2e08fd157e8fce9729b8d25c174`。
 
 ### TASK-023 - Add the platform capability matrix to the deployed guide
 

@@ -60,7 +60,6 @@ DEFAULT_CAPABILITY_SCOPES = (
     "record.share.manage",
     "organization.manage",
     "authorization.read",
-    "identity.principal.sync",
 )
 KEYCHAIN_SERVICE = "cloudcc-semattice"
 TOKEN_SKEW_SECONDS = 60

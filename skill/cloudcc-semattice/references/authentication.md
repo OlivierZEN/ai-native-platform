@@ -11,7 +11,7 @@
 
 ## 人工 CLI 登录
 
-从技能目录执行。默认请求当前51项公开Capability所需的全部26个唯一scope；`--scope`仍可用于追加未来已发布且被服务端允许的scope。scope只是Capability入口上限，最终权限仍由Semattice的Principal/RBAC、RLS、独立审批和审计收敛。
+从技能目录执行。默认请求人类 CLI 可用公开 Capability 所需的全部 26 个唯一 scope；服务身份专用的 `identity.principal.sync` 不在默认集合中。`--scope` 仍可用于追加未来已发布且被服务端允许的 scope。scope 只是 Capability 入口上限，最终权限仍由 Semattice 的 Principal/RBAC、RLS、独立审批和审计收敛。
 
 macOS 与 Linux：
 

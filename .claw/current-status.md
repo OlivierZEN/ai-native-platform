@@ -12,7 +12,7 @@ read_next:
   issue_list: true
   task_board: true
   test_report: true
-  devops: false
+  devops: true
 ---
 
 # 项目当前状态
@@ -21,13 +21,15 @@ read_next:
 
 - TASK-059 线上负向验收发现产品总监原有 `object/*:read` 通配访问被旧精确委托判断接受，导致随机对象权限错误写入；已停止继续验收。本地修复要求对象/字段再授权精确匹配，活动元数据 bootstrap 仍受策略管理员与当前版本约束；新增独立审批的 `authorization.permission-set.revoke` 以正式清理错误授权。PostgreSQL 全仓、race、定向 Go 与 19 项 Skill 认证测试通过，待发布清理。
 
-- TASK-059 / FEAT-050 已完成本地实现与全量验证：`authorization.permission-set.grant`、Permission Set 绑定和角色委托允许具有 `authorization.policy:update` 的策略管理员仅针对当前活动元数据对象/在线字段完成首次授权；未知 UUID、非活动资源和未持有的平台权限继续失败关闭。PostgreSQL 全仓、race、vet、module verify 与 Linux amd64 构建均通过，待生产发布和租户权限验收。
+- TASK-060 / FEAT-051 已完成：`metadata.version.get-current` 以空输入和 `metadata.read` 返回令牌绑定租户的当前 published Bundle，生产 `system.capability.list` 精确回读 56 项能力。统一 release `/opt/semattice/releases/20260804T071457Z-web-oidc-0398ebebe3b9` 的 SHA-256 为 `ed58228e1f3f893b387eb5b6a0892a39fe6d5c672423a49134eb57d70fba9c3c`；真实调用返回 `contact / 联系人`（0 字段）和 `large_backpack / 大书包`（2 字段）。Skill `v1.5.0` 发布提交为 `685687e71e41d2e08fd157e8fce9729b8d25c174`，远程 main/tag/raw 与本机安装副本一致；ISSUE-005 已关闭。
+
+- TASK-059 / FEAT-050 的首次 bootstrap 代码已随 TASK-060 统一 release 上线；精确委托与正式撤销的加固修复尚待新 release。当前活动元数据限制、未知 UUID 负向和平台权限边界均有回归覆盖。
 
 - DEV Autopilot 交付元数据 changeset `019fcb51-8cc1-7270-8767-6f0049587484` 已由不同组织管理员独立批准并发布，活动版本为 `019fcb51-85c2-74cd-8f0a-6132d6c769df`，精确包含 6 个对象 / 60 个字段；新增 `dev_delivery_event` 对象 `019fcb51-8a67-727c-9d43-673069d1c33d` 有 15 个字段，变更无需回填。权限初始化因首次授权死锁安全停止，待 TASK-059 上线后继续。
 
-- TASK-058 / FEAT-049 已发布 `cloudcc-semattice` v1.4.2：项目实现提交 `109dcbf61847b9f7148a9db86959af7e6c182acb` 已推送 CodeUp `main`；独立技能发布提交 `101faa8556453486517b12afd52c71bff0507227` 已通过 atomic push 同时更新 GitHub `main` 和不可移动标签 `v1.4.2`。远程 HEAD、raw VERSION/README、仓库页、标签页和发布仓库 clean 均验证通过。ctypes 合约级 Windows 测试已通过，真实 Windows `login/status/read-only call/logout` 仍待执行；既有 51/55 数量漂移继续由 ISSUE-005 独立跟踪。
+- TASK-058 / FEAT-049 已发布 `cloudcc-semattice` v1.4.2：项目实现提交 `109dcbf61847b9f7148a9db86959af7e6c182acb` 已推送 CodeUp `main`；独立技能发布提交 `101faa8556453486517b12afd52c71bff0507227` 已通过 atomic push 同时更新 GitHub `main` 和不可移动标签 `v1.4.2`。远程 HEAD、raw VERSION/README、仓库页、标签页和发布仓库 clean 均验证通过。ctypes 合约级 Windows 测试已通过，真实 Windows `login/status/read-only call/logout` 仍待执行；当时发现的 51/55 数量漂移现已由 TASK-060 关闭。
 
-- TASK-057 生产交付已完成、GitHub 镜像同步受 ISSUE-004 阻塞：CodeUp `main` 已同步至 `26d40f84e55f40863d3c86e081664aecbd63af2c`，生产 release `20260804T050808Z-web-oidc-26d40f84e55f` 健康且下载制品 SHA 校验通过。GitHub `main=4bb3d733` 无独有提交，但 `androidxhm` 与 CloudCCAI 两个现有 SSH 身份均被仓库拒绝写入；未强推或改写历史。
+- TASK-057 生产交付已完成、GitHub 项目镜像同步受 ISSUE-004 阻塞：CodeUp `main` 已包含生产制品源提交 `0398ebebe3b97e343a49bb342d07d4d7d61e3226` 及发布证据，生产 release `20260804T071457Z-web-oidc-0398ebebe3b9` 健康且下载制品 SHA 校验通过。GitHub `main=4bb3d733` 无独有提交，但 `androidxhm` 与 CloudCCAI 两个现有 SSH 身份均被仓库拒绝写入；未强推或改写历史。
 
 - TASK-056 已完成并发布：Skill README 快速开始只保留 `$cloudcc-semattice` 下“登录”与“查看当前对象列表。”两步提示词，旧环境变量、Token、Python API 和 dry-run 示例已清除。GitHub `main` 与不可移动标签 `v1.4.1` 均指向 `69fdb8ddd872e565df11ddd4f441f464fc183a89`，远端版本和 README 回读通过。
 

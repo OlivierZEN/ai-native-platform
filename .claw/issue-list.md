@@ -1,8 +1,8 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-08-04T07:20:00Z
-updated_by: ai after capability catalog and authorization regression repair
+updated_at: 2026-08-04T07:20:13Z
+updated_by: root after ISSUE-005 verification
 ---
 
 # 问题追踪列表
@@ -14,21 +14,12 @@ updated_by: ai after capability catalog and authorization regression repair
 
 ## 活跃问题
 
-### ISSUE-005 - Skill 能力目录数量断言仍固定为 51
-
-- severity: `low`
-- status: `fixed`
-- root_cause: `verified` — 当前 `api-catalog.md` 的表格与总数核对已有 55 项公开能力，但使用说明、Skill 文案和 `test_default_scopes_match_all_skill_catalog_capabilities` 仍固定写 51。
-- impact: 26 个唯一默认 scope 与 55 项目录能力仍完全匹配，但全量 `tests.test_semattice_skill_auth` 会在数量断言处失败，容易掩盖其他认证回归结果。
-- resolution: 能力目录随正式撤销能力更新为 56 项，默认唯一 scope 更新为 27 个；数量、集合和登录默认值断言已统一，不再用旧的 51/26 常量掩盖漂移。
-- verification: 19 项完整认证测试全部通过；待新 Semattice release 上线并由 `system.capability.list` 回读 56 项后转为 closed。
-
 ### ISSUE-004 - GitHub 项目镜像缺少写权限
 
 - severity: `medium`
 - status: `blocked`
 - root_cause: `verified` — `OlivierZEN/ai-native-platform` 明确拒绝当前 `androidxhm` 与 CloudCCAI 两个 SSH 身份的写入，GitHub CLI 也没有已登录身份；远端没有独有提交，不存在需要合并的分叉。
-- impact: CodeUp `main` 与生产已更新至 `26d40f84e55f40863d3c86e081664aecbd63af2c`，但 GitHub 镜像仍停在 `4bb3d733f5e7297409a813e952faeee8a50eeeec`。
+- impact: CodeUp `main` 已包含生产制品源提交 `0398ebebe3b97e343a49bb342d07d4d7d61e3226` 及其发布证据，但 GitHub 项目镜像仍停在 `4bb3d733f5e7297409a813e952faeee8a50eeeec`。
 - resolution: 仓库所有者为其中一个现有身份授予写权限后，将 GitHub `main` 普通快进至 CodeUp 当前提交；禁止 force push、替换仓库或使用未授权凭据绕过权限。
 - verification: 两次 push 分别返回 `Permission to OlivierZEN/ai-native-platform.git denied to androidxhm` 与 `denied to CloudCCAI`；GitHub `main` 回读保持不变。
 
@@ -42,6 +33,14 @@ updated_by: ai after capability catalog and authorization regression repair
 - verification: 最终统一 release 已上线；HTTPS API 确认 `contact.fields=[]`、`large_backpack` 为 2 字段，服务与静态契约通过。待用户完成 Keycloak 登录后执行真实页面零错误验收，再转为`verified`。
 
 ## 已解决问题
+
+### ISSUE-005 - Skill 能力目录数量断言仍固定为 51
+
+- severity: `low`
+- status: `closed`
+- root_cause: `verified` — 目录表格已有 55 项能力，但使用说明、Skill 文案和认证测试仍固定写 51；旧测试还错误假设服务身份专用的 `identity.principal.sync` 属于人类 CLI 默认 scope。
+- resolution: TASK-060 将新增能力后的目录统一为 56 项，并明确校验“26 项人类默认 scope + 1 项服务身份专用 scope”，未扩大生产 OACT allowlist。
+- evidence: 完整认证测试 19/19 通过；生产 `system.capability.list` 回读 56 项；Skill `v1.5.0` main/tag/raw 和本机安装副本均验证通过。
 
 ### ISSUE-003 - 管理中心成员与角色接口返回 500
 

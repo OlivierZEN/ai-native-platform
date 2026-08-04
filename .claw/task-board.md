@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T06:24:00Z
-updated_by: ai after merging current CodeUp production history
+updated_at: 2026-08-04T07:20:13Z
+updated_by: root after archiving completed TASK-060
 board_status: active
 ---
 
@@ -30,7 +30,7 @@ board_status: active
 
 ### TASK-059 - Govern active-metadata permission bootstrap
 
-- status: `review`
+- status: `in_progress`
 - priority: `critical`
 - owner_role: `backend-agent`
 - claimed_by: `root`
@@ -49,7 +49,7 @@ board_status: active
 
 #### Next Action
 
-- 提交并发布 Semattice，再恢复目标租户权限初始化与在线负向验收。
+- 首次 bootstrap 已上线；发布精确委托与正式撤销修复，清理误授权后恢复目标租户在线负向验收。
 
 ### TASK-058 - Support native Windows login in the Semattice skill
 
@@ -107,7 +107,7 @@ board_status: active
 
 #### Handoff Note
 
-- CodeUp `main` and production are synchronized through `26d40f84e55f40863d3c86e081664aecbd63af2c`. Release `/opt/semattice/releases/20260804T050808Z-web-oidc-26d40f84e55f` is healthy and publishes a SHA-verified downloadable binary. GitHub rejected both available SSH identities with an explicit permission error; no history was modified there.
+- CodeUp `main` contains production source `0398ebebe3b97e343a49bb342d07d4d7d61e3226` and subsequent release evidence. Release `/opt/semattice/releases/20260804T071457Z-web-oidc-0398ebebe3b9` is healthy and publishes a SHA-verified downloadable binary. GitHub rejected both available SSH identities with an explicit permission error; no history was modified there.
 
 ### TASK-050 - Render published objects with no fields in the administration console
 

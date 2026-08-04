@@ -56,6 +56,13 @@ func CapabilityDefinitions(service *Service) []capability.Definition {
 			}
 			return service.Get(ctx, request, input)
 		}),
+		definition("metadata.version.get-current", "Get the current published metadata version with ordered object, field and relation definitions.", "low", "metadata.read", emptySchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input struct{}
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.GetCurrent(ctx, request)
+		}),
 		definition("metadata.changeset.validate", "Validate a draft metadata version, freeze its quota snapshot, and produce a deterministic evolution plan.", "medium", "metadata.changeset.write", changesetValidateSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
 			var input ChangesetValidateInput
 			if stableErr := decodeInput(request.Input, &input); stableErr != nil {

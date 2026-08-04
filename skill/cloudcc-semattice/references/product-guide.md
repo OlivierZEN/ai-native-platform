@@ -65,7 +65,7 @@ CloudCC Semattice（语义格）是一套面向智能体的业务数据与语义
 | Capability 发现 | 当前环境可调用能力的机器可读目录 | AI 首次连接、上线版本变化、实施前核对输入 Schema | `system.capability.list` |
 | 租户与企业边界 | 隔离数据、元数据、授权和用量的企业运行空间 | 查询产品状态、暂停或恢复服务、调整权益、发起退役 | `tenant.*`；公开 API 不负责租户开通 |
 | 元数据版本 | 对一组对象、字段和关系的一致快照 | 设计新业务应用、冻结可复核模型、保留历史兼容证据 | `metadata.version.*` |
-| 对象 | 业务实体的版本化结构定义，不是业务数据本身 | 客户、联系人、订单、项目、工单、资产 | `metadata.object.upsert`，读取通过 `metadata.version.get` |
+| 对象 | 业务实体的版本化结构定义，不是业务数据本身 | 客户、联系人、订单、项目、工单、资产 | `metadata.object.upsert`；当前快照通过 `metadata.version.get-current` 读取，已知版本通过 `metadata.version.get` 读取 |
 | 字段 | 对象记录中的命名属性及类型、必填、索引、唯一性和生命周期规则 | 客户名称、订单金额、项目状态、服务到期时间 | `metadata.field.upsert`，退役走字段生命周期和 Changeset |
 | 关系 | 对象之间的版本化引用 | 联系人属于客户、订单引用客户、项目关联多个成员 | `metadata.relation.upsert` |
 | Changeset | 对已发布模型进行受治理演进的工作单元 | 增加必填字段、建立索引、字段换名或换类型、清除旧字段数据 | `metadata.changeset.*` |
