@@ -1,8 +1,8 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-08-03T05:16:39Z
-updated_by: root
+updated_at: 2026-08-04T05:09:55Z
+updated_by: root after GitHub mirror permission check
 ---
 
 # 问题追踪列表
@@ -13,6 +13,15 @@ updated_by: root
 推荐状态值：`open` / `in_progress` / `blocked` / `fixed` / `verified` / `closed`
 
 ## 活跃问题
+
+### ISSUE-004 - GitHub 项目镜像缺少写权限
+
+- severity: `medium`
+- status: `blocked`
+- root_cause: `verified` — `OlivierZEN/ai-native-platform` 明确拒绝当前 `androidxhm` 与 CloudCCAI 两个 SSH 身份的写入，GitHub CLI 也没有已登录身份；远端没有独有提交，不存在需要合并的分叉。
+- impact: CodeUp `main` 与生产已更新至 `26d40f84e55f40863d3c86e081664aecbd63af2c`，但 GitHub 镜像仍停在 `4bb3d733f5e7297409a813e952faeee8a50eeeec`。
+- resolution: 仓库所有者为其中一个现有身份授予写权限后，将 GitHub `main` 普通快进至 CodeUp 当前提交；禁止 force push、替换仓库或使用未授权凭据绕过权限。
+- verification: 两次 push 分别返回 `Permission to OlivierZEN/ai-native-platform.git denied to androidxhm` 与 `denied to CloudCCAI`；GitHub `main` 回读保持不变。
 
 ### ISSUE-002 - 无字段已发布对象导致管理中心对象页崩溃
 

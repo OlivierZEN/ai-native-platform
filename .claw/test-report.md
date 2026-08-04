@@ -1,13 +1,22 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T04:07:09Z
-updated_by: root after publishing cloudcc-semattice v1.4.1
-last_run_at: 2026-08-04T04:07:09Z
+updated_at: 2026-08-04T05:09:55Z
+updated_by: root after synchronized production release
+last_run_at: 2026-08-04T05:09:55Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-057 全代码同步与生产发布验证
+
+- `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`、`go mod verify`、Linux/amd64 CGO-free 发布构建、Node/Shell 语法、Skill/YAML/Python、状态 validator、缓存制品和 diff check 全部通过。
+- CodeUp `main` 已普通快进至 `26d40f84e55f40863d3c86e081664aecbd63af2c`。GitHub 无独有提交但写入被 `androidxhm` 与 CloudCCAI 两个现有身份拒绝，镜像仍为 `4bb3d733f5e7297409a813e952faeee8a50eeeec`；未使用 force push。
+- 首次统一 release `20260804T050411Z-web-oidc-543921635320` 核心服务健康，但独立验收发现下载地址 404。根因是静态归档未携带构建二进制；修复后本地复现确认二进制与 `.sha256` 均存在且一致。
+- 第二次发布在切换前因大归档触发 `tar | grep -q` SIGPIPE 退出 141，线上 release 未改变；将归档清单改为完整文件后，在 `set -euo pipefail` 下复验通过。
+- 最终 release `/opt/semattice/releases/20260804T050808Z-web-oidc-26d40f84e55f` 已上线，服务器二进制、公网下载和清单 SHA-256 均为 `c01284be0160f5f5fcab6c005f5527eee6832bc4896296ea10b4802fd9767c00`。
+- PostgreSQL、Keycloak、Semattice、Nginx 均 active；Semattice `NRestarts=0`、warning 日志为 0。health=200、HTTP redirect=301、home/console=200、overview/auth token/capability 匿名负例=401、OIDC login=303、MCP initialize=200、Keycloak discovery/certs=200。
 
 ## 2026-08-04 TASK-056 Skill 快速开始重写与发布验证
 
