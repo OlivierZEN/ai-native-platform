@@ -1,7 +1,7 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T03:25:00Z
+updated_at: 2026-08-04T06:24:00Z
 updated_by: ai
 board_status: active
 ---
@@ -27,6 +27,29 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-055 - Govern active-metadata permission bootstrap
+
+- status: `review`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-049-active-metadata-permission-bootstrap.md`
+- depends_on: `TASK-054`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `authorization delegation service/tests, production release and DEV Autopilot event authorization`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 策略管理员只能为当前活动元数据对象/字段完成首次权限引导，平台权限与未知资源继续失败关闭。
+- 定向/全量测试与生产发布通过，DEV Autopilot 事件对象完成最小权限和 enforced/private 策略。
+
+#### Next Action
+
+- 提交并发布 Semattice，再恢复目标租户权限初始化与在线负向验收。
 
 ### TASK-050 - Render published objects with no fields in the administration console
 

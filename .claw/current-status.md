@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T03:25:00Z
+updated_at: 2026-08-04T06:24:00Z
 updated_by: ai
-phase: governed-organization-membership-production-verified
-active_task: "TASK-050"
-next_action: "保持组织成员关系能力和哪吒休息状态的生产监控；TASK-050 等待用户登录后补浏览器零错误验收。"
+phase: active-metadata-permission-bootstrap-release-review
+active_task: "TASK-055"
+next_action: "发布活动元数据首次权限引导修复，并通过正式 Capability 完成 DEV Autopilot 交付事件权限。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,10 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-055 / FEAT-049 已完成本地实现与全量验证：`authorization.permission-set.grant`、Permission Set 绑定和角色委托允许具有 `authorization.policy:update` 的策略管理员仅针对当前活动元数据对象/在线字段完成首次授权；未知 UUID、非活动资源和未持有的平台权限继续失败关闭。PostgreSQL 全仓、race、vet、module verify 与 Linux amd64 构建均通过，待生产发布和租户权限验收。
+
+- DEV Autopilot 交付元数据 changeset `019fcb51-8cc1-7270-8767-6f0049587484` 已由不同组织管理员独立批准并发布，活动版本为 `019fcb51-85c2-74cd-8f0a-6132d6c769df`，精确包含 6 个对象 / 60 个字段；新增 `dev_delivery_event` 对象 `019fcb51-8a67-727c-9d43-673069d1c33d` 有 15 个字段，变更无需回填。权限初始化因首次授权死锁安全停止，待 TASK-055 上线后继续。
 
 - TASK-054 / FEAT-048 已完成：正式能力 `identity.principal.set-organization-membership` 已发布，要求 `authorization.manage`、HUMAN 管理主体和已验签独立审批；数据库集成、全量 race/vet、55 项线上能力发现均通过。release `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a` 已上线，二进制 SHA-256 为 `1187b727e05582cba2c4d8b9251895ddcb95da2eef997ef378d7e8136c808e6b`。
 

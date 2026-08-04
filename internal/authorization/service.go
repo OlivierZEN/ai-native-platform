@@ -351,7 +351,7 @@ func (service *Service) GrantPermission(ctx context.Context, request capability.
 		if err := service.requirePlatform(ctx, tx, tenant, request.Actor.ID, resourceAuthorizationPermissionSet, "update"); err != nil {
 			return err
 		}
-		if err := service.evaluator.RequirePermission(ctx, tx, tenant, request.Actor.ID, input.ResourceType, input.ResourceRef, input.Action); err != nil {
+		if err := service.requireDelegablePermission(ctx, tx, tenant, request.Actor.ID, input.ResourceType, input.ResourceRef, input.Action); err != nil {
 			return err
 		}
 		permissionID := uuid.New()
@@ -362,6 +362,50 @@ func (service *Service) GrantPermission(ctx context.Context, request capability.
 		return err
 	})
 	return mapStableError(err)
+}
+
+// requireDelegablePermission preserves the ordinary no-privilege-escalation
+// rule while making a newly activated metadata resource governable. Before a
+// new object or field has any grants, no actor can hold its exact permission;
+// requiring exact ownership would therefore create a permanent bootstrap
+// deadlock. A principal that already holds the separate
+// authorization.policy:update authority may seed permissions, but only for an
+// object or field in the tenant's currently active metadata version. Platform
+// permissions and stale/unknown metadata identifiers still require an exact
+// permission and fail closed.
+func (service *Service) requireDelegablePermission(ctx context.Context, tx pgx.Tx, tenant database.TenantContext, actorID, resourceType, resourceRef, action string) error {
+	err := service.evaluator.RequirePermission(ctx, tx, tenant, actorID, resourceType, resourceRef, action)
+	if err == nil || !errors.Is(err, ErrDenied) || (resourceType != "object" && resourceType != "field") {
+		return err
+	}
+	if err := service.evaluator.RequirePermission(ctx, tx, tenant, actorID, "platform", "authorization.policy", "update"); err != nil {
+		return ErrDenied
+	}
+	resourceID, parseErr := uuid.Parse(resourceRef)
+	if parseErr != nil || resourceID == uuid.Nil {
+		return ErrDenied
+	}
+	var active bool
+	if resourceType == "object" {
+		parseErr = tx.QueryRow(ctx, `select exists(
+			select 1 from tenant_registry tenant
+			join object_definition object on object.tenant_bucket=tenant.tenant_bucket and object.tenant_id=tenant.tenant_id and object.metadata_version_id=tenant.metadata_version_id
+			where tenant.tenant_bucket=$1 and tenant.tenant_id=$2 and object.object_id=$3
+		)`, tenant.Bucket, tenant.TenantID, resourceID).Scan(&active)
+	} else {
+		parseErr = tx.QueryRow(ctx, `select exists(
+			select 1 from tenant_registry tenant
+			join field_definition field on field.tenant_bucket=tenant.tenant_bucket and field.tenant_id=tenant.tenant_id and field.metadata_version_id=tenant.metadata_version_id
+			where tenant.tenant_bucket=$1 and tenant.tenant_id=$2 and field.field_id=$3 and field.lifecycle_state in ('active','deprecated_read_write','deprecated_read_only')
+		)`, tenant.Bucket, tenant.TenantID, resourceID).Scan(&active)
+	}
+	if parseErr != nil {
+		return parseErr
+	}
+	if !active {
+		return ErrDenied
+	}
+	return nil
 }
 
 func (service *Service) AttachPermissionSet(ctx context.Context, request capability.Request, input AttachPermissionSetInput) *capability.StableError {
@@ -387,6 +431,12 @@ func (service *Service) AttachPermissionSet(ctx context.Context, request capabil
 		canDelegate, err := service.canDelegatePermissionSet(ctx, tx, tenant, request.Actor.ID, permissionSetID)
 		if err != nil {
 			return err
+		}
+		if !canDelegate {
+			canDelegate, err = service.canPolicyAdministratorDelegateMetadataPermissionSet(ctx, tx, tenant, request.Actor.ID, permissionSetID)
+			if err != nil {
+				return err
+			}
 		}
 		if !canDelegate {
 			return ErrDenied
@@ -427,6 +477,12 @@ func (service *Service) AssignRole(ctx context.Context, request capability.Reque
 		canDelegate, err := service.canDelegateRole(ctx, tx, tenant, request.Actor.ID, roleID)
 		if err != nil {
 			return err
+		}
+		if !canDelegate {
+			canDelegate, err = service.canPolicyAdministratorDelegateMetadataRole(ctx, tx, tenant, request.Actor.ID, roleID)
+			if err != nil {
+				return err
+			}
 		}
 		if !canDelegate {
 			return ErrDenied
@@ -588,6 +644,35 @@ func (service *Service) canDelegateRole(ctx context.Context, tx pgx.Tx, tenant d
 	return !exceedsActor, nil
 }
 
+func (service *Service) canPolicyAdministratorDelegateMetadataRole(ctx context.Context, tx pgx.Tx, tenant database.TenantContext, actorID string, roleID uuid.UUID) (bool, error) {
+	rows, err := tx.Query(ctx, `select permission_set_id from role_permission_set
+		where tenant_bucket=$1 and tenant_id=$2 and role_id=$3`, tenant.Bucket, tenant.TenantID, roleID)
+	if err != nil {
+		return false, err
+	}
+	permissionSetIDs := make([]uuid.UUID, 0)
+	for rows.Next() {
+		var permissionSetID uuid.UUID
+		if err := rows.Scan(&permissionSetID); err != nil {
+			rows.Close()
+			return false, err
+		}
+		permissionSetIDs = append(permissionSetIDs, permissionSetID)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return false, err
+	}
+	rows.Close()
+	for _, permissionSetID := range permissionSetIDs {
+		allowed, err := service.canPolicyAdministratorDelegateMetadataPermissionSet(ctx, tx, tenant, actorID, permissionSetID)
+		if err != nil || !allowed {
+			return false, err
+		}
+	}
+	return true, nil
+}
+
 func (service *Service) canDelegatePermissionSet(ctx context.Context, tx pgx.Tx, tenant database.TenantContext, actorID string, permissionSetID uuid.UUID) (bool, error) {
 	var exceedsActor bool
 	err := tx.QueryRow(ctx, `select exists(
@@ -615,6 +700,47 @@ func (service *Service) canDelegatePermissionSet(ctx context.Context, tx pgx.Tx,
 		return false, err
 	}
 	return !exceedsActor, nil
+}
+
+// canPolicyAdministratorDelegateMetadataPermissionSet is the attachment half of the
+// active-metadata bootstrap rule in requireDelegablePermission. It never
+// relaxes platform permissions: every permission the actor does not already
+// hold must reference an object or field in the current active metadata
+// version, and the actor must separately hold authorization.policy:update.
+func (service *Service) canPolicyAdministratorDelegateMetadataPermissionSet(ctx context.Context, tx pgx.Tx, tenant database.TenantContext, actorID string, permissionSetID uuid.UUID) (bool, error) {
+	if err := service.evaluator.RequirePermission(ctx, tx, tenant, actorID, "platform", "authorization.policy", "update"); err != nil {
+		return false, nil
+	}
+	rows, err := tx.Query(ctx, `select permission.resource_type,permission.resource_ref,permission.action
+		from permission_set_permission set_permission
+		join permission_set target_set on target_set.tenant_bucket=set_permission.tenant_bucket and target_set.tenant_id=set_permission.tenant_id and target_set.permission_set_id=set_permission.permission_set_id
+		join authorization_permission permission on permission.tenant_bucket=set_permission.tenant_bucket and permission.tenant_id=set_permission.tenant_id and permission.permission_id=set_permission.permission_id
+		where set_permission.tenant_bucket=$1 and set_permission.tenant_id=$2 and set_permission.permission_set_id=$3 and target_set.lifecycle_state='active'`,
+		tenant.Bucket, tenant.TenantID, permissionSetID)
+	if err != nil {
+		return false, err
+	}
+	type permissionRef struct{ resourceType, resourceRef, action string }
+	permissions := make([]permissionRef, 0)
+	for rows.Next() {
+		var permission permissionRef
+		if err := rows.Scan(&permission.resourceType, &permission.resourceRef, &permission.action); err != nil {
+			rows.Close()
+			return false, err
+		}
+		permissions = append(permissions, permission)
+	}
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return false, err
+	}
+	rows.Close()
+	for _, permission := range permissions {
+		if err := service.requireDelegablePermission(ctx, tx, tenant, actorID, permission.resourceType, permission.resourceRef, permission.action); err != nil {
+			return false, nil
+		}
+	}
+	return true, nil
 }
 
 func (service *Service) GrantShare(ctx context.Context, request capability.Request, input GrantShareInput) (ShareGrant, *capability.StableError) {

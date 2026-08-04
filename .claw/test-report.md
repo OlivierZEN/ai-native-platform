@@ -1,13 +1,20 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T03:25:00Z
+updated_at: 2026-08-04T06:24:00Z
 updated_by: ai
-last_run_at: 2026-08-04T03:25:00Z
+last_run_at: 2026-08-04T06:24:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-055 活动元数据首次权限引导本地验证
+
+- 真实缺口复现：DEV Autopilot 新事件对象已发布，但产品总监首次调用 `authorization.permission-set.grant` 返回 `UNAUTHORIZED`，未产生绕过 API 的数据库写入。
+- 修复后 PostgreSQL 用例证明策略管理员可首次授予并绑定当前活动 metadata 中的对象/字段权限；随机对象 UUID 和未持有的平台权限继续返回 `UNAUTHORIZED`，既有防权限升级断言保持通过。
+- `./scripts/test-postgres.sh run`：全仓 PostgreSQL 16 测试通过；`GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`、`go mod verify`、`git diff --check` 均通过。
+- Linux amd64 CGO-free 构建 SHA-256 为 `1e5d12298cca534e99220944953ec993ce7baedc04b440ae2816e132ac81c24e`。生产发布与租户权限回读待执行。
 
 ## 2026-08-04 TASK-054 组织成员关系能力与哪吒生产验收
 
