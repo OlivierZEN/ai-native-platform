@@ -1,9 +1,9 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-04T03:55:36Z
-updated_by: root after website Skill guidance rollout
-verification_status: passed
+updated_at: 2026-08-04T04:18:00Z
+updated_by: root before synchronized production release
+verification_status: in_progress
 ---
 
 # 项目部署运维手册
@@ -35,10 +35,10 @@ verification_status: passed
 
 ## 源代码管理
 
-- GitHub `origin`：`https://github.com/OlivierZEN/ai-native-platform.git`。
-- 阿里云 CodeUp `codeup`：`https://codeup.aliyun.com/627b18115b46541dd2ff340e/cloudcc-aidev-projects/cloudcc-semattice.git`。
-- CodeUp 发布分支：`main`；首次发布使用当前工作分支的完整 `HEAD` 快照，不改写 GitHub `origin`、本地分支名或 upstream。
-- 发布后校验：`git ls-remote codeup refs/heads/main` 必须与本地 `git rev-parse HEAD` 完全相等。
+- GitHub `github`：`git@github.com:OlivierZEN/ai-native-platform.git`。
+- 阿里云 CodeUp `origin`：`git@codeup.aliyun.com:627b18115b46541dd2ff340e/cloudcc-aidev-projects/cloudcc-semattice.git`；本地 `main` 跟踪 `origin/main`。
+- 双远端都使用 `main`；只允许普通快进或保留双方历史的真实合并，禁止 force push 或改写历史。
+- 发布后校验：`git ls-remote origin refs/heads/main` 与 `git ls-remote github refs/heads/main` 必须同时等于本地 `git rev-parse HEAD`。
 
 ## 构建
 
