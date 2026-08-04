@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T03:55:36Z
-updated_by: root after website Skill guidance production verification
+updated_at: 2026-08-04T04:03:11Z
+updated_by: root after validating Skill quick-start rewrite
 board_status: active
 ---
 
@@ -27,6 +27,30 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-056 - Rewrite and publish the cloudcc-semattice quick start
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-055`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/cloudcc-semattice README/VERSION, independent Skill release repository, validation and GitHub publication evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- README quick start contains only the user-facing `$cloudcc-semattice` login and current-object-list prompt flow, with concise login and read-only safety context.
+- The old environment-variable, Token, Python API, capability-discovery and dry-run quick-start content is absent.
+- Version `1.4.1` is validated, synchronized to the independent release repository, tagged and pushed without rewriting history, and GitHub raw README is verified.
+
+#### Next Action
+
+- Development copy `1.4.1` is validated. Commit and push the project source, then fetch and fast-forward the independent release repository before dry-run synchronization.
 
 ### TASK-050 - Render published objects with no fields in the administration console
 

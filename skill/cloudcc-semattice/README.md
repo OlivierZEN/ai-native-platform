@@ -1,6 +1,6 @@
 # CloudCC Semattice（语义格）
 
-当前版本：[`1.4.0`](VERSION)
+当前版本：[`1.4.1`](VERSION)
 
 `cloudcc-semattice` 是帮助 AI 理解、设计并通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它先说明产品定位、业务模块和资源模型，再在用户授权后执行租户、元数据、记录、用量、授权、组织和共享等受控操作。
 
@@ -31,7 +31,7 @@
 
 ```bash
 git clone \
-  --branch v1.4.0 \
+  --branch v1.4.1 \
   --depth 1 \
   https://github.com/CloudCCAI/cloudcc-semattice.git \
   ~/.codex/skills/cloudcc-semattice
@@ -41,55 +41,27 @@ git clone \
 
 ## 快速开始
 
-人工 CLI 首次使用时登录：
+安装完成后，在 Codex 中按以下顺序使用 `$cloudcc-semattice`。
 
-```bash
-./scripts/semattice login
+### 1. 登录 Semattice
+
+调用技能并输入提示词：
+
+```text
+登录
 ```
 
-该命令打开系统浏览器到 Keycloak，使用 Authorization Code + S256 PKCE 回调本机 `127.0.0.1`。Semattice从已验签的 Keycloak Organization声明映射自己的 tenant并签发短期 OACT；默认 OACT包含当前51项公开Capability所需的全部26个唯一scope。用户名、密码和 MFA只提交给 Keycloak，refresh token只保存在 macOS Keychain或 Linux Secret Service。scope只是Capability入口上限，Principal/RBAC、RLS、审批和审计仍由服务端独立执行。
+Skill 会打开系统浏览器进入统一登录页。用户名、密码和 MFA 只提交给 Keycloak，不会进入 Codex 对话；登录成功后返回 Codex，再执行下一步。如果账号关联多个公司，按 Skill 提示选择目标公司。
 
-登录后发现线上能力：
+### 2. 查看当前对象列表
 
-```bash
-./scripts/semattice call \
-  --capability system.capability.list \
-  --input '{}'
+登录成功后，继续调用技能并输入提示词：
+
+```text
+查看当前对象列表。
 ```
 
-查看或清除登录状态：
-
-```bash
-./scripts/semattice status
-./scripts/semattice logout
-```
-
-无交互环境可继续配置短期 Token：
-
-```bash
-export SEMATTICE_BASE_URL='https://semattice.agentcici.com'
-export SEMATTICE_TOKEN='<short-lived-oact>'
-```
-
-然后使用兼容调用形式：
-
-```bash
-python3 scripts/semattice_api.py \
-  --capability system.capability.list \
-  --input '{}'
-```
-
-写操作应先执行 dry-run：
-
-```bash
-python3 scripts/semattice_api.py \
-  --capability runtime.record.create \
-  --idempotency-key 'idem-contact-alice-v1' \
-  --input '{"object_api_name":"contact","data":{"name":"Alice"}}' \
-  --dry-run
-```
-
-不要把 Token 放入命令行参数、技能文件、Git 仓库或日志。
+Skill 会复用当前登录，在目标公司的权限范围内执行只读查询并返回对象列表；如果需要补充选择公司或元数据版本，会直接在对话中提示。该步骤不会创建、修改或删除对象。
 
 ## 版本与升级
 
@@ -104,7 +76,7 @@ python3 scripts/semattice_api.py \
 ```bash
 cd ~/.codex/skills/cloudcc-semattice
 git fetch --tags
-git checkout v1.4.0
+git checkout v1.4.1
 ```
 
 `1.0.0` 将技能 ID 和调用名统一为 `cloudcc-semattice`。从 `0.x` 升级时，请安装到新目录并将调用名改为 `$cloudcc-semattice`；确认新技能可用后再移除旧目录。
@@ -118,6 +90,8 @@ git checkout v1.4.0
 `1.3.0` 将人工登录默认请求扩展为当前51项公开Capability所需的全部26个唯一scope；服务端Principal/RBAC、RLS、独立审批、幂等和审计门禁保持不变。升级后旧登录缓存会被拒绝，必须重新执行 `semattice login`。
 
 `1.4.0` 为内测租户的首个元数据版本增加手动发布确认：`metadata.version.publish` 接受用户明确提供的非空 `approval_id` 并持久审计，不要求该值出现在 OACT 的 `approvals` 声明中。其他高风险能力仍要求可信令牌中的真实审批标识。
+
+`1.4.1` 将快速开始重写为 Codex 提示词流程：先调用 `$cloudcc-semattice` 输入“登录”，登录成功后再输入“查看当前对象列表。”；不再要求普通用户手工配置 Token 或直接运行底层脚本。
 
 ## 目录结构
 

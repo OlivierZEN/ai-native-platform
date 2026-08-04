@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T03:55:36Z
-updated_by: root after website Skill guidance production verification
-phase: website-skill-guidance-production-verified
-active_task: "TASK-050"
-next_action: "保持官网 Skill 安装入口与组织成员关系能力的生产监控；TASK-050 等待用户登录后补浏览器零错误验收。"
+updated_at: 2026-08-04T04:03:11Z
+updated_by: root after validating Skill quick-start rewrite
+phase: skill-v1.4.1-release-ready
+active_task: "TASK-056"
+next_action: "提交并推送 cloudcc-semattice 1.4.1 开发源，再按 dry-run、diff 和校验门禁同步独立发布仓库并原子发布 main + v1.4.1。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-056 本地实现已完成：Skill README 快速开始只保留 `$cloudcc-semattice` 下“登录”与“查看当前对象列表。”两步提示词，旧环境变量、Token、Python API 和 dry-run 示例已清除；版本升至 `1.4.1`，官方 Skill 校验、YAML、脚本语法/CLI help、无 Token dry-run、版本一致性和缓存制品检查通过，待独立仓库发布。
 
 - TASK-055 已完成并上线：官网 `#cli` 区域新增 `cloudcc-semattice` Codex Skill 的 GitHub 安装入口、`v1.1.0` 固定版本安装命令、`$cloudcc-semattice` 调用示例和凭据安全提醒。源码提交 `c74267e` 已推送；静态发布标识为 `20260804T035355Z-skill-c74267e`，旧站点备份保留。公网桌面/390px 手机渲染、内部滚动、复制按钮、GitHub 链接和 edge health 均通过。
 
