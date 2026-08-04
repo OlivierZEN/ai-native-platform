@@ -35,6 +35,13 @@ func CapabilityDefinitions(service *Service) []capability.Definition {
 			}
 			return service.SetStatus(ctx, request, input)
 		}),
+		definition("identity.principal.set-organization-membership", "Create, update or end an approved Principal organization membership.", "high", "authorization.manage", organizationMembershipSchema(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input SetOrganizationMembershipInput
+			if err := decodeInput(request.Input, &input); err != nil {
+				return nil, err
+			}
+			return service.SetOrganizationMembership(ctx, request, input)
+		}),
 	}
 }
 
@@ -90,4 +97,8 @@ func listSchema() json.RawMessage {
 
 func statusSchema() json.RawMessage {
 	return json.RawMessage(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["principal_id","status","reason","approval_id"],"properties":{"principal_id":{"type":"string","minLength":1,"maxLength":200},"status":{"type":"string","enum":["active","suspended","disabled"]},"reason":{"type":"string","minLength":1,"maxLength":500},"approval_id":{"type":"string","minLength":1,"maxLength":200}}}`)
+}
+
+func organizationMembershipSchema() json.RawMessage {
+	return json.RawMessage(`{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["principal_id","organization_id","active","primary","approval_id"],"properties":{"principal_id":{"type":"string","minLength":1,"maxLength":200},"organization_id":{"type":"string","format":"uuid"},"active":{"type":"boolean"},"primary":{"type":"boolean"},"approval_id":{"type":"string","minLength":1,"maxLength":200}}}`)
 }

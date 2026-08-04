@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-03T01:46:01Z
-updated_by: root after merged production rollout
+updated_at: 2026-08-04T03:25:00Z
+updated_by: ai
 board_status: active
 ---
 
@@ -50,7 +50,7 @@ board_status: active
 
 #### Next Action
 
-- Merged release `20260803T013913Z-web-oidc-df308b1b981f` is live and server/API smoke passed. Wait for the user to complete Keycloak login in the retained Chrome tab, then verify both objects and zero browser errors before closing ISSUE-002.
+- 统一 release `20260803T051441Z-web-oidc-2329787b57ff` 已上线，HTTPS API 确认 `contact.fields=[]`、`large_backpack` 为 2 字段；待用户登录后补真实浏览器零错误验收。
 
 ### TASK-033 - Semattice 统一 Principal 投影与官方机器主体认证
 
@@ -183,6 +183,82 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-054 - Add governed Principal organization membership capability
+
+- status: `done`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `ai`
+- spec_path: `docs/specs/FEAT-048-governed-principal-organization-membership.md`
+- depends_on: `TASK-051, TASK-053`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `internal/principal, main wiring, capability catalog, production release and DEV Autopilot identity verification`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- `identity.principal.set-organization-membership` 作为正式高风险 Capability 发布，要求 HUMAN 管理主体、`authorization.manage` 和已验签独立审批。
+- 能力可幂等建立或结束指定 Principal 的组织成员关系，并维持每个主体至多一个 active primary membership。
+- 数据库集成测试、全量回归和生产能力发现通过；新增开发者哪吒通过该能力归属研发交付部。
+
+#### Next Action
+
+- 已完成；进入生产监控。
+
+#### Handoff Note
+
+- 提交 `3a0d9daa281a` 已发布为 `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a`，线上能力发现为 55 项。
+- 哪吒通过独立审批 `33f86ce8-6161-4ce0-a35b-60f527940556` 获得开发者角色和研发交付部 primary membership，随后被治理为 `suspended` 休息状态。
+
+### TASK-053 - 调整 DEV Autopilot 研发身份花名册
+
+- status: `done`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-047-dev-autopilot-identity-roster.md`
+- depends_on: `TASK-051, TASK-052`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `AgentCiCi Principal authority, Semattice identity/role/organization projections, console API and DEV Autopilot CLI verification`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 管理中心显示 Oliver、大乔、悟空、后羿四名成员，机器主体 owner 均为 Oliver。
+- 后羿拥有开发者角色和研发交付部主组织关系，并可使用 DEV Autopilot CLI 获取任务。
+- 产品经理凭据不能冒充开发者调用 CLI。
+
+#### Next Action
+
+- 已完成；常规监控。
+
+### TASK-052 - 修复管理中心成员与角色查询
+
+- status: `done`
+- priority: `high`
+- owner_role: `fullstack-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-051`
+- blocked_by: `none`
+- related_issues: `ISSUE-003`
+- scope_files: `internal/console/reader.go, internal/console/reader_test.go, project state and production release evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- PostgreSQL 成员聚合查询不再违反 GROUP BY 规则，真实 reader 回归测试可捕获该错误。
+- 最终统一 release 同时保留 CodeUp 主线能力，生产 `/console/api/members` 返回三类研发身份和三个角色。
+
+#### Next Action
+
+- 已完成并发布；常规监控。
 
 ### TASK-049 - Support manual confirmation for direct metadata publication
 
@@ -656,89 +732,6 @@ board_status: active
 #### Handoff Note
 
 - 已部署分组精确为 `6 tenant + 6 semantic metadata + 10 changeset + 5 record runtime + 12 authorization + 9 sharing/organization + 1 system = 49`；每项 ID、scope 和风险均通过运行时 parity。页面没有描述尚未实现的远程 HTTP MCP、outbox/worker、HA 或生产 SLA。
-
-### TASK-022 - Deploy CloudCC Semattice to the authorized ECS
-
-- status: `done`
-- priority: `critical`
-- owner_role: `release-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
-- depends_on: `TASK-010, TASK-011, TASK-012, TASK-013, TASK-014, TASK-015, TASK-016`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `deploy/semattice/**, docs/specs/FEAT-022-*, .claw/devops.md; authorized ECS 115.29.222.70`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- PostgreSQL 16、迁移、独立数据库角色、Semattice systemd 服务和 Nginx TLS 在授权 ECS 上运行
-- `semattice.agentcici.com` 展示 API/CLI/MCP 使用说明，HTTPS API 真实可调用
-- 公网 HTTPS、未授权拒绝、CLI、MCP stdio 和服务重启均有真实验证证据
-
-#### Next Action
-
-- 已完成。后续只进行证书续期、版本升级或故障处理；新功能继续使用独立任务。
-
-#### Handoff Note
-
-- PostgreSQL 16.13、Nginx 1.30.2 和 Semattice systemd 已启用；公网首页/HTTPS/API、CLI 下载、短期 JWT API、CLI、MCP stdio 与服务重启均验证通过。三入口发现 49 项能力，MCP 实际调用 `system_capability_list` 成功。凭据不在仓库；MCP 当前仍为 stdio，不伪装成 HTTP transport。
-
-### TASK-016 - Implement role-centered authorization and record sharing
-
-- status: `done`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-016-role-centered-rbac-organization-data-sharing.md`
-- depends_on: `TASK-012, TASK-013, TASK-015`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `principal/organization/role/permission-set models, object/field/record PDP, organization data scopes, Owner, teams, share grants/rules, snapshots and audit`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 角色中心的对象、字段、Capability 和平台管理权限由 Permission Set 可复用组合，并强制最小权限与职责分离
-- 记录权限由 Owner、数据归属组织范围、团队、显式共享和规则共享联合计算；组织层级不传播功能权限
-- 对象、字段、记录、共享、调岗、组织合并和跨租户越权场景均有真实 PostgreSQL 与三入口验证
-
-#### Next Action
-
-- 已完成：角色中心 RBAC、组织数据范围、Owner、组/团队/直接共享、规则 `record × group` 投影及失败恢复、条件策略、职责分离、重组、解释审计、三入口、跨租户负向和本地百万记录验证均通过。通用 worker/outbox 与 200 活跃用户/热点公平性容量验收是 TASK-017/TASK-019 的独立工作。
-
-#### Handoff Note
-
-- 已完成并由本地 PostgreSQL 证据验证。Profile 不进入业务授权模型；组织树只计算数据范围与记录共享，禁止 `record × user` ACL 物化。规则投影只存 record-to-group 边且未 ready 时 fail closed；构建结束会检查缺边，access group disabled 会撤销其共享路径；组织合并不物理删除。通用自动运行/告警与完整容量验收已明确拆分至 TASK-017/TASK-019。
-
-### TASK-012 - Validate the PostgreSQL shard baseline
-
-- status: `done`
-- priority: `critical`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-012-postgresql-shard-isolation-poc.md`
-- depends_on: `TASK-010`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `PostgreSQL 16.13 schema, 128 LIST partitions, FORCE RLS, TenantContext, pool isolation tests`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- migrations 1/2/3 可从空库执行，128 bucket、分区裁剪、FORCE RLS、事务级 TenantContext、连接池清理和跨租户关系拒绝均有 PostgreSQL 16 实证
-- runtime/control 角色最小权限和无上下文 fail-closed 测试通过
-
-#### Next Action
-
-- 已完成隔离与分区基线；8/16 GiB 下的 50 并发、200 活跃用户和 100 万记录完整容量验收保留给 `TASK-019`。
-
-#### Handoff Note
-
-- PoC 使用绑定 127.0.0.1 的专用临时 PostgreSQL 16.13；未连接生产/共享数据库，未执行 HA、备份或恢复。
 
 ## 维护规则
 

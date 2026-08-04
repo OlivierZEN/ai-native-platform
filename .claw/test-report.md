@@ -1,25 +1,49 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-03T01:46:01Z
-updated_by: root after merged production rollout verification
-last_run_at: 2026-08-03T01:46:01Z
+updated_at: 2026-08-04T03:25:00Z
+updated_by: ai
+last_run_at: 2026-08-04T03:25:00Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-## 2026-08-03 合并 release 生产发布验收
+## 2026-08-04 TASK-054 组织成员关系能力与哪吒生产验收
 
-- 部署前发现 migration 17 源文件格式清理改变已发布校验和；提交 `df308b1b981f6f8e6267e4274640f13aff59641a` 显式恢复运行时字节并以回归测试锁定生产值 `add7e8042c8a177431849080d4bb519212d49c288cf48b39ab02ee8b1f8fed20`。定向测试、全量 `go test -race ./... -count=1`、`go vet ./...`、`go mod verify` 和 `git diff --check` 通过。
-- Linux amd64 CGO-free 制品 SHA-256 为 `4fb9abdd5b05c170b2a637b19741d1c2e08c5cf1c6dde0977c1514c10c316a03`；切换前在生产数据库以新制品执行幂等 `db migrate` 返回 `succeeded`，migration 仍为 1–17 且无新增变更。
-- release `/opt/semattice/releases/20260803T013913Z-web-oidc-df308b1b981f` 已原子切换；Semattice、Nginx、PostgreSQL 16 和 Keycloak 均 active，Semattice 重启计数为 0，Nginx 配置有效，发布后错误日志和关键失败消息均为 0。
-- Edge 健康/首页/HTTP 跳转/控制台分别为 200/200/301/200；匿名 overview、换票、Capability 调用均为 401，OIDC 登录为 303；Keycloak discovery 为 200，公网 health/metrics 均为 404。
-- JWKS 路径按固定规则 301 到 `https://x.agentcici.com/.well-known/agentcici-oact-jwks.json`，跟随重定向后返回有效公钥集合；静态站包含 `Array.isArray(item.fields)` 归一逻辑，发布前静态站和 Nginx 备份均存在。
-- 生产本机注册表为 54 项能力，包含三项 `identity.principal.*` 与 `metadata.version.publish`；正式短期 OACT 调用 `system.capability.list` 返回 `succeeded`，审计标识 `audit:req-e63a80ec-4814-4896-ba1b-32bd59f4c431`。
-- 同一 OACT 的 `tenant.get-status` 返回 Native `active`，审计标识 `audit:req-ff851cd8-53db-474b-995b-f2498cda889a`；`metadata.version.get` 回读已发布版本、2 个对象，审计标识 `audit:req-98304c52-8ed5-43c2-91e3-532e15172a8b`。未执行业务写入。
-- 真实 Chrome 刷新后旧管理会话失效，Keycloak 无前台 SSO，页面已保留在统一登录表单；未输入或读取凭据。登录后的联系人/大书包页面与浏览器零错误仍待用户完成登录后验收。
-- 一致性检查确认线上 54 项能力需要 27 个唯一 scope，而生产人类 CLI 换票 allowlist 仍为 26 项且不含 `identity.principal.sync`；已登记 ISSUE-003，本次未擅自扩大授权。
+- 新增正式高风险能力 `identity.principal.set-organization-membership`，要求 `authorization.manage`、HUMAN 管理主体和 OACT 内已验签独立审批；SERVICE、自审、缺失审批和跨租户输入均 fail closed。
+- 定向 Principal/main wiring 测试、独立 PostgreSQL 集成测试、`./scripts/test-postgres.sh run`、`GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`、状态 validator 与 diff check 全部通过。
+- 提交 `3a0d9daa281a` 已发布为 `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a`，二进制 SHA-256 为 `1187b727e05582cba2c4d8b9251895ddcb95da2eef997ef378d7e8136c808e6b`；上一 release 保留。
+- 发布后服务 active，公网 edge health 通过，本机未鉴权 Capability 请求返回预期 401；受认证 `system.capability.list` 返回 55 项且包含新能力。
+- DEV Autopilot 哪吒 Principal 通过审批 `33f86ce8-6161-4ce0-a35b-60f527940556` 获得开发者角色和研发交付部 active primary membership，最终状态为 `suspended`。
+- 受认证治理控制台精确返回 5 名成员；哪吒为 `SERVICE / dev-autopilot-developer-nezha / 开发者 / 研发交付部 / suspended / owner=Oliver`。全过程未输出 Token、client secret、数据库 URL 或私钥。
+
+## 2026-08-03 TASK-053 DEV Autopilot 研发身份花名册生产验收
+
+- AgentCiCi 权威身份回读：Oliver、大乔、悟空、后羿均为 active；后羿为 SERVICE / AUTOMATION，owner 为 Oliver，client_id 为 `dev-autopilot-developer-houyi`。
+- Semattice `identity.principal.sync` 成功投影四名 Principal；后羿复用开发者角色 `8cb76dc3-04ed-4371-98da-87cb9ec081e1`，并拥有研发交付部 `8ed52e19-be8e-492a-bea7-ab1b2adba0b2` 的 primary membership。
+- 独立审批 `9e5783ea-7713-462f-8388-24b763eca4a0` 已由不同于申请人的组织管理员批准；身份、角色和组织变更均有审计记录。
+- 使用真实短期控制台 Session 调用 `/console/api/members` 与 `/console/api/overview`：返回 4 members / 3 roles / 1 organization / 5 objects / 42 fields；四名成员名称、角色、组织、状态和 owner 均与 FEAT-047 一致。
+- 使用后羿和悟空各自机器凭据调用 DEV Autopilot CLI `tasks list --human`：均成功列出开发任务；使用大乔产品经理凭据调用同一入口返回退出码 3、`FORBIDDEN`。
+- DEV Autopilot 公网 `/devautopilot/api/health` 返回 200、`mode=integrated`、AgentCiCi/Semattice 集成均为 true。全过程未输出 OACT、client secret、私钥或一次性凭据。
+
+## 2026-08-03 TASK-052 成员与角色查询及统一生产发布验证
+
+- 生产只读复现确认原 SQL 因 `p.created_at` 未加入 GROUP BY 而失败；修正后同租户可返回三名研发主体和三个角色。
+- 新增真实 PostgreSQL reader 回归测试，覆盖 control 租户解析、runtime TenantContext/RLS、成员聚合结果与角色查询；旧 SQL 会在该测试中返回数据库错误。
+- `./scripts/test-postgres.sh run`：PostgreSQL 16 全仓库集成测试通过，`internal/console` 用时 8.781s。
+- `GOTOOLCHAIN=go1.26.5 go vet ./...`、`go mod verify`、`CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath`和`git diff --check`：通过。
+- 验证构建 SHA-256 为 `08b654e8cfceca3c31b5dc446ed8bd5a6c7b587127f004a75922ff03fc705c68`。
+- 提交 `2b29dc5efb47` 已发布为临时验证 release `/opt/semattice/releases/20260803T045726Z-web-oidc-2b29dc5efb47`；线上二进制 SHA-256 为 `36fbd1451d211865599ba6e0b0bcbb0d0de435cd35fddf57505f80e09bbb4749`。
+- Semattice、Nginx、PostgreSQL 16、Keycloak 均 active，Nginx 配置有效，健康 200，匿名 members=401，发布后 Semattice warning 日志为空。
+- 服务器内使用受保护会话密钥生成未输出、未落盘的 5 分钟租户只读烟测会话；HTTPS members=200，精确返回三名研发主体和三个角色。overview 为 members=3、roles=3、organizations=1、objects=5、fields=42；organizations 和 objects 接口同时通过。
+- 发现 CodeUp `main=df308b1` 含 7 个独有生产提交后，普通快进门禁阻止覆盖；已通过 merge 保留手工元数据发布、零字段对象、研发身份、migration 17 checksum 和本次 members 修复。
+- 合并后 `./scripts/test-postgres.sh run` 与 `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1` 全仓通过；`internal/console` 同时覆盖空字段数组和 members 真实数据库查询。
+- 合并后 vet、module verify、16 项 Skill Python 测试、Node 语法、release shell 语法、状态 validator、diff check 与 Linux/amd64 CGO-free 构建全部通过；构建 SHA-256 为 `b9e79c0b43645a274fcb69e8f6d844b2e926553fda2d99e722abab6405952425`。
+- 合并提交 `2329787b57ff` 已发布为 `/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff`；线上二进制 SHA-256 为 `bdbd5e9547654c4c1142206b46fc8fa129efc61d72e3519b03b471eee6fd027c`，临时 release 仍保留为回滚点。
+- 最终线上 members=200，精确返回三名研发主体和三个角色；overview 为 3 members / 3 roles / 1 organization / 5 objects / 42 fields，5 个研发对象的 fields 均为数组。
+- 另一已发布元数据租户回读确认 `contact.fields=[]`、`large_backpack` 为 2 字段；Semattice、Nginx、PostgreSQL 16、Keycloak active，匿名 members=401，Nginx 有效且发布后 warning 日志为空。
+- CodeUp 从 `df308b1`、GitHub 从 `4e2bc62` 分别普通快进至交付提交 `9644cb634362fe435a3fea280a763610c29cf8b1`，两个远端回读与本地一致；未使用 force push。
 
 ## 2026-08-03 origin/main 合并验证
 
