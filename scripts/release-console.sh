@@ -63,9 +63,11 @@ test -d "$static_root"
 test ! -e "$release_path"
 actual_sha="$(sha256sum "$stage/semattice" | awk '{print $1}')"
 test "$actual_sha" = "$expected_sha"
-tar -tzf "$stage/console-static.tgz" | grep -Eq '(^|\./)console/index.html$'
-tar -tzf "$stage/console-static.tgz" | grep -Eq '(^|\./)downloads/semattice-linux-amd64$'
-tar -tzf "$stage/console-static.tgz" | grep -Eq '(^|\./)downloads/semattice-linux-amd64.sha256$'
+archive_list="$stage/console-static.list"
+tar -tzf "$stage/console-static.tgz" > "$archive_list"
+grep -Eq '(^|\./)console/index.html$' "$archive_list"
+grep -Eq '(^|\./)downloads/semattice-linux-amd64$' "$archive_list"
+grep -Eq '(^|\./)downloads/semattice-linux-amd64.sha256$' "$archive_list"
 test "$(stat -c '%U:%G %a' /etc/semattice/secrets/semattice-web-client-secret)" = 'root:semattice 640'
 test "$(wc -c < /etc/semattice/secrets/semattice-web-client-secret)" -le 4096
 grep -qx 'AI_NATIVE_CONSOLE_OIDC_CLIENT_ID=semattice-web' /etc/semattice/semattice.env
