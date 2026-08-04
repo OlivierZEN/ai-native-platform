@@ -22,6 +22,7 @@ import (
 	"github.com/OlivierZEN/ai-native-platform/internal/database/migrate"
 	mcpserver "github.com/OlivierZEN/ai-native-platform/internal/mcp"
 	"github.com/OlivierZEN/ai-native-platform/internal/metadata"
+	"github.com/OlivierZEN/ai-native-platform/internal/metering"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -29,6 +30,51 @@ import (
 )
 
 var requestSequence atomic.Int64
+
+func TestRecordUpdateToleratesMissingHistoricalMeteringBaseline(t *testing.T) {
+	_, control, runtime := recordTestPools(t)
+	metadataService := metadata.NewService(runtime, control)
+	meter := metering.NewService(runtime, control)
+	recordService := NewService(runtime, control, meter)
+	definitions := append(metadata.CapabilityDefinitions(metadataService), CapabilityDefinitions(recordService)...)
+	invoker := capability.NewInvoker(capability.NewRegistry(definitions), 8)
+	principal := recordPrincipal("11111111-1111-4111-8111-111111111111", "orgaaaaaaaaaaaaaaaaa", "record-meter-agent")
+	model := publishRecordModel(t, invoker, principal)
+	created := requireRecord(t, invokeRecord(t, invoker, principal, "runtime.record.create", map[string]any{
+		"object_api_name": "customer", "data": map[string]any{"name": "a deliberately long historical record name"},
+	}))
+	recordID := uuid.MustParse(created.RecordID)
+	tenant := database.TenantContext{TenantID: uuid.MustParse(principal.TenantID), Bucket: 7}
+	if err := database.WithTenant(context.Background(), runtime, tenant, func(tx pgx.Tx) error {
+		_, err := tx.Exec(context.Background(), `
+			update metering.tenant_usage_current_bucket
+			set live_record_count=0,logical_data_bytes=0
+			where object_id=$1 and counter_bucket=$2`, model.CustomerID, int16(recordID[15]%16))
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	requireSuccess(t, invokeRecord(t, invoker, principal, "runtime.record.update", map[string]any{
+		"object_api_name": "customer", "record_id": created.RecordID, "expected_revision": created.Revision,
+		"patch": map[string]any{"name": "short"},
+	}))
+	if err := database.WithTenant(context.Background(), runtime, tenant, func(tx pgx.Tx) error {
+		var records, bytes int64
+		if err := tx.QueryRow(context.Background(), `
+			select live_record_count,logical_data_bytes
+			from metering.tenant_usage_current_bucket
+			where object_id=$1 and counter_bucket=$2`, model.CustomerID, int16(recordID[15]%16)).Scan(&records, &bytes); err != nil {
+			return err
+		}
+		if records != 0 || bytes != 0 {
+			return fmt.Errorf("bounded usage = (%d,%d), want (0,0)", records, bytes)
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestRecordRuntimeCRUDQueryRelationsIsolationAndParity(t *testing.T) {
 	admin, control, runtime := recordTestPools(t)

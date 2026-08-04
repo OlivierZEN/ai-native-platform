@@ -55,7 +55,13 @@ func (service *Service) RecordInvocation(ctx context.Context, request capability
 
 func (service *Service) ApplyRecordDelta(ctx context.Context, tx pgx.Tx, tenant database.TenantContext, request capability.Request, objectID, recordID uuid.UUID, recordDelta, byteDelta int64) error {
 	bucket := int16(recordID[15] % 16)
-	_, err := tx.Exec(ctx, "insert into metering.tenant_usage_current_bucket(tenant_bucket,tenant_id,object_id,counter_bucket,live_record_count,logical_data_bytes) values ($1,$2,$3,$4,$5,$6) on conflict (tenant_bucket,tenant_id,object_id,counter_bucket) do update set live_record_count=metering.tenant_usage_current_bucket.live_record_count+excluded.live_record_count,logical_data_bytes=metering.tenant_usage_current_bucket.logical_data_bytes+excluded.logical_data_bytes,updated_at=clock_timestamp()", tenant.Bucket, tenant.TenantID, objectID, bucket, recordDelta, byteDelta)
+	// Imported or pre-metering records can legitimately have no current-usage
+	// baseline.  A later update that makes such a record smaller must not abort
+	// the domain write by driving the non-negative current counters below zero.
+	// The immutable ledger still records the actual delta so a reconciliation
+	// job can rebuild an exact baseline; only the materialized current view is
+	// bounded at zero.
+	_, err := tx.Exec(ctx, "insert into metering.tenant_usage_current_bucket(tenant_bucket,tenant_id,object_id,counter_bucket,live_record_count,logical_data_bytes) values ($1,$2,$3,$4,greatest($5::bigint,0),greatest($6::bigint,0)) on conflict (tenant_bucket,tenant_id,object_id,counter_bucket) do update set live_record_count=greatest(metering.tenant_usage_current_bucket.live_record_count+$5::bigint,0),logical_data_bytes=greatest(metering.tenant_usage_current_bucket.logical_data_bytes+$6::bigint,0),updated_at=clock_timestamp()", tenant.Bucket, tenant.TenantID, objectID, bucket, recordDelta, byteDelta)
 	if err != nil {
 		return err
 	}
