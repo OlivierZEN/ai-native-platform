@@ -107,7 +107,7 @@ board_status: active
 
 #### Handoff Note
 
-- CodeUp `main` and production are synchronized through `0398ebebe3b97e343a49bb342d07d4d7d61e3226`. Release `/opt/semattice/releases/20260804T071457Z-web-oidc-0398ebebe3b9` is healthy and publishes a SHA-verified downloadable binary. GitHub rejected both available SSH identities with an explicit permission error; no history was modified there.
+- CodeUp `main` contains production source `0398ebebe3b97e343a49bb342d07d4d7d61e3226` and subsequent release evidence. Release `/opt/semattice/releases/20260804T071457Z-web-oidc-0398ebebe3b9` is healthy and publishes a SHA-verified downloadable binary. GitHub rejected both available SSH identities with an explicit permission error; no history was modified there.
 
 ### TASK-050 - Render published objects with no fields in the administration console
 

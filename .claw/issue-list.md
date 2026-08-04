@@ -19,7 +19,7 @@ updated_by: root after ISSUE-005 verification
 - severity: `medium`
 - status: `blocked`
 - root_cause: `verified` — `OlivierZEN/ai-native-platform` 明确拒绝当前 `androidxhm` 与 CloudCCAI 两个 SSH 身份的写入，GitHub CLI 也没有已登录身份；远端没有独有提交，不存在需要合并的分叉。
-- impact: CodeUp `main` 与生产已更新至 `0398ebebe3b97e343a49bb342d07d4d7d61e3226`，但 GitHub 项目镜像仍停在 `4bb3d733f5e7297409a813e952faeee8a50eeeec`。
+- impact: CodeUp `main` 已包含生产制品源提交 `0398ebebe3b97e343a49bb342d07d4d7d61e3226` 及其发布证据，但 GitHub 项目镜像仍停在 `4bb3d733f5e7297409a813e952faeee8a50eeeec`。
 - resolution: 仓库所有者为其中一个现有身份授予写权限后，将 GitHub `main` 普通快进至 CodeUp 当前提交；禁止 force push、替换仓库或使用未授权凭据绕过权限。
 - verification: 两次 push 分别返回 `Permission to OlivierZEN/ai-native-platform.git denied to androidxhm` 与 `denied to CloudCCAI`；GitHub `main` 回读保持不变。
 

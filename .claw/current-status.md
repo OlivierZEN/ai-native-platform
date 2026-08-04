@@ -27,7 +27,7 @@ read_next:
 
 - TASK-058 / FEAT-049 已发布 `cloudcc-semattice` v1.4.2：项目实现提交 `109dcbf61847b9f7148a9db86959af7e6c182acb` 已推送 CodeUp `main`；独立技能发布提交 `101faa8556453486517b12afd52c71bff0507227` 已通过 atomic push 同时更新 GitHub `main` 和不可移动标签 `v1.4.2`。远程 HEAD、raw VERSION/README、仓库页、标签页和发布仓库 clean 均验证通过。ctypes 合约级 Windows 测试已通过，真实 Windows `login/status/read-only call/logout` 仍待执行；当时发现的 51/55 数量漂移现已由 TASK-060 关闭。
 
-- TASK-057 生产交付已完成、GitHub 项目镜像同步受 ISSUE-004 阻塞：CodeUp `main` 已同步至 `0398ebebe3b97e343a49bb342d07d4d7d61e3226`，生产 release `20260804T071457Z-web-oidc-0398ebebe3b9` 健康且下载制品 SHA 校验通过。GitHub `main=4bb3d733` 无独有提交，但 `androidxhm` 与 CloudCCAI 两个现有 SSH 身份均被仓库拒绝写入；未强推或改写历史。
+- TASK-057 生产交付已完成、GitHub 项目镜像同步受 ISSUE-004 阻塞：CodeUp `main` 已包含生产制品源提交 `0398ebebe3b97e343a49bb342d07d4d7d61e3226` 及发布证据，生产 release `20260804T071457Z-web-oidc-0398ebebe3b9` 健康且下载制品 SHA 校验通过。GitHub `main=4bb3d733` 无独有提交，但 `androidxhm` 与 CloudCCAI 两个现有 SSH 身份均被仓库拒绝写入；未强推或改写历史。
 
 - TASK-056 已完成并发布：Skill README 快速开始只保留 `$cloudcc-semattice` 下“登录”与“查看当前对象列表。”两步提示词，旧环境变量、Token、Python API 和 dry-run 示例已清除。GitHub `main` 与不可移动标签 `v1.4.1` 均指向 `69fdb8ddd872e565df11ddd4f441f464fc183a89`，远端版本和 README 回读通过。
 

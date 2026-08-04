@@ -10,7 +10,7 @@ verification_status: passed
 
 ## 2026-08-04 TASK-060 当前元数据发现生产发布
 
-- CodeUp `main` 已普通更新至 `0398ebebe3b97e343a49bb342d07d4d7d61e3226`；当前 release 为 `/opt/semattice/releases/20260804T071457Z-web-oidc-0398ebebe3b9`，二进制 SHA-256 为 `ed58228e1f3f893b387eb5b6a0892a39fe6d5c672423a49134eb57d70fba9c3c`，上一 release 保留为原子回滚点。
+- 生产制品源提交 `0398ebebe3b97e343a49bb342d07d4d7d61e3226` 已普通推送至 CodeUp；当前 release 为 `/opt/semattice/releases/20260804T071457Z-web-oidc-0398ebebe3b9`，二进制 SHA-256 为 `ed58228e1f3f893b387eb5b6a0892a39fe6d5c672423a49134eb57d70fba9c3c`，上一 release 保留为原子回滚点。后续发布证据提交只更新项目状态，不改变该生产二进制。
 - 能力注册表为 56 项；`metadata.version.get-current` 复用既有 `metadata.read`，不改变生产 26 项人类 CLI OACT scope allowlist。`identity.principal.sync` 继续是服务身份专用 scope，不纳入人类默认集合。
 - 四项服务 active，Semattice `NRestarts=0`、warning 日志为空；edge health、匿名 401、能力发现和真实当前对象回读均通过。
 
