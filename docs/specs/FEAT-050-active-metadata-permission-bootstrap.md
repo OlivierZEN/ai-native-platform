@@ -29,6 +29,7 @@ DEV Autopilot 的 `dev_delivery_event` 已通过独立审批发布，随后在�
 - 既有 verified approval、`authorization.manage` scope、管理权限、租户 RLS、幂等和持久审计要求全部保持不变。
 - 新增高风险能力 `authorization.permission-set.revoke`，用于在独立审批和完整审计下移除权限集中的原子权限关联，支持正式清理错误或过期授权，不允许直接数据库修正。
 - 原子权限 action 必须与资源类型一致：对象只接受 `create/read/update/delete`，字段只接受 `read/write`；平台能力保留各领域自己的 action 词汇并继续受精确委托校验。这样字段授权不会再以无效的 `update` 形式通过配置、却在记录运行时被 `write` 校验拒绝。
+- `authorization.permission-set.revoke` 继续接受历史上已落库但不再允许新增的有界 action，以便在独立审批和审计下清理 `field/update` 等旧边；这不会放宽任何新增授权。
 
 ## 验收
 

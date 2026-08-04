@@ -26,3 +26,15 @@ func TestValidPermissionUsesResourceSpecificActions(t *testing.T) {
 		})
 	}
 }
+
+func TestValidRevocationTargetAcceptsLegacyBoundedActions(t *testing.T) {
+	if !validRevocationTarget("field", "legacy-field", ActionUpdate) {
+		t.Fatal("legacy field/update permission must remain revocable")
+	}
+	if validRevocationTarget("unknown", "legacy-field", ActionUpdate) {
+		t.Fatal("unknown resource type must not be revocable")
+	}
+	if validRevocationTarget("field", "", ActionUpdate) {
+		t.Fatal("empty resource reference must not be revocable")
+	}
+}

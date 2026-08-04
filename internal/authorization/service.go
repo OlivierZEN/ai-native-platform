@@ -376,7 +376,7 @@ func (service *Service) RevokePermission(ctx context.Context, request capability
 	if stableErr != nil {
 		return stableErr
 	}
-	if !validPermission(input.ResourceType, input.ResourceRef, input.Action) {
+	if !validRevocationTarget(input.ResourceType, input.ResourceRef, input.Action) {
 		return validationError("permission resource_type, resource_ref, or action is invalid")
 	}
 	tenant, stableErr := service.tenantContext(ctx, request)
@@ -1659,10 +1659,7 @@ func accessLevels(action string) []string {
 	return []string{"read", "update", "delete"}
 }
 func validPermission(resourceType, resourceRef, action string) bool {
-	if resourceType != "platform" && resourceType != "object" && resourceType != "field" {
-		return false
-	}
-	if strings.TrimSpace(resourceRef) == "" || len(resourceRef) > 200 || strings.TrimSpace(action) == "" || len(action) > 32 {
+	if !validRevocationTarget(resourceType, resourceRef, action) {
 		return false
 	}
 	switch resourceType {
@@ -1676,6 +1673,16 @@ func validPermission(resourceType, resourceRef, action string) bool {
 		// still bounded by the capability's delegation check below.
 		return true
 	}
+}
+
+// validRevocationTarget intentionally accepts the formerly permitted bounded
+// action vocabulary. Revocation is privilege-reducing and must remain able to
+// remove legacy object/field edges that a stricter grant contract now rejects.
+func validRevocationTarget(resourceType, resourceRef, action string) bool {
+	if resourceType != "platform" && resourceType != "object" && resourceType != "field" {
+		return false
+	}
+	return strings.TrimSpace(resourceRef) != "" && len(resourceRef) <= 200 && strings.TrimSpace(action) != "" && len(action) <= 32
 }
 
 func validateGrantee(ctx context.Context, tx pgx.Tx, tenant database.TenantContext, granteeType, granteeRef string) error {
