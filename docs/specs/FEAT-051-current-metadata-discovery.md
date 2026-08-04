@@ -1,17 +1,17 @@
 ---
 kind: feature-spec
-feature_id: FEAT-050
+feature_id: FEAT-051
 title: Discover the current published metadata bundle
 status: approved
 owner_role: integration-agent
-task_ids: TASK-059
+task_ids: TASK-060
 related_decisions: ADR-003, ADR-014
 related_issues: ISSUE-005
 updated_at: 2026-08-04T07:18:00Z
 updated_by: root during implementation
 ---
 
-# FEAT-050 - 当前已发布元数据发现
+# FEAT-051 - 当前已发布元数据发现
 
 ## 背景与目标
 

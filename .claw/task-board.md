@@ -2,7 +2,7 @@
 kind: task-board
 version: 3
 updated_at: 2026-08-04T07:18:00Z
-updated_by: root during TASK-059 implementation
+updated_by: root during TASK-060 implementation
 board_status: active
 ---
 
@@ -28,13 +28,13 @@ board_status: active
 
 ## Active Tasks
 
-### TASK-059 - Add current metadata discovery and publish Skill v1.5.0
+### TASK-060 - Add current metadata discovery and publish Skill v1.5.0
 
 - status: `in_progress`
 - priority: `high`
 - owner_role: `integration-agent`
 - claimed_by: `root`
-- spec_path: `docs/specs/FEAT-050-current-metadata-discovery.md`
+- spec_path: `docs/specs/FEAT-051-current-metadata-discovery.md`
 - depends_on: `none`
 - blocked_by: `none`
 - related_issues: `ISSUE-005`
