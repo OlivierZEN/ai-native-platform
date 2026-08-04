@@ -7,7 +7,7 @@ owner_role: backend-agent
 task_ids: TASK-059
 related_decisions: ADR-006
 related_issues: none
-updated_at: 2026-08-04T06:24:00Z
+updated_at: 2026-08-04T13:45:00Z
 updated_by: ai
 ---
 
@@ -28,10 +28,12 @@ DEV Autopilot 的 `dev_delivery_event` 已通过独立审批发布，随后在�
 - `authorization.role.attach-permission-set` 对同一受限场景使用一致校验；Permission Set 中任何未持有的平台权限或非活动元数据权限都会阻断整个绑定。
 - 既有 verified approval、`authorization.manage` scope、管理权限、租户 RLS、幂等和持久审计要求全部保持不变。
 - 新增高风险能力 `authorization.permission-set.revoke`，用于在独立审批和完整审计下移除权限集中的原子权限关联，支持正式清理错误或过期授权，不允许直接数据库修正。
+- 原子权限 action 必须与资源类型一致：对象只接受 `create/read/update/delete`，字段只接受 `read/write`；平台能力保留各领域自己的 action 词汇并继续受精确委托校验。这样字段授权不会再以无效的 `update` 形式通过配置、却在记录运行时被 `write` 校验拒绝。
 
 ## 验收
 
 - 策略管理员可以首次授予并绑定当前活动元数据对象和字段权限。
 - 随机对象 UUID、历史/离线字段和未持有的平台权限仍返回 `UNAUTHORIZED`。
 - 既有“不能把授权管理权扩大为任意平台权限”的回归不变。
+- `field/update` 与 `object/write` 在授权入口直接返回验证失败，`field/write` 与对象 CRUD 权限保持可用。
 - PostgreSQL 定向测试、全量测试、race、vet、module verify 和生产健康/匿名负例通过。

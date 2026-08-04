@@ -1662,7 +1662,20 @@ func validPermission(resourceType, resourceRef, action string) bool {
 	if resourceType != "platform" && resourceType != "object" && resourceType != "field" {
 		return false
 	}
-	return strings.TrimSpace(resourceRef) != "" && len(resourceRef) <= 200 && strings.TrimSpace(action) != "" && len(action) <= 32
+	if strings.TrimSpace(resourceRef) == "" || len(resourceRef) > 200 || strings.TrimSpace(action) == "" || len(action) > 32 {
+		return false
+	}
+	switch resourceType {
+	case "object":
+		return action == ActionCreate || action == ActionRead || action == ActionUpdate || action == ActionDelete
+	case "field":
+		return action == ActionRead || action == ActionWrite
+	default:
+		// Platform capabilities intentionally use a domain-specific action
+		// vocabulary (for example manage, merge, or read). Their exact action is
+		// still bounded by the capability's delegation check below.
+		return true
+	}
 }
 
 func validateGrantee(ctx context.Context, tx pgx.Tx, tenant database.TenantContext, granteeType, granteeRef string) error {
