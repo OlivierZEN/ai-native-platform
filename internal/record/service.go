@@ -71,7 +71,10 @@ func (service *Service) Create(ctx context.Context, request capability.Request, 
 	if stableErr != nil {
 		return Record{}, stableErr
 	}
-	ownerID := request.Actor.ID
+	ownerID := strings.TrimSpace(input.OwnerPrincipalID)
+	if ownerID == "" {
+		ownerID = request.Actor.ID
+	}
 	var result Record
 	err := database.WithTenant(ctx, service.pool, tenant, func(tx pgx.Tx) error {
 		if err := lockMetadataRoute(ctx, tx, tenant, metadataVersionID); err != nil {
@@ -84,6 +87,23 @@ func (service *Service) Create(ctx context.Context, request capability.Request, 
 		decision, err := service.authorizer.RequireObject(ctx, tx, tenant, request.Actor.ID, model.ObjectID, authorization.ActionCreate)
 		if err != nil {
 			return mapAuthorizationError(err)
+		}
+		// An explicit owner is a create-time assignment, not an ownership
+		// transfer.  The assignee must already be an active principal with both
+		// read and update entitlement on the object; the normal record and field
+		// policies still govern every later operation.  This lets a product
+		// manager create a task directly for a developer without granting broad
+		// tenant update access or bypassing the PDP.
+		if ownerID != request.Actor.ID {
+			if !decision.Enforced {
+				return mapAuthorizationError(authorization.ErrDenied)
+			}
+			if _, err := service.authorizer.RequireObject(ctx, tx, tenant, ownerID, model.ObjectID, authorization.ActionRead); err != nil {
+				return mapAuthorizationError(err)
+			}
+			if _, err := service.authorizer.RequireObject(ctx, tx, tenant, ownerID, model.ObjectID, authorization.ActionUpdate); err != nil {
+				return mapAuthorizationError(err)
+			}
 		}
 		if err := service.requireFields(ctx, tx, tenant, request.Actor.ID, model, authorization.ActionWrite, changes); err != nil {
 			return err
@@ -116,7 +136,7 @@ func (service *Service) Create(ctx context.Context, request capability.Request, 
 		if err != nil {
 			return err
 		}
-		dataOrganizationID, err := service.authorizer.PrimaryOrganization(ctx, tx, tenant, request.Actor.ID, model.ObjectID)
+		dataOrganizationID, err := service.authorizer.PrimaryOrganization(ctx, tx, tenant, ownerID, model.ObjectID)
 		if err != nil {
 			return mapAuthorizationError(err)
 		}

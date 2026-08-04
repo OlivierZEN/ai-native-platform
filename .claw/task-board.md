@@ -28,6 +28,30 @@ board_status: active
 
 ## Active Tasks
 
+### TASK-061 - Govern create-time record assignment
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-052-create-time-record-assignment.md`
+- depends_on: `TASK-059`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `record runtime create contract/service/tests, production release and DEV Autopilot E2E`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- 创建者只能把新记录派发给同租户 active 且已有目标对象 read/update 权限的 Principal。
+- 受派人的主组织成为数据锚点，后续 own 范围更新通过，其他主体仍失败关闭。
+- 全量/race 和生产 DEV Autopilot E2E 通过。
+
+#### Next Action
+
+- 提交并发布 Semattice；更新 DevAutopilot 创建调用后重新创建后羿任务并完成线上闭环。
+
 ### TASK-059 - Govern active-metadata permission bootstrap
 
 - status: `in_progress`

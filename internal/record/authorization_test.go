@@ -24,6 +24,7 @@ func TestEnforcedObjectUsesRoleFieldAndOrganizationDataScope(t *testing.T) {
 	owner := recordPrincipal(tenantID, companyID, "rbac-owner")
 	owner.Actor.Scopes = append(owner.Actor.Scopes, "authorization.manage", "authorization.read", "record.share.manage", "organization.manage")
 	reader := recordPrincipal(tenantID, companyID, "rbac-reader")
+	assignee := recordPrincipal(tenantID, companyID, "rbac-assignee")
 	denied := recordPrincipal(tenantID, companyID, "rbac-denied")
 	authorizationService := authz.NewService(runtime, control)
 	definitions := append(metadata.CapabilityDefinitions(metadataService), CapabilityDefinitions(recordService)...)
@@ -37,6 +38,25 @@ func TestEnforcedObjectUsesRoleFieldAndOrganizationDataScope(t *testing.T) {
 	seedAuthorizationManagerPermissions(t, runtime, owner)
 	approvalID := "approval-record-model"
 	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.object-policy.set", map[string]any{"object_id": ids.CustomerID.String(), "enforcement_state": "enforced", "default_record_access": "private", "approval_id": approvalID}))
+
+	assigned := requireRecord(t, invokeRecord(t, invoker, owner, "runtime.record.create", map[string]any{
+		"object_api_name": "customer", "owner_principal_id": assignee.Actor.ID,
+		"data": map[string]any{"name": "Assigned customer"},
+	}))
+	if assigned.OwnerID != assignee.Actor.ID {
+		t.Fatalf("assigned record owner=%q want=%q", assigned.OwnerID, assignee.Actor.ID)
+	}
+	updatedAssigned := requireRecord(t, invokeRecord(t, invoker, assignee, "runtime.record.update", map[string]any{
+		"object_api_name": "customer", "record_id": assigned.RecordID, "expected_revision": assigned.Revision,
+		"patch": map[string]any{"name": "Assigned customer updated"},
+	}))
+	if updatedAssigned.Data["name"] != "Assigned customer updated" {
+		t.Fatalf("assigned owner could not update record: %#v", updatedAssigned)
+	}
+	assertRecordError(t, invokeRecord(t, invoker, owner, "runtime.record.create", map[string]any{
+		"object_api_name": "customer", "owner_principal_id": reader.Actor.ID,
+		"data": map[string]any{"name": "Invalid assignment"},
+	}), capability.CodeUnauthorized)
 
 	created := requireRecord(t, invokeRecord(t, invoker, owner, "runtime.record.create", map[string]any{
 		"object_api_name": "customer", "data": map[string]any{"name": "Scoped customer"},
@@ -391,7 +411,7 @@ func seedEnforcedRecordAuthorization(t *testing.T, runtime *pgxpool.Pool, owner,
 	tenantID := uuid.MustParse(owner.TenantID)
 	tenant := database.TenantContext{TenantID: tenantID, Bucket: 7, ActorID: owner.Actor.ID}
 	if err := database.WithTenant(context.Background(), runtime, tenant, func(tx pgx.Tx) error {
-		for _, principalID := range []string{owner.Actor.ID, reader.Actor.ID, "rbac-denied", "rbac-expired", "rbac-conditional", "rbac-shared", "rbac-team"} {
+		for _, principalID := range []string{owner.Actor.ID, reader.Actor.ID, "rbac-assignee", "rbac-denied", "rbac-expired", "rbac-conditional", "rbac-shared", "rbac-team"} {
 			if _, err := tx.Exec(context.Background(), "insert into principal_projection(tenant_bucket,tenant_id,principal_id,principal_type) values ($1,$2,$3,'user')", tenant.Bucket, tenant.TenantID, principalID); err != nil {
 				return err
 			}
@@ -405,10 +425,16 @@ func seedEnforcedRecordAuthorization(t *testing.T, runtime *pgxpool.Pool, owner,
 		if _, err := tx.Exec(context.Background(), "insert into principal_org_membership(tenant_bucket,tenant_id,membership_id,principal_id,organization_id,is_primary) values ($1,$2,$3,$4,$5,true)", tenant.Bucket, tenant.TenantID, uuid.New(), owner.Actor.ID, organizationA); err != nil {
 			return err
 		}
+		if _, err := tx.Exec(context.Background(), "insert into principal_org_membership(tenant_bucket,tenant_id,membership_id,principal_id,organization_id,is_primary) values ($1,$2,$3,$4,$5,true)", tenant.Bucket, tenant.TenantID, uuid.New(), "rbac-assignee", organizationB); err != nil {
+			return err
+		}
 		if err := grantRecordRole(context.Background(), tx, tenant, owner.Actor.ID, ids.CustomerID, []string{"create", "read", "update", "delete"}, []fieldGrant{{fieldID: ids.CustomerNameID, action: "read"}, {fieldID: ids.CustomerNameID, action: "write"}}, ""); err != nil {
 			return err
 		}
 		if err := grantRecordRole(context.Background(), tx, tenant, reader.Actor.ID, ids.CustomerID, []string{"read"}, []fieldGrant{{fieldID: ids.CustomerNameID, action: "read"}}, "organization_descendants:"+organizationA.String()); err != nil {
+			return err
+		}
+		if err := grantRecordRole(context.Background(), tx, tenant, "rbac-assignee", ids.CustomerID, []string{"read", "update"}, []fieldGrant{{fieldID: ids.CustomerNameID, action: "read"}, {fieldID: ids.CustomerNameID, action: "write"}}, ""); err != nil {
 			return err
 		}
 		if err := grantRecordRole(context.Background(), tx, tenant, "rbac-shared", ids.CustomerID, []string{"read"}, []fieldGrant{{fieldID: ids.CustomerNameID, action: "read"}}, ""); err != nil {

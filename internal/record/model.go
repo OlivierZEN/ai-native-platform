@@ -23,9 +23,10 @@ type Record struct {
 }
 
 type CreateInput struct {
-	ObjectAPIName string          `json:"object_api_name"`
-	RecordID      string          `json:"record_id,omitempty"`
-	Data          json.RawMessage `json:"data"`
+	ObjectAPIName    string          `json:"object_api_name"`
+	RecordID         string          `json:"record_id,omitempty"`
+	OwnerPrincipalID string          `json:"owner_principal_id,omitempty"`
+	Data             json.RawMessage `json:"data"`
 }
 
 type GetInput struct {

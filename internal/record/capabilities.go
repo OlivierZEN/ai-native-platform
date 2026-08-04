@@ -99,6 +99,7 @@ func decodeInput(raw json.RawMessage, target any) *capability.StableError {
 func createSchema() json.RawMessage {
 	return schema([]string{"object_api_name", "data"}, map[string]any{
 		"object_api_name": apiNameProperty(), "record_id": uuidProperty(),
+		"owner_principal_id": map[string]any{"type": "string", "minLength": 1, "maxLength": 200},
 		"data": map[string]any{"type": "object"},
 	})
 }
