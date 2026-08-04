@@ -1,20 +1,23 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T03:52:22Z
-updated_by: root after local website Skill guidance verification
-last_run_at: 2026-08-04T03:52:22Z
+updated_at: 2026-08-04T03:55:36Z
+updated_by: root after website Skill guidance production verification
+last_run_at: 2026-08-04T03:55:36Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-## 2026-08-04 TASK-055 官网 Skill 安装说明本地验证
+## 2026-08-04 TASK-055 官网 Skill 安装说明生产验证
 
 - GitHub raw README 与仓库页面 HTTPS 回读通过；当前公开固定版本为 `v1.1.0`，安装目标为 `~/.codex/skills/cloudcc-semattice`，调用名为 `$cloudcc-semattice`。
 - 首页 HTML 解析、`node --check deploy/semattice/www/app.js`、GitHub 链接 200、`git diff --check` 均通过。
 - 真实 Chrome 分别以 1440px 与 390px 宽度渲染 `#cli`；Skill 卡片为双列/单列，目标区域无横向溢出，长安装命令只在代码框内部滚动，两处新增复制按钮均实际显示“已复制”。
-- `go test ./...`、`go vet ./...`、`go mod verify` 与项目状态 validator 全部通过；本轮未修改运行时代码、Skill 发布仓库或生产系统。
+- `go test ./...`、`go vet ./...`、`go mod verify` 与项目状态 validator 全部通过；本轮未修改运行时代码或 Skill 发布仓库。
+- 静态归档本地/服务器 SHA-256 同为 `652c9de2887e300ff691fdfe0dd39718b69236003a26ca205062f23dc9371598`；发布标识为 `20260804T035355Z-skill-c74267e`，旧站点备份为 `/var/www/semattice-backups/20260804T035355Z-skill-c74267e`。
+- 切换后首页与样式 SHA-256 分别为 `748044469d965245fd1562e8edf9157531663fbae62754a9529566ec5f6daa3c`、`66eb4ee1b8f202ede21d3e4f9af364788eb6f1bbba0e36a67b3a3949f92989b1`；Nginx 配置有效，Nginx 与 Semattice 均 active。
+- 公网首页、样式和 `/healthz` 均返回 200 并包含新内容；真实 Chrome 公网桌面/390px 手机复验无目标区域溢出，布局、GitHub 链接与复制按钮全部通过。
 
 ## 2026-08-04 TASK-054 组织成员关系能力与哪吒生产验收
 

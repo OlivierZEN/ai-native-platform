@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T03:52:22Z
-updated_by: root after local website Skill guidance verification
+updated_at: 2026-08-04T03:55:36Z
+updated_by: root after website Skill guidance production verification
 board_status: active
 ---
 
@@ -27,30 +27,6 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
-
-### TASK-055 - Add cloudcc-semattice Skill installation and usage guidance to the website
-
-- status: `in_progress`
-- priority: `high`
-- owner_role: `frontend-agent`
-- claimed_by: `root`
-- spec_path: `none`
-- depends_on: `none`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `deploy/semattice/www/index.html, deploy/semattice/www/styles.css, static page verification and website rollout`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- The `#cli` section links to the official `CloudCCAI/cloudcc-semattice` repository and shows the current published fixed-version installation command.
-- Codex users can see how to invoke `$cloudcc-semattice` without exposing tokens or reusable secrets.
-- Desktop and mobile layouts render without overflow, existing copy controls work, and the production page serves the new guidance.
-
-#### Next Action
-
-- Local structural, responsive and browser checks passed. Commit and push the website source, then publish the static files with a recoverable backup and verify the public HTTPS page.
 
 ### TASK-050 - Render published objects with no fields in the administration console
 
@@ -207,6 +183,34 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-055 - Add cloudcc-semattice Skill installation and usage guidance to the website
+
+- status: `done`
+- priority: `high`
+- owner_role: `frontend-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `deploy/semattice/www/index.html, deploy/semattice/www/styles.css, static page verification and website rollout`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- The `#cli` section links to the official `CloudCCAI/cloudcc-semattice` repository and shows the current published fixed-version installation command.
+- Codex users can see how to invoke `$cloudcc-semattice` without exposing tokens or reusable secrets.
+- Desktop and mobile layouts render without overflow, existing copy controls work, and the production page serves the new guidance.
+
+#### Next Action
+
+- Completed. Monitor the public GitHub link and update the fixed version only when a new Skill release is formally published.
+
+#### Handoff Note
+
+- Source commit `c74267e` is live under static rollout `20260804T035355Z-skill-c74267e`; rollback backup is `/var/www/semattice-backups/20260804T035355Z-skill-c74267e`.
 
 ### TASK-054 - Add governed Principal organization membership capability
 
@@ -728,34 +732,6 @@ board_status: active
 #### Handoff Note
 
 - 该 endpoint 使用 MCP Streamable HTTP，不是旧 HTTP+SSE；默认 stateful session 空闲 5 分钟关闭，未配置 EventStore，因此不承诺断线重放。
-
-### TASK-023 - Add the platform capability matrix to the deployed guide
-
-- status: `done`
-- priority: `high`
-- owner_role: `frontend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
-- depends_on: `TASK-022`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `deploy/semattice/www/**, docs/specs/FEAT-022-*, .claw/task-board.md, .claw/current-status.md, .claw/test-report.md`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 首页说明平台核心设计、数据运行、元数据演进、租户、授权与共享能力
-- 能力矩阵覆盖当前 Registry 实际发布的全部 49 项 Capability，并标明数量、风险与调用入口
-- 更新后的静态资产部署到授权 ECS，公网内容、交互、响应式结构与无控制台错误均有验证
-
-#### Next Action
-
-- 已完成。能力矩阵后续必须随 Capability Registry 的发布能力变化同步更新并重复 parity 验证。
-
-#### Handoff Note
-
-- 已部署分组精确为 `6 tenant + 6 semantic metadata + 10 changeset + 5 record runtime + 12 authorization + 9 sharing/organization + 1 system = 49`；每项 ID、scope 和风险均通过运行时 parity。页面没有描述尚未实现的远程 HTTP MCP、outbox/worker、HA 或生产 SLA。
 
 ## 维护规则
 

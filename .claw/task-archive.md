@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-08-04T03:25:00Z
-updated_by: ai
+updated_at: 2026-08-04T03:55:36Z
+updated_by: root after archiving the oldest completed task
 archive_status: active
 ---
 
@@ -11,6 +11,13 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-023 - Add the platform capability matrix to the deployed guide
+
+- status: `done`
+- owner_role: `frontend-agent`
+- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
+- handoff: 官网首版能力矩阵以当时运行时 Registry 的 49 项 Capability 为准，分组为 `6 tenant + 6 semantic metadata + 10 changeset + 5 record runtime + 12 authorization + 9 sharing/organization + 1 system`；后续矩阵必须随正式发布能力同步更新并重复 parity 验证。
 
 ### TASK-022 - Deploy CloudCC Semattice to the authorized ECS
 

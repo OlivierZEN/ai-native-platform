@@ -1,12 +1,19 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-04T03:25:00Z
-updated_by: ai
+updated_at: 2026-08-04T03:55:36Z
+updated_by: root after website Skill guidance rollout
 verification_status: passed
 ---
 
 # 项目部署运维手册
+
+## 2026-08-04 TASK-055 官网 Skill 指南静态发布
+
+- 源码提交 `c74267e` 的 `deploy/semattice/www` 已以静态发布标识 `20260804T035355Z-skill-c74267e` 上线；只切换 `/var/www/semattice`，未重建、切换或重启 Semattice 二进制 release。
+- 静态归档 SHA-256 为 `652c9de2887e300ff691fdfe0dd39718b69236003a26ca205062f23dc9371598`；线上 `index.html` / `styles.css` SHA-256 分别为 `748044469d965245fd1562e8edf9157531663fbae62754a9529566ec5f6daa3c` / `66eb4ee1b8f202ede21d3e4f9af364788eb6f1bbba0e36a67b3a3949f92989b1`。
+- 切换前完整静态站保留于 `/var/www/semattice-backups/20260804T035355Z-skill-c74267e`；回滚时将当前静态目录移出、把该备份移回 `/var/www/semattice`，再校验并 reload Nginx。
+- 公网 `#cli` 已提供官方 GitHub 仓库、`v1.1.0` 固定版本安装命令、`$cloudcc-semattice` 调用示例与凭据安全提醒；桌面/手机 Chrome、复制按钮、GitHub 链接、首页和 edge health 均通过。
 
 ## 2026-08-04 TASK-054 组织成员关系能力生产基线
 
