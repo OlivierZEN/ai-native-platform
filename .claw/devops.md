@@ -1,12 +1,18 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-04T07:20:13Z
-updated_by: root after TASK-060 production release
+updated_at: 2026-08-04T15:12:00Z
+updated_by: root after metering baseline production release
 verification_status: passed
 ---
 
 # 项目部署运维手册
+
+## 2026-08-04 TASK-062 计量基线容错生产发布
+
+- 源提交 `a70142857f7d` 已推送，release `/opt/semattice/releases/20260804T143600Z-metering-a701428` 原子切换；二进制 SHA-256 为 `bb79c61ceae93aa587f7c67a1dc3b27799e7c894f8b90ff5485bc51173c1ff29`，上一 release 保留。
+- `semattice` active、`NRestarts=0`，公网 `https://semattice.agentcici.com/healthz` 正常。临时 OSS 制品已删除。
+- 目标租户当前用量物化桶已在租户上下文中重算为 41 条 active 记录 / 18,272 逻辑字节；操作先清零现有桶再按对象和 UUID 分桶原子 upsert，active 与 metered 计数一致。
 
 ## 2026-08-04 TASK-060 当前元数据发现生产发布
 

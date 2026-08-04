@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T07:20:13Z
-updated_by: root after archiving completed TASK-060
+updated_at: 2026-08-04T15:12:00Z
+updated_by: root after completing DEV Autopilot production E2E
 board_status: active
 ---
 
@@ -28,9 +28,27 @@ board_status: active
 
 ## Active Tasks
 
+### TASK-062 - Tolerate missing historical metering baselines
+
+- status: `done`
+- priority: `critical`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-051-metering-baseline-tolerance.md`
+- depends_on: `TASK-059`
+- blocked_by: `none`
+- related_issues: `none`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Completion Evidence
+
+- Commit `a701428` is deployed as `/opt/semattice/releases/20260804T143600Z-metering-a701428`; full/race/vet/module gates pass.
+- Production task review moved from `设计待确认` to `设计驳回` after release, and the current-usage baseline reconciles 41 active records to 41 metered records.
+
 ### TASK-061 - Govern create-time record assignment
 
-- status: `in_progress`
+- status: `done`
 - priority: `critical`
 - owner_role: `backend-agent`
 - claimed_by: `root`
@@ -54,7 +72,7 @@ board_status: active
 
 ### TASK-059 - Govern active-metadata permission bootstrap
 
-- status: `in_progress`
+- status: `done`
 - priority: `critical`
 - owner_role: `backend-agent`
 - claimed_by: `root`

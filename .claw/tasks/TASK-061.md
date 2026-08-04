@@ -2,14 +2,14 @@
 kind: task
 task_id: TASK-061
 title: 补齐创建时记录派发并恢复第三方研发闭环
-status: in_progress
+status: done
 priority: critical
 owner_role: backend-agent
 claimed_by: root
 spec_path: docs/specs/FEAT-052-create-time-record-assignment.md
 depends_on: TASK-059
 blocked_by: none
-updated_at: 2026-08-04T09:10:00Z
+updated_at: 2026-08-04T15:12:00Z
 updated_by: ai
 ---
 

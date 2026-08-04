@@ -1,13 +1,21 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T07:20:00Z
-updated_by: ai after authorization delegation hardening verification
-last_run_at: 2026-08-04T07:20:00Z
+updated_at: 2026-08-04T15:12:00Z
+updated_by: root after production delivery-loop verification
+last_run_at: 2026-08-04T15:12:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-059 / 061 / 062 生产闭环验收
+
+- `go test ./...`、`go test -race ./...`、`go vet ./...`、`go mod verify` 与 `git diff --check` 通过；缺失历史计量基线的负字节更新新增 PostgreSQL 回归。
+- 提交 `a701428` 发布为 `/opt/semattice/releases/20260804T143600Z-metering-a701428`，服务器 SHA-256 为 `bb79c61ceae93aa587f7c67a1dc3b27799e7c894f8b90ff5485bc51173c1ff29`；服务 active、重启计数 0、edge health 通过。
+- 产品经理首次“设计驳回”真实复现 `tenant_usage_current_bucket_logical_data_bytes_check`，修复发布后同一正式评审事件幂等恢复成功；生产基线重算得到 active/metered `41 / 41`。
+- 正式任务最终为 `已完成 / 100% / revision 13`，完整包含设计驳回/重提/批准、两次进度、1.5 小时工时、阻塞/解除、commit/test_report、完成申请与独立产品经理批准事件。
+- 哪吒 suspended 返回 inactive projection，产品经理凭据调用开发者 CLI 返回 forbidden，均未产生业务写入。
 
 ## 2026-08-04 TASK-059 精确委托与正式撤销能力验证
 

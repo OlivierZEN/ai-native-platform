@@ -2,14 +2,14 @@
 kind: task
 task_id: TASK-059
 title: 补齐活动元数据首次权限引导并恢复 DEV Autopilot 权限发布
-status: in_progress
+status: done
 priority: critical
 owner_role: backend-agent
 claimed_by: root
 spec_path: docs/specs/FEAT-050-active-metadata-permission-bootstrap.md
 depends_on: TASK-054
 blocked_by: none
-updated_at: 2026-08-04T13:45:00Z
+updated_at: 2026-08-04T15:12:00Z
 updated_by: ai
 ---
 

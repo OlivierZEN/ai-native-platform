@@ -2,14 +2,14 @@
 kind: task
 task_id: TASK-062
 title: 修复未计量历史记录缩小时阻断运行时更新
-status: in_progress
+status: done
 priority: critical
 owner_role: backend-agent
 claimed_by: root
 spec_path: docs/specs/FEAT-051-metering-baseline-tolerance.md
 depends_on: TASK-059
 blocked_by: none
-updated_at: 2026-08-04T14:35:00Z
+updated_at: 2026-08-04T15:12:00Z
 updated_by: ai
 ---
 
