@@ -1,13 +1,21 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T05:09:55Z
-updated_by: root after synchronized production release
-last_run_at: 2026-08-04T05:09:55Z
+updated_at: 2026-08-04T06:25:00Z
+updated_by: root after Windows skill login verification
+last_run_at: 2026-08-04T06:25:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-058 Windows Skill 登录支持验证
+
+- Windows Credential Manager ctypes 合约级测试覆盖 UTF-8 refresh token 保存、读取、缺失处理、删除与幂等删除；Windows 平台路由和 `%LOCALAPPDATA%\CloudCC\Semattice\credentials.json` 缓存分支共 3 项通过。
+- 排除 ISSUE-005 的既有固定数量断言后，认证模块其余 18 项全部通过，覆盖 PKCE、loopback state、Bearer redirect 拒绝、登录换票、refresh token轮换、logout、401 单次重试、POSIX缓存门禁和显式Token优先级。
+- 未排除任何用例的完整认证模块实测为 19 项中 18 项通过、1 项失败；唯一失败是当前目录已解析出 55 项能力但 HEAD 仍断言 51。默认 scope集合仍与目录 scope集合一致；该既有漂移已登记 ISSUE-005，未混入 Windows 补丁。
+- 官方 `skill-creator` `quick_validate.py`、三个 Python 入口 AST、`agents/openai.yaml`、SemVer/README `1.4.2` 一致性、CLI help、无 Token dry-run、项目状态 validator、secret pattern扫描和 `git diff --check` 均通过。
+- GitHub `v1.4.2` 标签预检为空；未提交、打标签、推送或修改独立发布仓库。当前工作站不是 Windows，真实 `login/status/read-only call/logout` 冒烟仍待 Windows 用户执行。
 
 ## 2026-08-04 TASK-057 全代码同步与生产发布验证
 

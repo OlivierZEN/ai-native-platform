@@ -42,6 +42,14 @@ description: 理解、设计和通过统一 HTTPS Capability API 操作 CloudCC 
 ./scripts/semattice login
 ```
 
+Windows PowerShell 不使用 WSL；从技能目录通过 Python 入口执行：
+
+```powershell
+py -3 .\scripts\semattice_api.py login
+```
+
+系统没有 `py` launcher 时改用 `python`。Windows refresh token只进入当前用户的 Credential Manager。
+
 登录脚本使用系统凭据库保护 Keycloak refresh token；Semattice从已验签的 Keycloak Organization映射当前 tenant并签发短期 OACT。详细配置、续期和退出流程见 [登录与短期 OACT](references/authentication.md)。
 
 登录后调用：

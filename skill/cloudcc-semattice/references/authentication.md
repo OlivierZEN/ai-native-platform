@@ -11,11 +11,21 @@
 
 ## 人工 CLI 登录
 
-从技能目录执行。默认请求当前51项公开Capability所需的全部26个唯一scope；`--scope`仍可用于追加未来已发布且被服务端允许的scope。scope只是Capability入口上限，最终权限仍由Semattice的Principal/RBAC、RLS、独立审批和审计收敛：
+从技能目录执行。默认请求当前51项公开Capability所需的全部26个唯一scope；`--scope`仍可用于追加未来已发布且被服务端允许的scope。scope只是Capability入口上限，最终权限仍由Semattice的Principal/RBAC、RLS、独立审批和审计收敛。
+
+macOS 与 Linux：
 
 ```bash
 ./scripts/semattice login
 ```
+
+Windows PowerShell（不要使用 WSL）：
+
+```powershell
+py -3 .\scripts\semattice_api.py login
+```
+
+系统没有 `py` launcher 时改用 `python`。登录浏览器、loopback 回调和后续命令均在同一 Windows 用户会话中执行。
 
 该命令执行 Keycloak OAuth 2.0 Authorization Code + S256 PKCE：
 
@@ -126,8 +136,8 @@ Semattice固定校验 Keycloak issuer、`semattice-api` audience、JWKS签名、
 ## 安全边界
 
 - 不在终端、脚本参数、日志、仓库或普通配置文件中接收/保存用户名、密码、authorization code、refresh token、OACT 或 client secret。
-- macOS refresh token只存 Keychain；Linux 只存 Secret Service（`secret-tool`）。安全凭据库不可用时 fail closed，可改用外部注入的短期 `SEMATTICE_TOKEN`。
-- 短期 OACT 缓存文件拒绝符号链接，要求当前用户所有且权限为 `0600`；专用目录权限为 `0700`。
+- macOS refresh token只存 Keychain；Linux 只存 Secret Service（`secret-tool`）；Windows 只存当前用户的 Credential Manager。安全凭据库不可用时 fail closed，可改用外部注入的短期 `SEMATTICE_TOKEN`。
+- macOS/Linux 的短期 OACT 缓存文件拒绝符号链接，要求当前用户所有且权限为 `0600`，专用目录权限为 `0700`；Windows 默认保存到当前用户的 LocalAppData 并继承用户配置目录 ACL，不套用无效的 POSIX mode-bit 判断。
 - 缓存中的 JWT `exp` 只用于本地续期时机，不作为验签或授权依据；Semattice仍执行完整 issuer/audience/signature/time/scope/RBAC/RLS校验。
 - raw Keycloak access token只允许发送到 Semattice `/v1/auth/token`，绝不作为 Capability API、MCP或控制台的 Bearer。
 - 旧版登录缓存不包含完整的默认scope集合或仍含已移除的外部换票字段，当前版本拒绝读取并要求重新登录。

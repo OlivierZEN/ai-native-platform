@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T05:09:55Z
-updated_by: root after production release and GitHub permission check
-phase: production-released-github-mirror-blocked
-active_task: "TASK-057"
-next_action: "由 OlivierZEN/ai-native-platform 仓库所有者为 androidxhm 或 CloudCCAI 部署身份授予写权限，再将 GitHub main 普通快进到 CodeUp 当前提交；禁止强推。"
+updated_at: 2026-08-04T06:25:00Z
+updated_by: root after native Windows skill login implementation
+phase: windows-skill-login-awaiting-native-smoke
+active_task: "TASK-058"
+next_action: "在原生 Windows Codex 会话完成 login、status、一次只读调用和 logout 冒烟；通过后按唯一发布流程发布尚未占用的 v1.4.2。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-058 / FEAT-049 已完成本地实现并进入 Windows 冒烟评审：`cloudcc-semattice` 1.4.2 使用 Win32 Credential API 将 refresh token 保存到当前用户 Credential Manager，Windows 会话缓存默认位于 LocalAppData 且不再误用 POSIX mode-bit 判断；Skill 明确使用原生 Python 入口而非 WSL。ctypes 合约级 Windows 保存/读取/删除、平台路由和缓存测试已通过，真实 Windows `login/status/read-only call/logout` 尚待执行；`v1.4.2` 远程标签预检为空，尚未提交、打标签或发布。全量认证测试的唯一失败是既有 51/55 能力数量漂移，已单独登记为 ISSUE-005，本次未混入修复。
 
 - TASK-057 生产交付已完成、GitHub 镜像同步受 ISSUE-004 阻塞：CodeUp `main` 已同步至 `26d40f84e55f40863d3c86e081664aecbd63af2c`，生产 release `20260804T050808Z-web-oidc-26d40f84e55f` 健康且下载制品 SHA 校验通过。GitHub `main=4bb3d733` 无独有提交，但 `androidxhm` 与 CloudCCAI 两个现有 SSH 身份均被仓库拒绝写入；未强推或改写历史。
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import ctypes
 import json
 import os
 import stat
@@ -11,6 +12,7 @@ import unittest
 import urllib.error
 import urllib.parse
 import urllib.request
+from types import SimpleNamespace
 from argparse import Namespace
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -30,10 +32,14 @@ from semattice_auth import (  # noqa: E402
     JSONHTTPClient,
     SESSION_CACHE_VERSION,
     SessionCache,
+    WindowsCredentialStore,
+    _WindowsCredential,
     authorization_url,
+    default_credentials_file,
     generate_pkce,
     parse_callback_query,
     receive_authorization_code,
+    system_credential_store,
 )
 
 
@@ -417,6 +423,95 @@ class SematticeAuthenticationTests(unittest.TestCase):
         self.cache_path.symlink_to(target)
         with self.assertRaisesRegex(AuthError, "符号链接"):
             cache.load()
+
+    def test_windows_cache_uses_local_appdata_without_posix_mode_checks(self) -> None:
+        local_app_data = Path(self.temp_dir.name) / "LocalAppData"
+        with mock.patch("semattice_auth.platform.system", return_value="Windows"):
+            with mock.patch.dict(
+                os.environ,
+                {
+                    "LOCALAPPDATA": str(local_app_data),
+                    "SEMATTICE_CREDENTIALS_FILE": "",
+                },
+                clear=False,
+            ):
+                self.assertEqual(
+                    default_credentials_file(),
+                    local_app_data / "CloudCC" / "Semattice" / "credentials.json",
+                )
+            session = CachedSession(
+                version=SESSION_CACHE_VERSION,
+                issuer=self.settings.issuer,
+                client_id=self.settings.client_id,
+                semattice_base_url=self.settings.semattice_base_url,
+                company_id="org-example",
+                scopes=list(DEFAULT_CAPABILITY_SCOPES),
+                credential_account="account",
+                oact="short-oact",
+                oact_expires_at=2_000,
+            )
+            cache = SessionCache(self.cache_path)
+            cache.save(session)
+            os.chmod(self.cache_path, 0o644)
+            self.assertEqual(cache.load(), session)
+
+    def test_windows_credential_manager_saves_loads_and_deletes_utf8_secret(self) -> None:
+        saved: dict[str, bytes] = {}
+        allocations: list[object] = []
+        last_error = [0]
+
+        def write(credential_reference: object, _flags: int) -> bool:
+            credential = credential_reference._obj
+            saved[credential.TargetName] = ctypes.string_at(
+                credential.CredentialBlob, credential.CredentialBlobSize
+            )
+            return True
+
+        def read(target: str, _kind: int, _flags: int, output: object) -> bool:
+            secret = saved.get(target)
+            if secret is None:
+                last_error[0] = WindowsCredentialStore._ERROR_NOT_FOUND
+                return False
+            blob = (ctypes.c_ubyte * len(secret)).from_buffer_copy(secret)
+            credential = _WindowsCredential()
+            credential.CredentialBlobSize = len(secret)
+            credential.CredentialBlob = ctypes.cast(blob, ctypes.POINTER(ctypes.c_ubyte))
+            credential_pointer = ctypes.pointer(credential)
+            ctypes.cast(
+                output,
+                ctypes.POINTER(ctypes.POINTER(_WindowsCredential)),
+            )[0] = credential_pointer
+            allocations.extend([blob, credential, credential_pointer])
+            return True
+
+        def delete(target: str, _kind: int, _flags: int) -> bool:
+            if target in saved:
+                del saved[target]
+                return True
+            last_error[0] = WindowsCredentialStore._ERROR_NOT_FOUND
+            return False
+
+        store = WindowsCredentialStore.__new__(WindowsCredentialStore)
+        store.advapi32 = SimpleNamespace(
+            CredWriteW=write,
+            CredReadW=read,
+            CredDeleteW=delete,
+            CredFree=lambda _value: None,
+        )
+        store._last_error = lambda: last_error[0]
+
+        store.save("account", "刷新令牌-refresh-token")
+        self.assertEqual(store.load("account"), "刷新令牌-refresh-token")
+        store.delete("account")
+        store.delete("account")
+        with self.assertRaisesRegex(AuthError, "重新登录"):
+            store.load("account")
+
+    def test_system_credential_store_routes_windows_to_credential_manager(self) -> None:
+        sentinel = object()
+        with mock.patch("semattice_auth.platform.system", return_value="Windows"):
+            with mock.patch("semattice_auth.WindowsCredentialStore", return_value=sentinel):
+                self.assertIs(system_credential_store(), sentinel)
 
     def test_cache_rejects_pre_all_capability_scope_version(self) -> None:
         self.cache_path.parent.mkdir(mode=0o700, parents=True)

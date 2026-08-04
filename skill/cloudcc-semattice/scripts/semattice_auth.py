@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import base64
 import ctypes
+from ctypes import wintypes
 import hashlib
 import json
 import os
@@ -121,6 +122,11 @@ def default_credentials_file() -> Path:
     configured = os.environ.get("SEMATTICE_CREDENTIALS_FILE", "").strip()
     if configured:
         return Path(configured).expanduser()
+    if platform.system() == "Windows":
+        config_root = Path(
+            os.environ.get("LOCALAPPDATA", "") or Path.home() / "AppData" / "Local"
+        )
+        return config_root / "CloudCC" / "Semattice" / "credentials.json"
     config_root = Path(os.environ.get("XDG_CONFIG_HOME", "")).expanduser() if os.environ.get("XDG_CONFIG_HOME") else Path.home() / ".config"
     return config_root / "cloudcc-semattice" / "credentials.json"
 
@@ -207,7 +213,7 @@ class SessionCache:
             raise AuthError("拒绝读取符号链接形式的登录缓存")
         if hasattr(os, "getuid") and info.st_uid != os.getuid():
             raise AuthError("登录缓存不属于当前用户")
-        if stat.S_IMODE(info.st_mode) & 0o077:
+        if platform.system() != "Windows" and stat.S_IMODE(info.st_mode) & 0o077:
             raise AuthError("登录缓存权限过宽；请改为 0600 后重试")
         descriptor: int | None = None
         try:
@@ -236,7 +242,8 @@ class SessionCache:
             parent_info = parent.stat()
             if hasattr(os, "getuid") and parent_info.st_uid != os.getuid():
                 raise AuthError("登录缓存目录不属于当前用户")
-            os.chmod(parent, 0o700)
+            if platform.system() != "Windows":
+                os.chmod(parent, 0o700)
         except OSError as exc:
             raise AuthError("无法保护登录缓存目录") from exc
 
@@ -247,12 +254,14 @@ class SessionCache:
                 mode="w", encoding="utf-8", dir=parent, prefix=".credentials-", delete=False
             ) as handle:
                 temporary_path = Path(handle.name)
-                os.chmod(handle.name, 0o600)
+                if platform.system() != "Windows":
+                    os.chmod(handle.name, 0o600)
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())
             os.replace(temporary_path, self.path)
-            os.chmod(self.path, 0o600)
+            if platform.system() != "Windows":
+                os.chmod(self.path, 0o600)
         except OSError as exc:
             if temporary_path is not None:
                 temporary_path.unlink(missing_ok=True)
@@ -270,6 +279,119 @@ class CredentialStore(Protocol):
     def load(self, account: str) -> str: ...
 
     def delete(self, account: str) -> None: ...
+
+
+class _WindowsCredential(ctypes.Structure):
+    _fields_ = [
+        ("Flags", wintypes.DWORD),
+        ("Type", wintypes.DWORD),
+        ("TargetName", wintypes.LPWSTR),
+        ("Comment", wintypes.LPWSTR),
+        ("LastWritten", wintypes.FILETIME),
+        ("CredentialBlobSize", wintypes.DWORD),
+        ("CredentialBlob", ctypes.POINTER(ctypes.c_ubyte)),
+        ("Persist", wintypes.DWORD),
+        ("AttributeCount", wintypes.DWORD),
+        ("Attributes", ctypes.c_void_p),
+        ("TargetAlias", wintypes.LPWSTR),
+        ("UserName", wintypes.LPWSTR),
+    ]
+
+
+class WindowsCredentialStore:
+    _CREDENTIAL_TYPE_GENERIC = 1
+    _CREDENTIAL_PERSIST_LOCAL_MACHINE = 2
+    _ERROR_NOT_FOUND = 1168
+
+    def __init__(self) -> None:
+        loader = getattr(ctypes, "WinDLL", None)
+        error_reader = getattr(ctypes, "get_last_error", None)
+        if loader is None or error_reader is None:
+            raise AuthError("Windows Credential Manager 不可用")
+        try:
+            self.advapi32 = loader("Advapi32.dll", use_last_error=True)
+        except OSError as exc:
+            raise AuthError("Windows Credential Manager 不可用") from exc
+        self._last_error = error_reader
+        self._configure_functions()
+
+    def _configure_functions(self) -> None:
+        credential_pointer = ctypes.POINTER(_WindowsCredential)
+        self.advapi32.CredWriteW.argtypes = [credential_pointer, wintypes.DWORD]
+        self.advapi32.CredWriteW.restype = wintypes.BOOL
+        self.advapi32.CredReadW.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            ctypes.POINTER(credential_pointer),
+        ]
+        self.advapi32.CredReadW.restype = wintypes.BOOL
+        self.advapi32.CredDeleteW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD]
+        self.advapi32.CredDeleteW.restype = wintypes.BOOL
+        self.advapi32.CredFree.argtypes = [ctypes.c_void_p]
+        self.advapi32.CredFree.restype = None
+
+    @staticmethod
+    def _target(account: str) -> str:
+        return f"{KEYCHAIN_SERVICE}/{account}"
+
+    def save(self, account: str, secret: str) -> None:
+        secret_bytes = secret.encode("utf-8")
+        secret_buffer = (
+            (ctypes.c_ubyte * len(secret_bytes)).from_buffer_copy(secret_bytes)
+            if secret_bytes
+            else None
+        )
+        credential = _WindowsCredential()
+        credential.Type = self._CREDENTIAL_TYPE_GENERIC
+        credential.TargetName = self._target(account)
+        credential.CredentialBlobSize = len(secret_bytes)
+        credential.CredentialBlob = (
+            ctypes.cast(secret_buffer, ctypes.POINTER(ctypes.c_ubyte))
+            if secret_buffer is not None
+            else None
+        )
+        credential.Persist = self._CREDENTIAL_PERSIST_LOCAL_MACHINE
+        credential.UserName = account
+        if not self.advapi32.CredWriteW(ctypes.byref(credential), 0):
+            raise AuthError(
+                f"无法写入 Windows Credential Manager（状态 {self._last_error()}）"
+            )
+
+    def load(self, account: str) -> str:
+        credential_pointer = ctypes.POINTER(_WindowsCredential)()
+        if not self.advapi32.CredReadW(
+            self._target(account),
+            self._CREDENTIAL_TYPE_GENERIC,
+            0,
+            ctypes.byref(credential_pointer),
+        ):
+            status_code = self._last_error()
+            if status_code == self._ERROR_NOT_FOUND:
+                raise AuthError("系统凭据库中没有可续期会话，请重新登录")
+            raise AuthError(f"无法读取 Windows Credential Manager（状态 {status_code}）")
+        try:
+            credential = credential_pointer.contents
+            secret_bytes = ctypes.string_at(
+                credential.CredentialBlob, credential.CredentialBlobSize
+            )
+            secret_value = secret_bytes.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise AuthError("Windows Credential Manager 凭据格式无效") from exc
+        finally:
+            self.advapi32.CredFree(credential_pointer)
+        if not secret_value:
+            raise AuthError("系统凭据库中没有可续期会话，请重新登录")
+        return secret_value
+
+    def delete(self, account: str) -> None:
+        if self.advapi32.CredDeleteW(
+            self._target(account), self._CREDENTIAL_TYPE_GENERIC, 0
+        ):
+            return
+        status_code = self._last_error()
+        if status_code != self._ERROR_NOT_FOUND:
+            raise AuthError(f"无法删除 Windows Credential Manager 凭据（状态 {status_code}）")
 
 
 class MacOSKeychainStore:
@@ -451,6 +573,8 @@ def system_credential_store() -> CredentialStore:
         return MacOSKeychainStore()
     if current == "Linux":
         return SecretToolStore()
+    if current == "Windows":
+        return WindowsCredentialStore()
     raise AuthError("当前系统没有受支持的安全凭据库；请使用短期 SEMATTICE_TOKEN")
 
 

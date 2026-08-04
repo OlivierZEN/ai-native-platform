@@ -28,6 +28,35 @@ board_status: active
 
 ## Active Tasks
 
+### TASK-058 - Support native Windows login in the Semattice skill
+
+- status: `review`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-049-skill-windows-credential-login.md`
+- depends_on: `TASK-056`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/cloudcc-semattice authentication helper and docs, focused Python tests, project delivery evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Native Windows uses Credential Manager for refresh token save, load, rotation and deletion without WSL or plaintext fallback.
+- Windows short-lived session cache uses LocalAppData and does not fail on POSIX-only permission checks.
+- macOS/Linux behavior remains unchanged and focused regression checks pass.
+- A Windows user completes login, status, one read-only call and logout smoke verification.
+
+#### Next Action
+
+- Run the four-command smoke verification in a native Windows Codex session, then publish the prepared immutable `v1.4.2` skill release if it passes.
+
+#### Handoff Note
+
+- Local implementation and ctypes contract-level tests are complete. This workstation cannot execute the real Windows Credential Manager API, so TASK-058 remains in review pending native Windows smoke evidence; `v1.4.2` was confirmed unpublished before preparation.
+
 ### TASK-057 - Synchronize all code remotes and deploy current main
 
 - status: `blocked`
