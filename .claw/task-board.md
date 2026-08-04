@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T04:03:11Z
-updated_by: root after validating Skill quick-start rewrite
+updated_at: 2026-08-04T04:07:09Z
+updated_by: root after publishing cloudcc-semattice v1.4.1
 board_status: active
 ---
 
@@ -27,30 +27,6 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
-
-### TASK-056 - Rewrite and publish the cloudcc-semattice quick start
-
-- status: `in_progress`
-- priority: `high`
-- owner_role: `release-agent`
-- claimed_by: `root`
-- spec_path: `none`
-- depends_on: `TASK-055`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `skill/cloudcc-semattice README/VERSION, independent Skill release repository, validation and GitHub publication evidence`
-- branch: `main`
-- pr_url: `n/a`
-
-#### Done When
-
-- README quick start contains only the user-facing `$cloudcc-semattice` login and current-object-list prompt flow, with concise login and read-only safety context.
-- The old environment-variable, Token, Python API, capability-discovery and dry-run quick-start content is absent.
-- Version `1.4.1` is validated, synchronized to the independent release repository, tagged and pushed without rewriting history, and GitHub raw README is verified.
-
-#### Next Action
-
-- Development copy `1.4.1` is validated. Commit and push the project source, then fetch and fast-forward the independent release repository before dry-run synchronization.
 
 ### TASK-050 - Render published objects with no fields in the administration console
 
@@ -207,6 +183,34 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-056 - Rewrite and publish the cloudcc-semattice quick start
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-055`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/cloudcc-semattice README/VERSION, independent Skill release repository, validation and GitHub publication evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- README quick start contains only the user-facing `$cloudcc-semattice` login and current-object-list prompt flow, with concise login and read-only safety context.
+- The old environment-variable, Token, Python API, capability-discovery and dry-run quick-start content is absent.
+- Version `1.4.1` is validated, synchronized to the independent release repository, tagged and pushed without rewriting history, and GitHub raw README is verified.
+
+#### Next Action
+
+- Completed. Future changes require a new SemVer release; do not move or reuse tag `v1.4.1`.
+
+#### Handoff Note
+
+- GitHub `main` and annotated tag `v1.4.1` both point to `69fdb8ddd872e565df11ddd4f441f464fc183a89`; raw `VERSION` and README were verified after publication.
 
 ### TASK-055 - Add cloudcc-semattice Skill installation and usage guidance to the website
 
@@ -728,34 +732,6 @@ board_status: active
 #### Handoff Note
 
 - `company_id` 是统一运营控制面的全局企业标识；`organization_id` 只属于租户内 RBAC/共享组织树。旧 `org_id` 输入与 JWT claim 已 fail closed。
-
-### TASK-024 - Add authenticated Streamable HTTP MCP transport
-
-- status: `done`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-024-streamable-http-mcp.md`
-- depends_on: `TASK-020`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `cmd/ai-native-platform/main.go, internal/identity/jwt.go, internal/mcp/**, README.md`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- `serve` exposes authenticated Streamable HTTP MCP at `/mcp` while stdio MCP and Capability API remain compatible
-- every MCP HTTP request verifies bearer identity and sessions cannot cross tenant/principal boundaries
-- SDK Streamable HTTP client tool invocation, authentication rejection, full test/race/vet/module/build checks pass
-
-#### Next Action
-
-- 2026-07-24 已在授权 ECS 配置并验证 Nginx Streamable HTTP `/mcp` 代理；公网未认证 POST 返回 401。后续只需由支持 Bearer header 的客户端携带有效短期 JWT 做真实工具发现；MCP OAuth resource metadata 仍需独立任务。
-
-#### Handoff Note
-
-- 该 endpoint 使用 MCP Streamable HTTP，不是旧 HTTP+SSE；默认 stateful session 空闲 5 分钟关闭，未配置 EventStore，因此不承诺断线重放。
 
 ## 维护规则
 
