@@ -2,7 +2,7 @@
 kind: task-board
 version: 3
 updated_at: 2026-08-04T06:24:00Z
-updated_by: ai
+updated_by: ai after merging current CodeUp production history
 board_status: active
 ---
 
@@ -28,7 +28,7 @@ board_status: active
 
 ## Active Tasks
 
-### TASK-055 - Govern active-metadata permission bootstrap
+### TASK-058 - Govern active-metadata permission bootstrap
 
 - status: `review`
 - priority: `critical`
@@ -50,6 +50,35 @@ board_status: active
 #### Next Action
 
 - 提交并发布 Semattice，再恢复目标租户权限初始化与在线负向验收。
+
+### TASK-057 - Synchronize all code remotes and deploy current main
+
+- status: `blocked`
+- priority: `critical`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-056`
+- blocked_by: `ISSUE-004`
+- related_issues: `ISSUE-004`
+- scope_files: `Git remotes, release validation, immutable Semattice release, production verification and project evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Local `main`, CodeUp `main` and GitHub `main` resolve to the same commit without force push or history rewriting.
+- The repository quality gate passes from a clean committed worktree before release.
+- A new immutable release is installed and activated while the previous release remains available for rollback.
+- Semattice, Nginx and dependent services are healthy; public health, console, authentication and anonymous security checks pass.
+
+#### Next Action
+
+- Repository owner grants `androidxhm` or the CloudCCAI deploy identity write access to `OlivierZEN/ai-native-platform`; then fast-forward GitHub `main` from `4bb3d733` to the current CodeUp `main` without force push.
+
+#### Handoff Note
+
+- CodeUp `main` and production are synchronized through `26d40f84e55f40863d3c86e081664aecbd63af2c`. Release `/opt/semattice/releases/20260804T050808Z-web-oidc-26d40f84e55f` is healthy and publishes a SHA-verified downloadable binary. GitHub rejected both available SSH identities with an explicit permission error; no history was modified there.
 
 ### TASK-050 - Render published objects with no fields in the administration console
 
@@ -206,6 +235,62 @@ board_status: active
 - User authorized Phase 1 implementation on 2026-07-23. Ledger/current buckets/hourly rollups, API/MCP/CLI entrypoint meter, RU, CRUD logical-byte/record deltas, summary/timeseries and shared physical-storage sample Capability are implemented locally. It intentionally does not enable pricing, invoicing, automatic suspension, AI/connector meters, external TSDB or a Web UI. Read FEAT-027 before implementation; current `audit_event` is not a usage ledger.
 
 ## Completed Tasks
+
+### TASK-056 - Rewrite and publish the cloudcc-semattice quick start
+
+- status: `done`
+- priority: `high`
+- owner_role: `release-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `TASK-055`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/cloudcc-semattice README/VERSION, independent Skill release repository, validation and GitHub publication evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- README quick start contains only the user-facing `$cloudcc-semattice` login and current-object-list prompt flow, with concise login and read-only safety context.
+- The old environment-variable, Token, Python API, capability-discovery and dry-run quick-start content is absent.
+- Version `1.4.1` is validated, synchronized to the independent release repository, tagged and pushed without rewriting history, and GitHub raw README is verified.
+
+#### Next Action
+
+- Completed. Future changes require a new SemVer release; do not move or reuse tag `v1.4.1`.
+
+#### Handoff Note
+
+- GitHub `main` and annotated tag `v1.4.1` both point to `69fdb8ddd872e565df11ddd4f441f464fc183a89`; raw `VERSION` and README were verified after publication.
+
+### TASK-055 - Add cloudcc-semattice Skill installation and usage guidance to the website
+
+- status: `done`
+- priority: `high`
+- owner_role: `frontend-agent`
+- claimed_by: `root`
+- spec_path: `none`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `deploy/semattice/www/index.html, deploy/semattice/www/styles.css, static page verification and website rollout`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- The `#cli` section links to the official `CloudCCAI/cloudcc-semattice` repository and shows the current published fixed-version installation command.
+- Codex users can see how to invoke `$cloudcc-semattice` without exposing tokens or reusable secrets.
+- Desktop and mobile layouts render without overflow, existing copy controls work, and the production page serves the new guidance.
+
+#### Next Action
+
+- Completed. Monitor the public GitHub link and update the fixed version only when a new Skill release is formally published.
+
+#### Handoff Note
+
+- Source commit `c74267e` is live under static rollout `20260804T035355Z-skill-c74267e`; rollback backup is `/var/www/semattice-backups/20260804T035355Z-skill-c74267e`.
 
 ### TASK-054 - Add governed Principal organization membership capability
 
@@ -699,62 +784,6 @@ board_status: active
 #### Handoff Note
 
 - `company_id` 是统一运营控制面的全局企业标识；`organization_id` 只属于租户内 RBAC/共享组织树。旧 `org_id` 输入与 JWT claim 已 fail closed。
-
-### TASK-024 - Add authenticated Streamable HTTP MCP transport
-
-- status: `done`
-- priority: `high`
-- owner_role: `backend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-024-streamable-http-mcp.md`
-- depends_on: `TASK-020`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `cmd/ai-native-platform/main.go, internal/identity/jwt.go, internal/mcp/**, README.md`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- `serve` exposes authenticated Streamable HTTP MCP at `/mcp` while stdio MCP and Capability API remain compatible
-- every MCP HTTP request verifies bearer identity and sessions cannot cross tenant/principal boundaries
-- SDK Streamable HTTP client tool invocation, authentication rejection, full test/race/vet/module/build checks pass
-
-#### Next Action
-
-- 2026-07-24 已在授权 ECS 配置并验证 Nginx Streamable HTTP `/mcp` 代理；公网未认证 POST 返回 401。后续只需由支持 Bearer header 的客户端携带有效短期 JWT 做真实工具发现；MCP OAuth resource metadata 仍需独立任务。
-
-#### Handoff Note
-
-- 该 endpoint 使用 MCP Streamable HTTP，不是旧 HTTP+SSE；默认 stateful session 空闲 5 分钟关闭，未配置 EventStore，因此不承诺断线重放。
-
-### TASK-023 - Add the platform capability matrix to the deployed guide
-
-- status: `done`
-- priority: `high`
-- owner_role: `frontend-agent`
-- claimed_by: `root`
-- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
-- depends_on: `TASK-022`
-- blocked_by: `none`
-- related_issues: `none`
-- scope_files: `deploy/semattice/www/**, docs/specs/FEAT-022-*, .claw/task-board.md, .claw/current-status.md, .claw/test-report.md`
-- branch: `n/a`
-- pr_url: `n/a`
-
-#### Done When
-
-- 首页说明平台核心设计、数据运行、元数据演进、租户、授权与共享能力
-- 能力矩阵覆盖当前 Registry 实际发布的全部 49 项 Capability，并标明数量、风险与调用入口
-- 更新后的静态资产部署到授权 ECS，公网内容、交互、响应式结构与无控制台错误均有验证
-
-#### Next Action
-
-- 已完成。能力矩阵后续必须随 Capability Registry 的发布能力变化同步更新并重复 parity 验证。
-
-#### Handoff Note
-
-- 已部署分组精确为 `6 tenant + 6 semantic metadata + 10 changeset + 5 record runtime + 12 authorization + 9 sharing/organization + 1 system = 49`；每项 ID、scope 和风险均通过运行时 parity。页面没有描述尚未实现的远程 HTTP MCP、outbox/worker、HA 或生产 SLA。
 
 ## 维护规则
 

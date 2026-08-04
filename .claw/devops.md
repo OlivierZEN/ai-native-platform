@@ -1,12 +1,26 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-04T03:25:00Z
-updated_by: ai
+updated_at: 2026-08-04T05:09:55Z
+updated_by: root after synchronized production release
 verification_status: passed
 ---
 
 # 项目部署运维手册
+
+## 2026-08-04 TASK-057 全代码生产发布
+
+- CodeUp `main` 已普通快进至 `26d40f84e55f40863d3c86e081664aecbd63af2c`；GitHub 镜像因 ISSUE-004 的仓库写权限阻塞，仍为 `4bb3d733f5e7297409a813e952faeee8a50eeeec`，未使用 force push 或改写历史。
+- 当前 release 为 `/opt/semattice/releases/20260804T050808Z-web-oidc-26d40f84e55f`，二进制 SHA-256 为 `c01284be0160f5f5fcab6c005f5527eee6832bc4896296ea10b4802fd9767c00`；上一成功 release `/opt/semattice/releases/20260804T050411Z-web-oidc-543921635320` 和原组织成员关系 release 均保留。
+- 发布脚本现在把 Linux/amd64 二进制和 `.sha256` 清单放入静态归档，并在切换后从公网完整下载验证 SHA；归档清单先完整生成再匹配，避免大归档下 `tar | grep -q` 的 SIGPIPE 误报。
+- PostgreSQL、Keycloak、Semattice、Nginx 均 active，Semattice `NRestarts=0`、发布后 warning 日志为 0；edge health、首页、控制台、HTTP 跳转、OIDC、匿名 401、MCP initialize、Keycloak discovery/certs 和下载校验全部通过。
+
+## 2026-08-04 TASK-055 官网 Skill 指南静态发布
+
+- 源码提交 `c74267e` 的 `deploy/semattice/www` 已以静态发布标识 `20260804T035355Z-skill-c74267e` 上线；只切换 `/var/www/semattice`，未重建、切换或重启 Semattice 二进制 release。
+- 静态归档 SHA-256 为 `652c9de2887e300ff691fdfe0dd39718b69236003a26ca205062f23dc9371598`；线上 `index.html` / `styles.css` SHA-256 分别为 `748044469d965245fd1562e8edf9157531663fbae62754a9529566ec5f6daa3c` / `66eb4ee1b8f202ede21d3e4f9af364788eb6f1bbba0e36a67b3a3949f92989b1`。
+- 切换前完整静态站保留于 `/var/www/semattice-backups/20260804T035355Z-skill-c74267e`；回滚时将当前静态目录移出、把该备份移回 `/var/www/semattice`，再校验并 reload Nginx。
+- 公网 `#cli` 已提供官方 GitHub 仓库、`v1.1.0` 固定版本安装命令、`$cloudcc-semattice` 调用示例与凭据安全提醒；桌面/手机 Chrome、复制按钮、GitHub 链接、首页和 edge health 均通过。
 
 ## 2026-08-04 TASK-054 组织成员关系能力生产基线
 
@@ -28,10 +42,10 @@ verification_status: passed
 
 ## 源代码管理
 
-- GitHub `origin`：`https://github.com/OlivierZEN/ai-native-platform.git`。
-- 阿里云 CodeUp `codeup`：`https://codeup.aliyun.com/627b18115b46541dd2ff340e/cloudcc-aidev-projects/cloudcc-semattice.git`。
-- CodeUp 发布分支：`main`；首次发布使用当前工作分支的完整 `HEAD` 快照，不改写 GitHub `origin`、本地分支名或 upstream。
-- 发布后校验：`git ls-remote codeup refs/heads/main` 必须与本地 `git rev-parse HEAD` 完全相等。
+- GitHub `github`：`git@github.com:OlivierZEN/ai-native-platform.git`。
+- 阿里云 CodeUp `origin`：`git@codeup.aliyun.com:627b18115b46541dd2ff340e/cloudcc-aidev-projects/cloudcc-semattice.git`；本地 `main` 跟踪 `origin/main`。
+- 双远端都使用 `main`；只允许普通快进或保留双方历史的真实合并，禁止 force push 或改写历史。
+- 发布后校验：`git ls-remote origin refs/heads/main` 与 `git ls-remote github refs/heads/main` 必须同时等于本地 `git rev-parse HEAD`。
 
 ## 构建
 
@@ -42,7 +56,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 当前部署制品 SHA-256：`1187b727e05582cba2c4d8b9251895ddcb95da2eef997ef378d7e8136c808e6b`。
+- 当前部署制品 SHA-256：`c01284be0160f5f5fcab6c005f5527eee6832bc4896296ea10b4802fd9767c00`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动
@@ -67,7 +81,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
 - 2026-07-31 TASK-040 真实租户治理控制台曾发布为 `/opt/semattice/releases/20260731T012059Z-console`。发布脚本交叉编译 Linux amd64 二进制、校验 SHA-256、原子切换 `/opt/semattice/current` 并保留上一 release / 静态站备份。控制台已不再使用内存 fixture；OACT 会话经 runtime RLS 读取真实租户 published metadata、RBAC、组织和审计。该版本线上验证为 active、Nginx valid、edge health 200、匿名治理 API 401；目标研发交付公司读取为 metadata v1 / 5 objects / 37 active fields，本地成员、角色和组织投影均为 0。
 
 - 当前目标：`115.29.222.70`；域名：`https://semattice.agentcici.com`。
-- 当前 release 目录：`/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a`；当前链接：`/opt/semattice/current`。该 release 在统一治理基线上新增正式 Principal 组织成员关系能力；上一 release `/opt/semattice/releases/20260803T051441Z-web-oidc-2329787b57ff` 继续保留为原子回滚点。
+- 当前 release 目录：`/opt/semattice/releases/20260804T050808Z-web-oidc-26d40f84e55f`；当前链接：`/opt/semattice/current`。上一成功 release `/opt/semattice/releases/20260804T050411Z-web-oidc-543921635320` 与组织成员关系 release `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a` 均保留为原子回滚点。
 - 合并后的 `metadata.version.publish` 仍为高风险、异步、要求 `metadata.publish` scope 和非空 `approval_id`，但该能力不再要求手动标识存在于 OACT `approvals` 声明中。服务端在发布事务内记录 `approval_id`、`approval_mode=manual` 和版本 ID；其他审批能力的可信声明校验不变。
 - 网站OIDC环境备份为`/etc/semattice/semattice.env.backup.20260731T074537Z-before-web-oidc`；Nginx与静态站使用同一release标识创建发布前备份。Keycloak `semattice-cli` client历史备份仍为`/opt/keycloak/backups/20260731T045751Z-standalone-auth-before-sematttice-auth`。
 - `semattice-web`是confidential server-side client。现有Client Secret仅保存于`/etc/semattice/secrets/semattice-web-client-secret`，Secret目录必须为`root:semattice 0750`，文件为`root:semattice 0640`；环境仅以`AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE`引用该文件，不得把Secret写入env、日志、仓库或浏览器。

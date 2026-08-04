@@ -2,10 +2,10 @@
 kind: current-status
 version: 3
 updated_at: 2026-08-04T06:24:00Z
-updated_by: ai
+updated_by: ai after merging current CodeUp production history
 phase: active-metadata-permission-bootstrap-release-review
-active_task: "TASK-055"
-next_action: "发布活动元数据首次权限引导修复，并通过正式 Capability 完成 DEV Autopilot 交付事件权限。"
+active_task: "TASK-058"
+next_action: "发布活动元数据首次权限引导修复，并通过正式 Capability 完成 DEV Autopilot 交付事件权限；GitHub 镜像权限阻塞继续由 TASK-057 跟踪。"
 read_next:
   goals: true
   decisions: true
@@ -19,9 +19,15 @@ read_next:
 
 ## 快照
 
-- TASK-055 / FEAT-049 已完成本地实现与全量验证：`authorization.permission-set.grant`、Permission Set 绑定和角色委托允许具有 `authorization.policy:update` 的策略管理员仅针对当前活动元数据对象/在线字段完成首次授权；未知 UUID、非活动资源和未持有的平台权限继续失败关闭。PostgreSQL 全仓、race、vet、module verify 与 Linux amd64 构建均通过，待生产发布和租户权限验收。
+- TASK-058 / FEAT-049 已完成本地实现与全量验证：`authorization.permission-set.grant`、Permission Set 绑定和角色委托允许具有 `authorization.policy:update` 的策略管理员仅针对当前活动元数据对象/在线字段完成首次授权；未知 UUID、非活动资源和未持有的平台权限继续失败关闭。PostgreSQL 全仓、race、vet、module verify 与 Linux amd64 构建均通过，待生产发布和租户权限验收。
 
-- DEV Autopilot 交付元数据 changeset `019fcb51-8cc1-7270-8767-6f0049587484` 已由不同组织管理员独立批准并发布，活动版本为 `019fcb51-85c2-74cd-8f0a-6132d6c769df`，精确包含 6 个对象 / 60 个字段；新增 `dev_delivery_event` 对象 `019fcb51-8a67-727c-9d43-673069d1c33d` 有 15 个字段，变更无需回填。权限初始化因首次授权死锁安全停止，待 TASK-055 上线后继续。
+- DEV Autopilot 交付元数据 changeset `019fcb51-8cc1-7270-8767-6f0049587484` 已由不同组织管理员独立批准并发布，活动版本为 `019fcb51-85c2-74cd-8f0a-6132d6c769df`，精确包含 6 个对象 / 60 个字段；新增 `dev_delivery_event` 对象 `019fcb51-8a67-727c-9d43-673069d1c33d` 有 15 个字段，变更无需回填。权限初始化因首次授权死锁安全停止，待 TASK-058 上线后继续。
+
+- TASK-057 生产交付已完成、GitHub 镜像同步受 ISSUE-004 阻塞：CodeUp `main` 已同步至 `26d40f84e55f40863d3c86e081664aecbd63af2c`，生产 release `20260804T050808Z-web-oidc-26d40f84e55f` 健康且下载制品 SHA 校验通过。GitHub `main=4bb3d733` 无独有提交，但 `androidxhm` 与 CloudCCAI 两个现有 SSH 身份均被仓库拒绝写入；未强推或改写历史。
+
+- TASK-056 已完成并发布：Skill README 快速开始只保留 `$cloudcc-semattice` 下“登录”与“查看当前对象列表。”两步提示词，旧环境变量、Token、Python API 和 dry-run 示例已清除。GitHub `main` 与不可移动标签 `v1.4.1` 均指向 `69fdb8ddd872e565df11ddd4f441f464fc183a89`，远端版本和 README 回读通过。
+
+- TASK-055 已完成并上线：官网 `#cli` 区域新增 `cloudcc-semattice` Codex Skill 的 GitHub 安装入口、`v1.1.0` 固定版本安装命令、`$cloudcc-semattice` 调用示例和凭据安全提醒。源码提交 `c74267e` 已推送；静态发布标识为 `20260804T035355Z-skill-c74267e`，旧站点备份保留。公网桌面/390px 手机渲染、内部滚动、复制按钮、GitHub 链接和 edge health 均通过。
 
 - TASK-054 / FEAT-048 已完成：正式能力 `identity.principal.set-organization-membership` 已发布，要求 `authorization.manage`、HUMAN 管理主体和已验签独立审批；数据库集成、全量 race/vet、55 项线上能力发现均通过。release `/opt/semattice/releases/20260804T030035Z-identity-membership-3a0d9daa281a` 已上线，二进制 SHA-256 为 `1187b727e05582cba2c4d8b9251895ddcb95da2eef997ef378d7e8136c808e6b`。
 

@@ -30,9 +30,14 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 GOTOOLCHAIN=go1.26.5 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
   go build -trimpath -ldflags='-s -w' -o "$work_dir/semattice" ./cmd/ai-native-platform
-tar -C deploy/semattice/www -czf "$work_dir/console-static.tgz" .
-cp deploy/semattice/nginx.conf "$work_dir/semattice.conf"
 binary_sha="$(shasum -a 256 "$work_dir/semattice" | awk '{print $1}')"
+static_stage="$work_dir/www"
+install -d -m 0755 "$static_stage/downloads"
+cp -R deploy/semattice/www/. "$static_stage/"
+install -m 0755 "$work_dir/semattice" "$static_stage/downloads/semattice-linux-amd64"
+printf '%s  %s\n' "$binary_sha" 'semattice-linux-amd64' > "$static_stage/downloads/semattice-linux-amd64.sha256"
+tar -C "$static_stage" -czf "$work_dir/console-static.tgz" .
+cp deploy/semattice/nginx.conf "$work_dir/semattice.conf"
 
 "${remote[@]}" "install -d -m 0700 '$remote_stage'"
 "${copy_remote[@]}" "$work_dir/semattice" "$work_dir/console-static.tgz" "$work_dir/semattice.conf" "${deploy_user}@${deploy_host}:${remote_stage}/"
@@ -58,7 +63,11 @@ test -d "$static_root"
 test ! -e "$release_path"
 actual_sha="$(sha256sum "$stage/semattice" | awk '{print $1}')"
 test "$actual_sha" = "$expected_sha"
-tar -tzf "$stage/console-static.tgz" | grep -Eq '(^|\./)console/index.html$'
+archive_list="$stage/console-static.list"
+tar -tzf "$stage/console-static.tgz" > "$archive_list"
+grep -Eq '(^|\./)console/index.html$' "$archive_list"
+grep -Eq '(^|\./)downloads/semattice-linux-amd64$' "$archive_list"
+grep -Eq '(^|\./)downloads/semattice-linux-amd64.sha256$' "$archive_list"
 test "$(stat -c '%U:%G %a' /etc/semattice/secrets/semattice-web-client-secret)" = 'root:semattice 640'
 test "$(wc -c < /etc/semattice/secrets/semattice-web-client-secret)" -le 4096
 grep -qx 'AI_NATIVE_CONSOLE_OIDC_CLIENT_ID=semattice-web' /etc/semattice/semattice.env
@@ -112,6 +121,9 @@ fi
 
 curl -fsS "https://${domain}/healthz" >/dev/null
 curl -fsS "https://${domain}/console/" | grep -q '管理中心'
+downloaded_sha="$(curl -fsS "https://${domain}/downloads/semattice-linux-amd64" | sha256sum | awk '{print $1}')"
+test "$downloaded_sha" = "$expected_sha"
+curl -fsS "https://${domain}/downloads/semattice-linux-amd64.sha256" | grep -qx "${expected_sha}  semattice-linux-amd64"
 test "$(curl -sS -o /dev/null -w '%{http_code}' "https://${domain}/console/api/overview")" = '401'
 test "$(curl -sS -o /dev/null -w '%{http_code}' "https://${domain}/auth/oidc/login")" = '303'
 rm -rf "$stage"

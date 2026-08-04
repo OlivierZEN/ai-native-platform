@@ -2,19 +2,47 @@
 kind: test-report
 version: 3
 updated_at: 2026-08-04T06:24:00Z
-updated_by: ai
+updated_by: ai after merging current CodeUp production history
 last_run_at: 2026-08-04T06:24:00Z
 last_run_status: passed
 ---
 
 # 测试报告
 
-## 2026-08-04 TASK-055 活动元数据首次权限引导本地验证
+## 2026-08-04 TASK-058 活动元数据首次权限引导本地验证
 
 - 真实缺口复现：DEV Autopilot 新事件对象已发布，但产品总监首次调用 `authorization.permission-set.grant` 返回 `UNAUTHORIZED`，未产生绕过 API 的数据库写入。
 - 修复后 PostgreSQL 用例证明策略管理员可首次授予并绑定当前活动 metadata 中的对象/字段权限；随机对象 UUID 和未持有的平台权限继续返回 `UNAUTHORIZED`，既有防权限升级断言保持通过。
 - `./scripts/test-postgres.sh run`：全仓 PostgreSQL 16 测试通过；`GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`、`go mod verify`、`git diff --check` 均通过。
 - Linux amd64 CGO-free 构建 SHA-256 为 `1e5d12298cca534e99220944953ec993ce7baedc04b440ae2816e132ac81c24e`。生产发布与租户权限回读待执行。
+
+## 2026-08-04 TASK-057 全代码同步与生产发布验证
+
+- `GOTOOLCHAIN=go1.26.5 go test -race ./... -count=1`、`go vet ./...`、`go mod verify`、Linux/amd64 CGO-free 发布构建、Node/Shell 语法、Skill/YAML/Python、状态 validator、缓存制品和 diff check 全部通过。
+- CodeUp `main` 已普通快进至 `26d40f84e55f40863d3c86e081664aecbd63af2c`。GitHub 无独有提交但写入被 `androidxhm` 与 CloudCCAI 两个现有身份拒绝，镜像仍为 `4bb3d733f5e7297409a813e952faeee8a50eeeec`；未使用 force push。
+- 首次统一 release `20260804T050411Z-web-oidc-543921635320` 核心服务健康，但独立验收发现下载地址 404。根因是静态归档未携带构建二进制；修复后本地复现确认二进制与 `.sha256` 均存在且一致。
+- 第二次发布在切换前因大归档触发 `tar | grep -q` SIGPIPE 退出 141，线上 release 未改变；将归档清单改为完整文件后，在 `set -euo pipefail` 下复验通过。
+- 最终 release `/opt/semattice/releases/20260804T050808Z-web-oidc-26d40f84e55f` 已上线，服务器二进制、公网下载和清单 SHA-256 均为 `c01284be0160f5f5fcab6c005f5527eee6832bc4896296ea10b4802fd9767c00`。
+- PostgreSQL、Keycloak、Semattice、Nginx 均 active；Semattice `NRestarts=0`、warning 日志为 0。health=200、HTTP redirect=301、home/console=200、overview/auth token/capability 匿名负例=401、OIDC login=303、MCP initialize=200、Keycloak discovery/certs=200。
+
+## 2026-08-04 TASK-056 Skill 快速开始重写与发布验证
+
+- `README.md` 快速开始已改为 `$cloudcc-semattice` 的“登录”与“查看当前对象列表。”两步提示词；该章节不再包含 `SEMATTICE_TOKEN`、`semattice_api.py`、`system.capability.list`、`runtime.record.create` 或 `dry-run`。
+- `VERSION`、README 当前版本、安装标签、升级命令和版本历史一致为 `1.4.1`；发布前远程 `v1.4.1` 标签预检为空。
+- `skill-creator` `quick_validate.py`、`agents/openai.yaml` YAML、三个 Python 入口语法、CLI help、无 Token `system.capability.list --dry-run` 均通过。
+- Skill 目录未产生 `__pycache__` 或 `.pyc`；`git diff --check` 通过。开发副本与独立发布仓库 `diff -qr` 完全一致，发布仓库工作树最终 clean。
+- 独立发布提交 `69fdb8ddd872e565df11ddd4f441f464fc183a89` 已通过原子 push 同时更新 GitHub `main` 并创建不可移动标签 `v1.4.1`；本地 HEAD、`origin/main` 与 `v1.4.1^{}` 三者一致。
+- GitHub 仓库页面返回 HTTP 200，远端 HEAD 指向 `main`，raw `VERSION` 为 `1.4.1`；raw README 精确包含“登录”与“查看当前对象列表。”两步快速开始和 `v1.4.1` 安装/升级引用。
+
+## 2026-08-04 TASK-055 官网 Skill 安装说明生产验证
+
+- GitHub raw README 与仓库页面 HTTPS 回读通过；当前公开固定版本为 `v1.1.0`，安装目标为 `~/.codex/skills/cloudcc-semattice`，调用名为 `$cloudcc-semattice`。
+- 首页 HTML 解析、`node --check deploy/semattice/www/app.js`、GitHub 链接 200、`git diff --check` 均通过。
+- 真实 Chrome 分别以 1440px 与 390px 宽度渲染 `#cli`；Skill 卡片为双列/单列，目标区域无横向溢出，长安装命令只在代码框内部滚动，两处新增复制按钮均实际显示“已复制”。
+- `go test ./...`、`go vet ./...`、`go mod verify` 与项目状态 validator 全部通过；本轮未修改运行时代码或 Skill 发布仓库。
+- 静态归档本地/服务器 SHA-256 同为 `652c9de2887e300ff691fdfe0dd39718b69236003a26ca205062f23dc9371598`；发布标识为 `20260804T035355Z-skill-c74267e`，旧站点备份为 `/var/www/semattice-backups/20260804T035355Z-skill-c74267e`。
+- 切换后首页与样式 SHA-256 分别为 `748044469d965245fd1562e8edf9157531663fbae62754a9529566ec5f6daa3c`、`66eb4ee1b8f202ede21d3e4f9af364788eb6f1bbba0e36a67b3a3949f92989b1`；Nginx 配置有效，Nginx 与 Semattice 均 active。
+- 公网首页、样式和 `/healthz` 均返回 200 并包含新内容；真实 Chrome 公网桌面/390px 手机复验无目标区域溢出，布局、GitHub 链接与复制按钮全部通过。
 
 ## 2026-08-04 TASK-054 组织成员关系能力与哪吒生产验收
 

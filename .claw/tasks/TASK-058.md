@@ -1,6 +1,6 @@
 ---
 kind: task
-task_id: TASK-055
+task_id: TASK-058
 title: 补齐活动元数据首次权限引导并恢复 DEV Autopilot 权限发布
 status: review
 priority: critical
@@ -13,7 +13,7 @@ updated_at: 2026-08-04T06:24:00Z
 updated_by: ai
 ---
 
-# TASK-055 - 活动元数据首次权限引导
+# TASK-058 - 活动元数据首次权限引导
 
 ## 范围
 

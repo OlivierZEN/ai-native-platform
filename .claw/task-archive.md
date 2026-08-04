@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-08-04T03:25:00Z
-updated_by: ai
+updated_at: 2026-08-04T03:55:36Z
+updated_by: root after archiving the oldest completed task
 archive_status: active
 ---
 
@@ -11,6 +11,13 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-023 - Add the platform capability matrix to the deployed guide
+
+- status: `done`
+- owner_role: `frontend-agent`
+- spec_path: `docs/specs/FEAT-022-semattice-single-node-https-deployment.md`
+- handoff: 官网首版能力矩阵以当时运行时 Registry 的 49 项 Capability 为准，分组为 `6 tenant + 6 semantic metadata + 10 changeset + 5 record runtime + 12 authorization + 9 sharing/organization + 1 system`；后续矩阵必须随正式发布能力同步更新并重复 parity 验证。
 
 ### TASK-022 - Deploy CloudCC Semattice to the authorized ECS
 
@@ -529,6 +536,34 @@ archive_status: active
 #### Handoff Note
 
 - 已完成并由本地 PostgreSQL 证据验证。Profile 不进入业务授权模型；组织树只计算数据范围与记录共享，禁止 `record × user` ACL 物化。规则投影只存 record-to-group 边且未 ready 时 fail closed；构建结束会检查缺边，access group disabled 会撤销其共享路径；组织合并不物理删除。通用自动运行/告警与完整容量验收已明确拆分至 TASK-017/TASK-019。
+
+### TASK-024 - Add authenticated Streamable HTTP MCP transport
+
+- status: `done`
+- priority: `high`
+- owner_role: `backend-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-024-streamable-http-mcp.md`
+- depends_on: `TASK-020`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `cmd/ai-native-platform/main.go, internal/identity/jwt.go, internal/mcp/**, README.md`
+- branch: `n/a`
+- pr_url: `n/a`
+
+#### Done When
+
+- `serve` exposes authenticated Streamable HTTP MCP at `/mcp` while stdio MCP and Capability API remain compatible
+- every MCP HTTP request verifies bearer identity and sessions cannot cross tenant/principal boundaries
+- SDK Streamable HTTP client tool invocation, authentication rejection, full test/race/vet/module/build checks pass
+
+#### Next Action
+
+- 2026-07-24 已在授权 ECS 配置并验证 Nginx Streamable HTTP `/mcp` 代理；公网未认证 POST 返回 401。后续只需由支持 Bearer header 的客户端携带有效短期 JWT 做真实工具发现；MCP OAuth resource metadata 仍需独立任务。
+
+#### Handoff Note
+
+- 该 endpoint 使用 MCP Streamable HTTP，不是旧 HTTP+SSE；默认 stateful session 空闲 5 分钟关闭，未配置 EventStore，因此不承诺断线重放。
 
 ## 维护规则
 
