@@ -38,6 +38,16 @@ func CapabilityDefinitions(service *Service) []capability.Definition {
 			}
 			return map[string]bool{"granted": true}, nil
 		}),
+		definition("authorization.permission-set.revoke", "Remove an atomic permission from a permission set.", "high", "authorization.manage", permissionGrantSchema(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input GrantPermissionInput
+			if err := decodeInput(request.Input, &input); err != nil {
+				return nil, err
+			}
+			if err := service.RevokePermission(ctx, request, input); err != nil {
+				return nil, err
+			}
+			return map[string]bool{"revoked": true}, nil
+		}),
 		definition("authorization.role.attach-permission-set", "Attach a reusable permission set to a role.", "high", "authorization.manage", attachSchema(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
 			var input AttachPermissionSetInput
 			if err := decodeInput(request.Input, &input); err != nil {

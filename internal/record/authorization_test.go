@@ -151,6 +151,8 @@ func TestEnforcedObjectUsesRoleFieldAndOrganizationDataScope(t *testing.T) {
 	// governed metadata bootstrap path.
 	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "object", "resource_ref": ids.ContactID.String(), "action": "read", "approval_id": approvalID}))
 	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "field", "resource_ref": ids.ContactNameID.String(), "action": "read", "approval_id": approvalID}))
+	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.permission-set.revoke", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "field", "resource_ref": ids.ContactNameID.String(), "action": "read", "approval_id": approvalID}))
+	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "field", "resource_ref": ids.ContactNameID.String(), "action": "read", "approval_id": approvalID}))
 	assertRecordError(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "object", "resource_ref": uuid.New().String(), "action": "read", "approval_id": approvalID}), capability.CodeUnauthorized)
 	assertRecordError(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "platform", "resource_ref": "unowned.permission", "action": "read", "approval_id": approvalID}), capability.CodeUnauthorized)
 	assertAuthorizationAuditExists(t, runtime, owner, "authorization.permission-set.grant", "failed")
@@ -447,6 +449,13 @@ func seedAuthorizationManagerPermissions(t *testing.T, runtime *pgxpool.Pool, pr
 			if _, err := tx.Exec(context.Background(), "insert into permission_set_permission(tenant_bucket,tenant_id,permission_set_id,permission_id) values ($1,$2,$3,$4)", tenant.Bucket, tenant.TenantID, setID, permissionID); err != nil {
 				return err
 			}
+		}
+		wildcardPermissionID := uuid.New()
+		if _, err := tx.Exec(context.Background(), "insert into authorization_permission(tenant_bucket,tenant_id,permission_id,resource_type,resource_ref,action) values ($1,$2,$3,'object','*','read')", tenant.Bucket, tenant.TenantID, wildcardPermissionID); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(context.Background(), "insert into permission_set_permission(tenant_bucket,tenant_id,permission_set_id,permission_id) values ($1,$2,$3,$4)", tenant.Bucket, tenant.TenantID, setID, wildcardPermissionID); err != nil {
+			return err
 		}
 		return nil
 	}); err != nil {

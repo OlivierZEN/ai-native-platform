@@ -185,8 +185,8 @@ class SematticeAuthenticationTests(unittest.TestCase):
     def test_login_defaults_to_all_published_capability_scopes(self) -> None:
         args = semattice_api.command_parser().parse_args(["login"])
         self.assertEqual(args.scope, list(DEFAULT_CAPABILITY_SCOPES))
-        self.assertEqual(len(args.scope), 26)
-        self.assertEqual(len(set(args.scope)), 26)
+        self.assertEqual(len(args.scope), 27)
+        self.assertEqual(len(set(args.scope)), 27)
         self.assertIn("runtime.record.create", args.scope)
         self.assertIn("authorization.manage", args.scope)
         self.assertNotIn("tenant.provision", args.scope)
@@ -200,7 +200,7 @@ class SematticeAuthenticationTests(unittest.TestCase):
             if len(columns) == 8 and columns[1].startswith("`") and columns[2] in {"v1", "v2"}:
                 capability_count += 1
                 catalog_scopes.add(columns[4].strip("`"))
-        self.assertEqual(capability_count, 51)
+        self.assertEqual(capability_count, 56)
         self.assertEqual(catalog_scopes, set(DEFAULT_CAPABILITY_SCOPES))
 
     def test_bearer_redirect_is_rejected_and_error_description_is_redacted(self) -> None:

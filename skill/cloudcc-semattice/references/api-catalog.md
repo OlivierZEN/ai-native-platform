@@ -96,6 +96,7 @@
 | `authorization.role.create` | v1 | 创建租户业务角色 | `authorization.manage` | 中/同步 | 必填 `name`；可选 `role_id`、`description` |
 | `authorization.permission-set.create` | v1 | 创建可复用权限集 | `authorization.manage` | 中/同步 | 必填 `name`；可选 `permission_set_id`、`description` |
 | `authorization.permission-set.grant` | v1 | 向权限集附加原子允许权限 | `authorization.manage` | 高/异步/审批 | 必填 `permission_set_id`、`resource_type`、`resource_ref`、`action`、`approval_id`；资源类型为 `platform`、`object` 或 `field` |
+| `authorization.permission-set.revoke` | v1 | 从权限集撤销一项原子允许权限 | `authorization.manage` | 高/异步/审批 | 输入同 grant；只删除权限集关联，不删除共享原子权限定义 |
 | `authorization.role.attach-permission-set` | v1 | 把权限集附加到角色 | `authorization.manage` | 高/异步/审批 | 必填 `role_id`、`permission_set_id`、`approval_id` |
 | `authorization.role.assign` | v1 | 经职责冲突检查后向已投影主体分配角色 | `authorization.manage` | 高/异步/审批 | 必填 `principal_id`、`role_id`、`approval_id`；可选 RFC3339 `expires_at` |
 | `authorization.role.revoke` | v1 | 结束有效角色分配并使授权快照失效 | `authorization.manage` | 高/异步/审批 | 必填 `principal_id`、`role_id`、`approval_id` |
@@ -146,4 +147,4 @@
 | 记录 | 5 |
 | 身份投影 | 4 |
 | 授权、组织和共享 | 21 |
-| 合计 | 55 |
+| 合计 | 56 |

@@ -22,10 +22,12 @@ DEV Autopilot 的 `dev_delivery_event` 已通过独立审批发布，随后在�
 ## 决策
 
 - `authorization.permission-set.grant` 仍优先执行现有精确权限委托校验。
+- 对象/字段的 `*` 通配访问权限不得作为再授权的精确所有权；它只影响业务访问。随机、历史或不存在的 UUID 不能借通配权限完成授权。
 - 只有调用主体已经持有独立的 `platform / authorization.policy / update` 权限时，才可为租户**当前活动元数据版本**中的对象或在线字段引导对象/字段权限。
 - 平台权限、未知 UUID、历史元数据版本、已 tombstone/purging 的字段均不适用引导规则，继续失败关闭。
 - `authorization.role.attach-permission-set` 对同一受限场景使用一致校验；Permission Set 中任何未持有的平台权限或非活动元数据权限都会阻断整个绑定。
 - 既有 verified approval、`authorization.manage` scope、管理权限、租户 RLS、幂等和持久审计要求全部保持不变。
+- 新增高风险能力 `authorization.permission-set.revoke`，用于在独立审批和完整审计下移除权限集中的原子权限关联，支持正式清理错误或过期授权，不允许直接数据库修正。
 
 ## 验收
 

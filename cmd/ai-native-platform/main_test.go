@@ -230,8 +230,8 @@ func TestBinaryWiringUsesSeparateControlAndRuntimeRoles(t *testing.T) {
 	if found["tenant.provision"] {
 		t.Fatalf("main wiring must not publish tenant.provision: %s", listOutput.String())
 	}
-	if len(listed.Capabilities) != 55 {
-		t.Fatalf("main wiring published %d capabilities, want 55: %s", len(listed.Capabilities), listOutput.String())
+	if len(listed.Capabilities) != 56 {
+		t.Fatalf("main wiring published %d capabilities, want 56: %s", len(listed.Capabilities), listOutput.String())
 	}
 	for _, required := range []string{
 		"metadata.changeset.backfill", "metadata.changeset.validate-coverage", "metadata.changeset.purge",

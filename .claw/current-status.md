@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T06:34:03Z
-updated_by: ai after merging cloudcc-semattice v1.4.2 release
-phase: active-metadata-permission-bootstrap-release-review
+updated_at: 2026-08-04T07:20:00Z
+updated_by: ai after online authorization negative finding and repair
+phase: authorization-delegation-hardening-release
 active_task: "TASK-059"
-next_action: "发布活动元数据首次权限引导修复，并通过正式 Capability 完成 DEV Autopilot 交付事件权限；TASK-058 原生 Windows 冒烟和 TASK-057 GitHub 镜像权限阻塞继续独立跟踪。"
+next_action: "发布精确委托与权限撤销修复，正式撤销误授出的随机对象权限并复验负向授权；随后继续 DEV Autopilot 交付闭环。"
 read_next:
   goals: true
   decisions: true
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-059 线上负向验收发现产品总监原有 `object/*:read` 通配访问被旧精确委托判断接受，导致随机对象权限错误写入；已停止继续验收。本地修复要求对象/字段再授权精确匹配，活动元数据 bootstrap 仍受策略管理员与当前版本约束；新增独立审批的 `authorization.permission-set.revoke` 以正式清理错误授权。PostgreSQL 全仓、race、定向 Go 与 19 项 Skill 认证测试通过，待发布清理。
 
 - TASK-059 / FEAT-050 已完成本地实现与全量验证：`authorization.permission-set.grant`、Permission Set 绑定和角色委托允许具有 `authorization.policy:update` 的策略管理员仅针对当前活动元数据对象/在线字段完成首次授权；未知 UUID、非活动资源和未持有的平台权限继续失败关闭。PostgreSQL 全仓、race、vet、module verify 与 Linux amd64 构建均通过，待生产发布和租户权限验收。
 

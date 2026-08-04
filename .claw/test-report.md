@@ -1,13 +1,20 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T06:34:03Z
-updated_by: ai after merging cloudcc-semattice v1.4.2 release verification
-last_run_at: 2026-08-04T06:34:03Z
+updated_at: 2026-08-04T07:20:00Z
+updated_by: ai after authorization delegation hardening verification
+last_run_at: 2026-08-04T07:20:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-04 TASK-059 精确委托与正式撤销能力验证
+
+- 线上负向调用以随机对象 UUID 复现通配 `object/*:read` 被错误当成可委托精确权限；该随机权限关联通过正式 Capability 写入，未直接修改数据库。
+- 修复后对象/字段委托只接受精确 `resource_ref`；通配权限仍可用于业务访问但不能再授权。测试种子显式持有 `object/*:read`，随机 UUID 仍返回 `UNAUTHORIZED`，当前活动对象 bootstrap 成功。
+- 新增 `authorization.permission-set.revoke`，要求 `authorization.manage`、Permission Set 更新权限和独立审批；测试覆盖 grant → revoke → grant，审计入口与三入口注册沿用统一 Capability 运行时。
+- PostgreSQL 16 全仓和 `go test -race ./... -count=1` 通过；定向主接线/授权测试、vet、module verify、状态与 diff 校验通过。Skill 目录 56 项能力、27 个唯一默认 scope 和 19 项认证测试全部一致通过。
 
 ## 2026-08-04 TASK-059 活动元数据首次权限引导本地验证
 

@@ -364,6 +364,46 @@ func (service *Service) GrantPermission(ctx context.Context, request capability.
 	return mapStableError(err)
 }
 
+// RevokePermission removes a permission edge without deleting the shared
+// atomic permission definition. Revocation is privilege-reducing, but still
+// requires the permission-set management authority and an independently
+// verified approval so cleanup remains governed and auditable.
+func (service *Service) RevokePermission(ctx context.Context, request capability.Request, input GrantPermissionInput) *capability.StableError {
+	if stableErr := requireVerifiedApproval(request, input.ApprovalID); stableErr != nil {
+		return stableErr
+	}
+	permissionSetID, stableErr := requiredID(input.PermissionSetID, "permission_set_id")
+	if stableErr != nil {
+		return stableErr
+	}
+	if !validPermission(input.ResourceType, input.ResourceRef, input.Action) {
+		return validationError("permission resource_type, resource_ref, or action is invalid")
+	}
+	tenant, stableErr := service.tenantContext(ctx, request)
+	if stableErr != nil {
+		return stableErr
+	}
+	err := database.WithTenant(ctx, service.pool, tenant, func(tx pgx.Tx) error {
+		if err := service.requirePlatform(ctx, tx, tenant, request.Actor.ID, resourceAuthorizationPermissionSet, "update"); err != nil {
+			return err
+		}
+		command, err := tx.Exec(ctx, `delete from permission_set_permission edge
+			using authorization_permission permission
+			where edge.tenant_bucket=$1 and edge.tenant_id=$2 and edge.permission_set_id=$3
+			  and permission.tenant_bucket=edge.tenant_bucket and permission.tenant_id=edge.tenant_id and permission.permission_id=edge.permission_id
+			  and permission.resource_type=$4 and permission.resource_ref=$5 and permission.action=$6 and permission.effect='allow'`,
+			tenant.Bucket, tenant.TenantID, permissionSetID, input.ResourceType, input.ResourceRef, input.Action)
+		if err != nil {
+			return err
+		}
+		if command.RowsAffected() == 0 {
+			return pgx.ErrNoRows
+		}
+		return nil
+	})
+	return mapStableError(err)
+}
+
 // requireDelegablePermission preserves the ordinary no-privilege-escalation
 // rule while making a newly activated metadata resource governable. Before a
 // new object or field has any grants, no actor can hold its exact permission;
@@ -374,9 +414,28 @@ func (service *Service) GrantPermission(ctx context.Context, request capability.
 // permissions and stale/unknown metadata identifiers still require an exact
 // permission and fail closed.
 func (service *Service) requireDelegablePermission(ctx context.Context, tx pgx.Tx, tenant database.TenantContext, actorID, resourceType, resourceRef, action string) error {
-	err := service.evaluator.RequirePermission(ctx, tx, tenant, actorID, resourceType, resourceRef, action)
-	if err == nil || !errors.Is(err, ErrDenied) || (resourceType != "object" && resourceType != "field") {
+	if resourceType != "object" && resourceType != "field" {
+		return service.evaluator.RequirePermission(ctx, tx, tenant, actorID, resourceType, resourceRef, action)
+	}
+	var exact bool
+	err := tx.QueryRow(ctx, `select exists(
+		select 1 from principal_role_assignment assignment
+		join principal_projection principal on principal.tenant_bucket=assignment.tenant_bucket and principal.tenant_id=assignment.tenant_id and principal.principal_id=assignment.principal_id
+		join authorization_role role on role.tenant_bucket=assignment.tenant_bucket and role.tenant_id=assignment.tenant_id and role.role_id=assignment.role_id
+		join role_permission_set role_set on role_set.tenant_bucket=role.tenant_bucket and role_set.tenant_id=role.tenant_id and role_set.role_id=role.role_id
+		join permission_set permission_set on permission_set.tenant_bucket=role_set.tenant_bucket and permission_set.tenant_id=role_set.tenant_id and permission_set.permission_set_id=role_set.permission_set_id
+		join permission_set_permission edge on edge.tenant_bucket=permission_set.tenant_bucket and edge.tenant_id=permission_set.tenant_id and edge.permission_set_id=permission_set.permission_set_id
+		join authorization_permission permission on permission.tenant_bucket=edge.tenant_bucket and permission.tenant_id=edge.tenant_id and permission.permission_id=edge.permission_id
+		where assignment.tenant_bucket=$1 and assignment.tenant_id=$2 and assignment.principal_id=$3 and assignment.assignment_state='active'
+		  and (assignment.effective_to is null or assignment.effective_to>clock_timestamp()) and principal.status='active'
+		  and role.lifecycle_state='active' and permission_set.lifecycle_state='active'
+		  and permission.resource_type=$4 and permission.resource_ref=$5 and permission.action=$6 and permission.effect='allow'
+	)`, tenant.Bucket, tenant.TenantID, actorID, resourceType, resourceRef, action).Scan(&exact)
+	if err != nil {
 		return err
+	}
+	if exact {
+		return nil
 	}
 	if err := service.evaluator.RequirePermission(ctx, tx, tenant, actorID, "platform", "authorization.policy", "update"); err != nil {
 		return ErrDenied
