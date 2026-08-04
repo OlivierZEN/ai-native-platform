@@ -376,20 +376,49 @@ func (service *Service) Get(ctx context.Context, request capability.Request, inp
 	}
 	var bundle Bundle
 	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
-		if err := scanVersion(tx.QueryRow(ctx, "select "+versionColumns+" from metadata_version where metadata_version_id=$1", versionID), &bundle.Version); err != nil {
-			return err
-		}
-		snapshot, _, err := compileTx(ctx, tx, versionID)
-		if err != nil {
-			return err
-		}
-		bundle.Objects, bundle.Fields, bundle.Relations = snapshot.Objects, snapshot.Fields, snapshot.Relations
-		return nil
+		return loadBundleTx(ctx, tx, versionID, &bundle)
 	})
 	if err != nil {
 		return Bundle{}, mapDatabaseError(err)
 	}
 	return bundle, nil
+}
+
+func (service *Service) GetCurrent(ctx context.Context, request capability.Request) (Bundle, *capability.StableError) {
+	tenantContext, stableErr := service.tenantContext(ctx, request)
+	if stableErr != nil {
+		return Bundle{}, stableErr
+	}
+	var bundle Bundle
+	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
+		var versionID uuid.UUID
+		if err := tx.QueryRow(ctx,
+			"select coalesce(metadata_version_id,'00000000-0000-0000-0000-000000000000'::uuid) from tenant_registry where tenant_id=$1",
+			tenantContext.TenantID,
+		).Scan(&versionID); err != nil {
+			return err
+		}
+		if versionID == uuid.Nil {
+			return errNoCurrentMetadata
+		}
+		return loadBundleTx(ctx, tx, versionID, &bundle)
+	})
+	if err != nil {
+		return Bundle{}, mapDatabaseError(err)
+	}
+	return bundle, nil
+}
+
+func loadBundleTx(ctx context.Context, tx pgx.Tx, versionID uuid.UUID, bundle *Bundle) error {
+	if err := scanVersion(tx.QueryRow(ctx, "select "+versionColumns+" from metadata_version where metadata_version_id=$1", versionID), &bundle.Version); err != nil {
+		return err
+	}
+	snapshot, _, err := compileTx(ctx, tx, versionID)
+	if err != nil {
+		return err
+	}
+	bundle.Objects, bundle.Fields, bundle.Relations = snapshot.Objects, snapshot.Fields, snapshot.Relations
+	return nil
 }
 
 func (service *Service) Compile(ctx context.Context, request capability.Request, versionIDString string) ([]byte, string, *capability.StableError) {
@@ -538,6 +567,7 @@ func scanRelation(row rowScanner, relation *RelationDefinition) error {
 
 var errPublishedVersion = errors.New("metadata version is not draft")
 var errEmptyMetadata = errors.New("metadata version has no objects")
+var errNoCurrentMetadata = errors.New("tenant has no published metadata version")
 var errFieldQuota = errors.New("object dynamic field quota exceeded")
 var errIndexedFieldQuota = errors.New("object indexed field quota exceeded")
 var errChangesetRequired = errors.New("subsequent metadata publication requires metadata.changeset.publish")
@@ -547,7 +577,7 @@ func mapDatabaseError(err error) *capability.StableError {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return &capability.StableError{Code: capability.CodeResourceNotFound, Message: "metadata resource was not found"}
 	}
-	if errors.Is(err, errPublishedVersion) || errors.Is(err, errEmptyMetadata) || errors.Is(err, errFieldQuota) || errors.Is(err, errIndexedFieldQuota) || errors.Is(err, errChangesetRequired) || errors.Is(err, errFieldNameReserved) {
+	if errors.Is(err, errPublishedVersion) || errors.Is(err, errEmptyMetadata) || errors.Is(err, errNoCurrentMetadata) || errors.Is(err, errFieldQuota) || errors.Is(err, errIndexedFieldQuota) || errors.Is(err, errChangesetRequired) || errors.Is(err, errFieldNameReserved) {
 		return preconditionError(err.Error())
 	}
 	var postgresError *pgconn.PgError

@@ -1,8 +1,8 @@
 ---
 kind: issue-list
 version: 3
-updated_at: 2026-08-04T06:25:00Z
-updated_by: root after Windows skill regression verification
+updated_at: 2026-08-04T07:18:00Z
+updated_by: root during TASK-059 implementation
 ---
 
 # 问题追踪列表
@@ -17,11 +17,11 @@ updated_by: root after Windows skill regression verification
 ### ISSUE-005 - Skill 能力目录数量断言仍固定为 51
 
 - severity: `low`
-- status: `open`
-- root_cause: `verified` — 当前 `api-catalog.md` 的表格与总数核对已有 55 项公开能力，但使用说明、Skill 文案和 `test_default_scopes_match_all_skill_catalog_capabilities` 仍固定写 51。
-- impact: 26 个唯一默认 scope 与 55 项目录能力仍完全匹配，但全量 `tests.test_semattice_skill_auth` 会在数量断言处失败，容易掩盖其他认证回归结果。
-- resolution: 在独立目录同步任务中统一所有能力总数文案和测试断言，并以线上 `system.capability.list` 回读作为最终事实；不要在 Windows 凭据补丁中混入该范围。
-- verification: 当前 HEAD 的相同测试断言为 51；本轮完整认证测试实测得到 `AssertionError: 55 != 51`，排除该既有断言后其余 18 项全部通过。
+- status: `in_progress`
+- root_cause: `verified` — `api-catalog.md` 的表格与总数核对已有 55 项公开能力，但使用说明、Skill 文案和认证测试仍固定写 51；旧测试还错误假设服务身份专用的 `identity.principal.sync` 属于人类 CLI 默认 scope。
+- impact: 固定数量断言失败会掩盖 scope 集合的第二处口径错误，容易误导维护者把人类登录默认 scope 从 26 项扩成不必要的 27 项。
+- resolution: TASK-059 已把目录更新为含 `metadata.version.get-current` 的 56 项，并让测试明确校验“26 项人类默认 scope + 1 项服务身份专用 scope”；待生产能力和 Skill v1.5.0 发布验证后关闭。
+- verification: 当前完整认证测试 19/19 通过；最终仍需以生产 `system.capability.list` 回读 56 项和独立 Skill release 验证为准。
 
 ### ISSUE-004 - GitHub 项目镜像缺少写权限
 

@@ -128,6 +128,55 @@ func TestMetadataCoreDeterministicPublishAndIsolation(t *testing.T) {
 	assertMetadataSchema(t, admin)
 }
 
+func TestGetCurrentMetadataVersion(t *testing.T) {
+	control, runtime := metadataTestPools(t)
+	service := NewService(runtime, control)
+	invoker := capability.NewInvoker(capability.NewRegistry(CapabilityDefinitions(service)), 4)
+	principal := metadataPrincipal("11111111-1111-4111-8111-111111111111", "orgaaaaaaaaaaaaaaaaa")
+
+	assertMetadataError(t, invokeMetadata(t, invoker, principal, "metadata.version.get-current", map[string]any{}), capability.CodeFailedPrecondition)
+	assertMetadataError(t, invokeMetadata(t, invoker, principal, "metadata.version.get-current", map[string]any{"metadata_version_id": mustV7(t).String()}), capability.CodeValidationFailed)
+
+	objectID := mustV7(t)
+	base := createVersion(t, invoker, principal)
+	upsertObject(t, invoker, principal, base.MetadataVersionID, objectID, "account", "Account")
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, principal, "metadata.version.publish", map[string]any{
+		"metadata_version_id": base.MetadataVersionID, "approval_id": "approval-metadata-1",
+	}))
+
+	draft := createVersion(t, invoker, principal)
+	upsertObject(t, invoker, principal, draft.MetadataVersionID, objectID, "account", "Draft account")
+	upsertObject(t, invoker, principal, draft.MetadataVersionID, mustV7(t), "contact", "Draft contact")
+
+	currentResponse := invokeMetadata(t, invoker, principal, "metadata.version.get-current", map[string]any{})
+	requireMetadataSuccess(t, currentResponse)
+	var current Bundle
+	if err := json.Unmarshal(currentResponse.Result, &current); err != nil {
+		t.Fatal(err)
+	}
+	if current.Version.MetadataVersionID != base.MetadataVersionID || current.Version.Status != "published" || len(current.Objects) != 1 || current.Objects[0].APIName != "account" {
+		t.Fatalf("current bundle=%#v", current)
+	}
+	assertMetadataCapabilityAdapterParity(t, invoker, principal, "metadata.version.get-current", map[string]any{})
+
+	insertMetadataTenant(t, control, "22222222-2222-4222-8222-222222222222", "orgbbbbbbbbbbbbbbbbb", 42)
+	tenantB := metadataPrincipal("22222222-2222-4222-8222-222222222222", "orgbbbbbbbbbbbbbbbbb")
+	tenantBVersion := createVersion(t, invoker, tenantB)
+	upsertObject(t, invoker, tenantB, tenantBVersion.MetadataVersionID, mustV7(t), "case", "Case")
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, tenantB, "metadata.version.publish", map[string]any{
+		"metadata_version_id": tenantBVersion.MetadataVersionID, "approval_id": "approval-metadata-1",
+	}))
+	tenantBResponse := invokeMetadata(t, invoker, tenantB, "metadata.version.get-current", map[string]any{})
+	requireMetadataSuccess(t, tenantBResponse)
+	var tenantBBundle Bundle
+	if err := json.Unmarshal(tenantBResponse.Result, &tenantBBundle); err != nil {
+		t.Fatal(err)
+	}
+	if tenantBBundle.Version.MetadataVersionID != tenantBVersion.MetadataVersionID || len(tenantBBundle.Objects) != 1 || tenantBBundle.Objects[0].APIName != "case" {
+		t.Fatalf("tenant B bundle=%#v", tenantBBundle)
+	}
+}
+
 func TestChangesetLifecyclePublicationRollbackAndAdapterParity(t *testing.T) {
 	control, runtime := metadataTestPools(t)
 	service := NewService(runtime, control)

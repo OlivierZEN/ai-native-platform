@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T05:09:55Z
-updated_by: root after production release and GitHub permission check
+updated_at: 2026-08-04T07:18:00Z
+updated_by: root during TASK-059 implementation
 board_status: active
 ---
 
@@ -27,6 +27,35 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-059 - Add current metadata discovery and publish Skill v1.5.0
+
+- status: `in_progress`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-050-current-metadata-discovery.md`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `ISSUE-005`
+- scope_files: `metadata Capability service/contract/tests, main registry count, cloudcc-semattice workflow/catalog/version, production and Skill release evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- `metadata.version.get-current` returns the tenant's pointer-selected metadata Bundle with low-risk `metadata.read` semantics and no caller-supplied identity or version ID.
+- Empty-current, draft-not-current, cross-tenant, schema and API/MCP/CLI registry behavior have real test evidence.
+- Production capability discovery and current-object readback succeed without project-state or console fallbacks.
+- `cloudcc-semattice` v1.5.0 is validated, atomically published with an immutable tag, and synchronized to the local installation.
+
+#### Next Action
+
+- Commit and push the validated platform/Skill source change, then deploy the platform before publishing Skill v1.5.0.
+
+#### Handoff Note
+
+- The user approved platform-first publication followed by Skill v1.5.0. Reuse `tenant_registry.metadata_version_id` and the existing Bundle; do not add version listing or mutate `metadata.version.get`.
 
 ### TASK-058 - Support native Windows login in the Semattice skill
 

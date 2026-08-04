@@ -1,6 +1,6 @@
 # CloudCC Semattice（语义格）
 
-当前版本：[`1.4.2`](VERSION)
+当前版本：[`1.5.0`](VERSION)
 
 `cloudcc-semattice` 是帮助 AI 理解、设计并通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它先说明产品定位、业务模块和资源模型，再在用户授权后执行租户、元数据、记录、用量、授权、组织和共享等受控操作。
 
@@ -14,7 +14,7 @@
 - 查看租户状态与用量信息。
 - 配置角色、Permission Set、对象策略、组织、团队和共享规则。
 - 使用统一脚本构造请求、执行 dry-run，并检查稳定错误码与审计标识。
-- 通过 Keycloak Authorization Code + PKCE 完成人工 CLI 登录，默认请求全部已发布 Capability 所需的 scope，并自动为当前公司换取和续发短期 OACT。
+- 通过 Keycloak Authorization Code + PKCE 完成人工 CLI 登录，默认请求人类 CLI 可用公开 Capability 所需的 scope，并自动为当前公司换取和续发短期 OACT。
 
 本技能的业务操作只调用 `/v1/capabilities/{capability-id}/invoke`；人工登录助手只调用 `/v1/auth/token` 换取短期 OACT。它不使用 MCP，不直连数据库，不调用内部租户开通接口，也不绕过 OAuth、RBAC、租户隔离、审批、幂等或审计。
 
@@ -31,7 +31,7 @@
 
 ```bash
 git clone \
-  --branch v1.4.2 \
+  --branch v1.5.0 \
   --depth 1 \
   https://github.com/CloudCCAI/cloudcc-semattice.git \
   ~/.codex/skills/cloudcc-semattice
@@ -61,7 +61,7 @@ Skill 会打开系统浏览器进入统一登录页。用户名、密码和 MFA 
 查看当前对象列表。
 ```
 
-Skill 会复用当前登录，在目标公司的权限范围内执行只读查询并返回对象列表；如果需要补充选择公司或元数据版本，会直接在对话中提示。该步骤不会创建、修改或删除对象。
+Skill 会复用当前登录，通过 `metadata.version.get-current` 自动发现目标公司当前已发布的元数据版本并返回对象列表；账号关联多个公司时会提示选择公司，目标公司尚未发布元数据版本时会明确报告。该步骤不会创建、修改或删除对象。
 
 ## 版本与升级
 
@@ -76,7 +76,7 @@ Skill 会复用当前登录，在目标公司的权限范围内执行只读查�
 ```bash
 cd ~/.codex/skills/cloudcc-semattice
 git fetch --tags
-git checkout v1.4.2
+git checkout v1.5.0
 ```
 
 `1.0.0` 将技能 ID 和调用名统一为 `cloudcc-semattice`。从 `0.x` 升级时，请安装到新目录并将调用名改为 `$cloudcc-semattice`；确认新技能可用后再移除旧目录。
@@ -94,6 +94,8 @@ git checkout v1.4.2
 `1.4.1` 将快速开始重写为 Codex 提示词流程：先调用 `$cloudcc-semattice` 输入“登录”，登录成功后再输入“查看当前对象列表。”；不再要求普通用户手工配置 Token 或直接运行底层脚本。
 
 `1.4.2` 增加 Windows 人工登录支持：refresh token 保存到当前用户的 Windows Credential Manager，短期会话缓存使用用户的 LocalAppData；Windows 上由 Skill 直接通过 Python 入口运行登录，不依赖 WSL。
+
+`1.5.0` 增加 `metadata.version.get-current` 工作流：全新登录后可从令牌绑定租户自动发现当前已发布元数据版本，并直接列出对象及其字段，不再要求调用方预先知道 `metadata_version_id`；同时将能力目录更新为 56 项，并区分人类 CLI 默认 scope 与服务身份专用 scope。
 
 ## 目录结构
 

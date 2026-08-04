@@ -230,10 +230,11 @@ func TestBinaryWiringUsesSeparateControlAndRuntimeRoles(t *testing.T) {
 	if found["tenant.provision"] {
 		t.Fatalf("main wiring must not publish tenant.provision: %s", listOutput.String())
 	}
-	if len(listed.Capabilities) != 55 {
-		t.Fatalf("main wiring published %d capabilities, want 55: %s", len(listed.Capabilities), listOutput.String())
+	if len(listed.Capabilities) != 56 {
+		t.Fatalf("main wiring published %d capabilities, want 56: %s", len(listed.Capabilities), listOutput.String())
 	}
 	for _, required := range []string{
+		"metadata.version.get-current",
 		"metadata.changeset.backfill", "metadata.changeset.validate-coverage", "metadata.changeset.purge",
 		"runtime.record.create", "runtime.record.get", "runtime.record.update", "runtime.record.delete", "runtime.record.query",
 		"authorization.role.create", "authorization.role.assign", "authorization.role.revoke", "authorization.role.set-data-scope", "authorization.role.set-conflict", "authorization.object-policy.set", "authorization.access.explain", "authorization.group.create", "record.team.add-member", "record.share.grant", "record.sharing-rule.upsert", "record.sharing-rule.refresh", "record.sharing-rule.retry", "organization.merge.start", "organization.merge.execute", "organization.merge.cancel",
