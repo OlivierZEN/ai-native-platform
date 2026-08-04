@@ -1,17 +1,17 @@
 ---
 kind: feature-spec
-feature_id: FEAT-049
+feature_id: FEAT-050
 title: Governed active metadata permission bootstrap
 status: implemented
 owner_role: backend-agent
-task_ids: TASK-058
+task_ids: TASK-059
 related_decisions: ADR-006
 related_issues: none
 updated_at: 2026-08-04T06:24:00Z
 updated_by: ai
 ---
 
-# FEAT-049 - 活动元数据首次权限引导
+# FEAT-050 - 活动元数据首次权限引导
 
 ## 背景
 

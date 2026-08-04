@@ -28,13 +28,13 @@ board_status: active
 
 ## Active Tasks
 
-### TASK-058 - Govern active-metadata permission bootstrap
+### TASK-059 - Govern active-metadata permission bootstrap
 
 - status: `review`
 - priority: `critical`
 - owner_role: `backend-agent`
 - claimed_by: `root`
-- spec_path: `docs/specs/FEAT-049-active-metadata-permission-bootstrap.md`
+- spec_path: `docs/specs/FEAT-050-active-metadata-permission-bootstrap.md`
 - depends_on: `TASK-054`
 - blocked_by: `none`
 - related_issues: `none`
@@ -50,6 +50,35 @@ board_status: active
 #### Next Action
 
 - 提交并发布 Semattice，再恢复目标租户权限初始化与在线负向验收。
+
+### TASK-058 - Support native Windows login in the Semattice skill
+
+- status: `review`
+- priority: `high`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-049-skill-windows-credential-login.md`
+- depends_on: `TASK-056`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `skill/cloudcc-semattice authentication helper and docs, focused Python tests, project delivery evidence`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Native Windows uses Credential Manager for refresh token save, load, rotation and deletion without WSL or plaintext fallback.
+- Windows short-lived session cache uses LocalAppData and does not fail on POSIX-only permission checks.
+- macOS/Linux behavior remains unchanged and focused regression checks pass.
+- A Windows user completes login, status, one read-only call and logout smoke verification.
+
+#### Next Action
+
+- Install immutable `v1.4.2` in a native Windows Codex session and run login, status, one read-only call and logout; mark TASK-058 verified only after that evidence passes.
+
+#### Handoff Note
+
+- Project commit `109dcbf61847b9f7148a9db86959af7e6c182acb` is on CodeUp `main`. Skill release commit `101faa8556453486517b12afd52c71bff0507227` is GitHub `main` and immutable `v1.4.2`; remote raw files and pages passed post-release verification. This workstation cannot execute the real Windows Credential Manager API, so TASK-058 remains in review pending native Windows smoke evidence.
 
 ### TASK-057 - Synchronize all code remotes and deploy current main
 

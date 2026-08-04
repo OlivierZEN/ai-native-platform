@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T06:24:00Z
-updated_by: ai after merging current CodeUp production history
+updated_at: 2026-08-04T06:34:03Z
+updated_by: ai after merging cloudcc-semattice v1.4.2 release
 phase: active-metadata-permission-bootstrap-release-review
-active_task: "TASK-058"
-next_action: "发布活动元数据首次权限引导修复，并通过正式 Capability 完成 DEV Autopilot 交付事件权限；GitHub 镜像权限阻塞继续由 TASK-057 跟踪。"
+active_task: "TASK-059"
+next_action: "发布活动元数据首次权限引导修复，并通过正式 Capability 完成 DEV Autopilot 交付事件权限；TASK-058 原生 Windows 冒烟和 TASK-057 GitHub 镜像权限阻塞继续独立跟踪。"
 read_next:
   goals: true
   decisions: true
@@ -19,9 +19,11 @@ read_next:
 
 ## 快照
 
-- TASK-058 / FEAT-049 已完成本地实现与全量验证：`authorization.permission-set.grant`、Permission Set 绑定和角色委托允许具有 `authorization.policy:update` 的策略管理员仅针对当前活动元数据对象/在线字段完成首次授权；未知 UUID、非活动资源和未持有的平台权限继续失败关闭。PostgreSQL 全仓、race、vet、module verify 与 Linux amd64 构建均通过，待生产发布和租户权限验收。
+- TASK-059 / FEAT-050 已完成本地实现与全量验证：`authorization.permission-set.grant`、Permission Set 绑定和角色委托允许具有 `authorization.policy:update` 的策略管理员仅针对当前活动元数据对象/在线字段完成首次授权；未知 UUID、非活动资源和未持有的平台权限继续失败关闭。PostgreSQL 全仓、race、vet、module verify 与 Linux amd64 构建均通过，待生产发布和租户权限验收。
 
-- DEV Autopilot 交付元数据 changeset `019fcb51-8cc1-7270-8767-6f0049587484` 已由不同组织管理员独立批准并发布，活动版本为 `019fcb51-85c2-74cd-8f0a-6132d6c769df`，精确包含 6 个对象 / 60 个字段；新增 `dev_delivery_event` 对象 `019fcb51-8a67-727c-9d43-673069d1c33d` 有 15 个字段，变更无需回填。权限初始化因首次授权死锁安全停止，待 TASK-058 上线后继续。
+- DEV Autopilot 交付元数据 changeset `019fcb51-8cc1-7270-8767-6f0049587484` 已由不同组织管理员独立批准并发布，活动版本为 `019fcb51-85c2-74cd-8f0a-6132d6c769df`，精确包含 6 个对象 / 60 个字段；新增 `dev_delivery_event` 对象 `019fcb51-8a67-727c-9d43-673069d1c33d` 有 15 个字段，变更无需回填。权限初始化因首次授权死锁安全停止，待 TASK-059 上线后继续。
+
+- TASK-058 / FEAT-049 已发布 `cloudcc-semattice` v1.4.2：项目实现提交 `109dcbf61847b9f7148a9db86959af7e6c182acb` 已推送 CodeUp `main`；独立技能发布提交 `101faa8556453486517b12afd52c71bff0507227` 已通过 atomic push 同时更新 GitHub `main` 和不可移动标签 `v1.4.2`。远程 HEAD、raw VERSION/README、仓库页、标签页和发布仓库 clean 均验证通过。ctypes 合约级 Windows 测试已通过，真实 Windows `login/status/read-only call/logout` 仍待执行；既有 51/55 数量漂移继续由 ISSUE-005 独立跟踪。
 
 - TASK-057 生产交付已完成、GitHub 镜像同步受 ISSUE-004 阻塞：CodeUp `main` 已同步至 `26d40f84e55f40863d3c86e081664aecbd63af2c`，生产 release `20260804T050808Z-web-oidc-26d40f84e55f` 健康且下载制品 SHA 校验通过。GitHub `main=4bb3d733` 无独有提交，但 `androidxhm` 与 CloudCCAI 两个现有 SSH 身份均被仓库拒绝写入；未强推或改写历史。
 

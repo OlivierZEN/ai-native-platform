@@ -1,19 +1,19 @@
 ---
 kind: task
-task_id: TASK-058
+task_id: TASK-059
 title: 补齐活动元数据首次权限引导并恢复 DEV Autopilot 权限发布
 status: review
 priority: critical
 owner_role: backend-agent
 claimed_by: root
-spec_path: docs/specs/FEAT-049-active-metadata-permission-bootstrap.md
+spec_path: docs/specs/FEAT-050-active-metadata-permission-bootstrap.md
 depends_on: TASK-054
 blocked_by: none
 updated_at: 2026-08-04T06:24:00Z
 updated_by: ai
 ---
 
-# TASK-058 - 活动元数据首次权限引导
+# TASK-059 - 活动元数据首次权限引导
 
 ## 范围
 

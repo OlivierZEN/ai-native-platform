@@ -1,6 +1,6 @@
 # CloudCC Semattice（语义格）
 
-当前版本：[`1.4.1`](VERSION)
+当前版本：[`1.4.2`](VERSION)
 
 `cloudcc-semattice` 是帮助 AI 理解、设计并通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它先说明产品定位、业务模块和资源模型，再在用户授权后执行租户、元数据、记录、用量、授权、组织和共享等受控操作。
 
@@ -23,7 +23,7 @@
 - Codex 技能运行环境。
 - Python 3.10 或更高版本；辅助脚本只使用 Python 标准库。
 - 可访问的 Semattice HTTPS 服务地址。
-- 人工登录需要可用的 Keycloak `semattice-cli` public client、Semattice `/v1/auth/token` 和操作系统凭据库；无交互调用可直接提供短期 Bearer Token。
+- 人工登录需要可用的 Keycloak `semattice-cli` public client、Semattice `/v1/auth/token` 和操作系统凭据库（macOS Keychain、Linux Secret Service 或 Windows Credential Manager）；无交互调用可直接提供短期 Bearer Token。
 
 ## 安装
 
@@ -31,7 +31,7 @@
 
 ```bash
 git clone \
-  --branch v1.4.1 \
+  --branch v1.4.2 \
   --depth 1 \
   https://github.com/CloudCCAI/cloudcc-semattice.git \
   ~/.codex/skills/cloudcc-semattice
@@ -76,7 +76,7 @@ Skill 会复用当前登录，在目标公司的权限范围内执行只读查�
 ```bash
 cd ~/.codex/skills/cloudcc-semattice
 git fetch --tags
-git checkout v1.4.1
+git checkout v1.4.2
 ```
 
 `1.0.0` 将技能 ID 和调用名统一为 `cloudcc-semattice`。从 `0.x` 升级时，请安装到新目录并将调用名改为 `$cloudcc-semattice`；确认新技能可用后再移除旧目录。
@@ -92,6 +92,8 @@ git checkout v1.4.1
 `1.4.0` 为内测租户的首个元数据版本增加手动发布确认：`metadata.version.publish` 接受用户明确提供的非空 `approval_id` 并持久审计，不要求该值出现在 OACT 的 `approvals` 声明中。其他高风险能力仍要求可信令牌中的真实审批标识。
 
 `1.4.1` 将快速开始重写为 Codex 提示词流程：先调用 `$cloudcc-semattice` 输入“登录”，登录成功后再输入“查看当前对象列表。”；不再要求普通用户手工配置 Token 或直接运行底层脚本。
+
+`1.4.2` 增加 Windows 人工登录支持：refresh token 保存到当前用户的 Windows Credential Manager，短期会话缓存使用用户的 LocalAppData；Windows 上由 Skill 直接通过 Python 入口运行登录，不依赖 WSL。
 
 ## 目录结构
 
