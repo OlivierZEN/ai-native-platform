@@ -145,6 +145,13 @@ func TestEnforcedObjectUsesRoleFieldAndOrganizationDataScope(t *testing.T) {
 		t.Fatal(err)
 	}
 	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "platform", "resource_ref": "audit", "action": "read", "approval_id": approvalID}))
+	// The contact object is part of the active metadata version but deliberately
+	// has no record permission assigned to the policy administrator. The first
+	// object/field grants and the attachment must still be possible through the
+	// governed metadata bootstrap path.
+	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "object", "resource_ref": ids.ContactID.String(), "action": "read", "approval_id": approvalID}))
+	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "field", "resource_ref": ids.ContactNameID.String(), "action": "read", "approval_id": approvalID}))
+	assertRecordError(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "object", "resource_ref": uuid.New().String(), "action": "read", "approval_id": approvalID}), capability.CodeUnauthorized)
 	assertRecordError(t, invokeRecord(t, invoker, owner, "authorization.permission-set.grant", map[string]any{"permission_set_id": permissionSet.PermissionSetID, "resource_type": "platform", "resource_ref": "unowned.permission", "action": "read", "approval_id": approvalID}), capability.CodeUnauthorized)
 	assertAuthorizationAuditExists(t, runtime, owner, "authorization.permission-set.grant", "failed")
 	requireSuccess(t, invokeRecord(t, invoker, owner, "authorization.role.attach-permission-set", map[string]any{"role_id": role.RoleID, "permission_set_id": permissionSet.PermissionSetID, "approval_id": approvalID}))
