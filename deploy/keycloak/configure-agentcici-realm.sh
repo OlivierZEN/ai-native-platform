@@ -94,7 +94,11 @@ if [[ -d /opt/keycloak/current/themes/agentcici ]]; then
     -s loginTheme=agentcici \
     -s internationalizationEnabled=true \
     -s defaultLocale=zh-CN \
-    -s 'supportedLocales=["zh-CN"]' >/dev/null
+    -s 'supportedLocales=["zh-CN"]' \
+    -s registrationEmailAsUsername=false \
+    -s loginWithEmailAllowed=true \
+    -s duplicateEmailsAllowed=false \
+    -s editUsernameAllowed=false >/dev/null
 fi
 
 create_client semattice-cli '{

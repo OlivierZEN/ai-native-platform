@@ -58,7 +58,23 @@ mv "${stage_dir}/agentcici" "${theme_target}"
   -s loginTheme=agentcici \
   -s internationalizationEnabled=true \
   -s defaultLocale=zh-CN \
-  -s 'supportedLocales=["zh-CN"]' >/dev/null
+  -s 'supportedLocales=["zh-CN"]' \
+  -s registrationEmailAsUsername=false \
+  -s loginWithEmailAllowed=true \
+  -s duplicateEmailsAllowed=false \
+  -s editUsernameAllowed=false >/dev/null
+
+# Do not let a presentation-only theme rollout reset the realm's identity
+# semantics. With registrationEmailAsUsername=true Keycloak forces username to
+# email, which overwrites AgentCiCi's phone/public-ID usernames on later saves.
+"${keycloak_bin}" get realms/agentcici --config "${keycloak_config}" \
+  --fields registrationEmailAsUsername,loginWithEmailAllowed,duplicateEmailsAllowed,editUsernameAllowed \
+  | jq -e '
+      .registrationEmailAsUsername == false
+      and .loginWithEmailAllowed == true
+      and .duplicateEmailsAllowed == false
+      and .editUsernameAllowed == false
+    ' >/dev/null
 
 systemctl restart keycloak.service
 for attempt in $(seq 1 24); do

@@ -28,6 +28,25 @@ board_status: active
 
 ## Active Tasks
 
+### TASK-063 - Prevent Keycloak theme deployment from resetting username login policy
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `root`
+- spec_path: `docs/specs/FEAT-029-keycloak-resource-server-and-production-idp.md`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `deploy/keycloak theme/realm scripts, FEAT-029, production verification`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Theme deployment and realm bootstrap explicitly preserve username-or-email authentication policy.
+- A production theme rollout no longer reverts `registrationEmailAsUsername` or historical user username values.
+
 ### TASK-062 - Tolerate missing historical metering baselines
 
 - status: `done`

@@ -52,7 +52,7 @@ AgentCiCi BFF 的 browser redirect URI 必须精确列出 HTTPS callback；`sema
 ## IdP 登录主题
 
 - 用户已确认使用 AgentCiCi 用户入口的深蓝星空、3D 品牌立方体和居中操作区作为 `agentcici` Realm 的 IdP 登录视觉基线。该主题是 Keycloak 原生 login theme，保留 Keycloak 的 form action、CSRF/session 参数、密码可见性、错误提示、重置密码与 MFA 流程，不调用 AgentCiCi 的旧密码登录接口。
-- 主题源码位于 `deploy/keycloak/themes/agentcici`，不依赖 AgentCiCi 前端的跨域图片或运行时资源；`apply-agentcici-login-theme.sh` 在备份原主题后原子替换该目录、更新 realm theme/locale 并重启 Keycloak 清理 theme cache。
+- 主题源码位于 `deploy/keycloak/themes/agentcici`，不依赖 AgentCiCi 前端的跨域图片或运行时资源；`apply-agentcici-login-theme.sh` 在备份原主题后原子替换该目录、更新 realm theme/locale 并重启 Keycloak 清理 theme cache。主题部署必须显式保持 `registrationEmailAsUsername=false`、`loginWithEmailAllowed=true`、`duplicateEmailsAllowed=false` 与 `editUsernameAllowed=false`：手机号/公共编号为 username，邮箱是同一用户的第二登录标识；主题发布不得覆盖该认证策略。
 - 回滚时，以部署输出的 `/opt/keycloak/backups/<timestamp>-before-agentcici-login-theme/agentcici` 恢复 theme 目录，并将 realm `loginTheme` 改回 `keycloak.v2` 后重启 Keycloak。该回滚不触及用户、credential、client 或会话数据库数据。
 
 ## 数据平台实现边界
