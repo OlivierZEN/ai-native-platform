@@ -54,8 +54,8 @@ python3 scripts/semattice_api.py \
 按以下顺序执行，每步保留返回的稳定 ID：
 
 1. 调用 `metadata.version.create` 创建草稿。
-2. 调用 `metadata.object.upsert` 创建对象。
-3. 对每个字段调用 `metadata.field.upsert`。
+2. 调用 `metadata.object.create` 创建对象。
+3. 对每个字段调用 `metadata.field.create`。
 4. 需要对象关联时调用 `metadata.relation.upsert`。
 5. 使用 `metadata.version.get` 回读草稿并核对完整定义；发布会包含该版本的全部对象、字段和关系。
 6. 首次简单发布可在用户明确确认整版内容并提供非空手动 `approval_id` 后调用 `metadata.version.publish`。服务端会持久审计该标识，但不会要求它存在于 OACT 的 `approvals` 声明中。
@@ -107,14 +107,14 @@ python3 scripts/semattice_api.py \
 | 资源 | 创建 | 读取 | 修改 | 删除或退役 |
 |---|---|---|---|---|
 | 元数据版本 | `metadata.version.create` | 当前已发布版本用 `metadata.version.get-current`；已知版本用 `metadata.version.get` | 版本本身不可直接修改；修改其中的草稿定义 | 没有版本删除能力；未激活 Changeset 可取消，已发布版本保持不可变 |
-| 对象 | 在草稿中调用 `metadata.object.upsert`；省略 `object_id` 时生成稳定 ID | 通过版本读取能力随版本读取 | 草稿中携带相同 `object_id` 再次 upsert；已发布后在候选版本中保留稳定 ID 并走 Changeset | 当前没有公开对象删除或退役能力；对象不能从候选版本中消失 |
-| 字段 | 在草稿中调用 `metadata.field.upsert` | 通过版本读取能力随版本读取 | 草稿中携带相同 `field_id` upsert；已发布后的受支持变更走候选版本和 Changeset | 不能直接删除；按生命周期逐步进入 `deprecated_*`、`hidden`、`purging`、`tombstone`，破坏性清除使用 `metadata.changeset.purge` |
+| 对象 | 草稿中调用 `metadata.object.create`；省略 `object_id` 时生成稳定 ID | 单条用 `metadata.object.get`，列表用 `metadata.object.list` | 草稿中调用 `metadata.object.update` 完整替换可变属性；保留 `upsert` 兼容入口 | 草稿中调用 `metadata.object.delete`；会级联删除同版本字段，但关系引用会阻止删除。已发布对象只有无记录、无关系时才能通过候选版本和 Changeset 移除 |
+| 字段 | 草稿中调用 `metadata.field.create` | 单条用 `metadata.field.get`，列表用 `metadata.field.list`；列表可按 `object_id` 过滤 | 草稿中调用 `metadata.field.update` 完整替换可变属性；保留 `upsert` 兼容入口 | 草稿中调用 `metadata.field.delete`。已发布字段无存量值时可通过候选版本和 Changeset移除；有存量值时仍必须走生命周期和 `metadata.changeset.purge` |
 | 关系 | 在草稿中调用 `metadata.relation.upsert` | 通过版本读取能力随版本读取 | 草稿中携带相同 `relation_id` upsert；已发布后保持 API 名称、端点和类型身份并走 Changeset | 当前没有公开关系删除或退役能力；关系不能从候选版本中消失 |
 
 ### 修改草稿定义
 
 1. 使用可信结果中的 `metadata_version_id` 和稳定资源 ID。
-2. 调用对应 `*.upsert`，只修改目标属性，不生成新的资源 ID。
+2. 调用对应 `*.update`，提供完整定义并保持资源 ID；更新是完整替换，不是合并补丁。旧调用方仍可使用 `*.upsert`。
 3. 使用 `metadata.version.get` 回读整个版本，确认没有意外改变其他定义。
 
 `upsert` 同时承担草稿内的创建和修改。不要因为用户说“修改对象”就创建第二个同名对象。
@@ -132,14 +132,13 @@ python3 scripts/semattice_api.py \
 
 `metadata.version.get-current` 只返回当前已发布快照，不枚举历史版本。读取已知草稿或历史版本时继续使用 `metadata.version.get`，且版本 ID 必须来自可信结果，不要枚举或猜测 UUID。
 
-### 处理“删除对象”请求
+### 处理“删除对象或字段”请求
 
-当前公开 Capability 没有对象删除或对象退役操作。遇到此类请求时：
-
-1. 明确区分用户要删除的是对象定义，还是某条对象记录。
-2. 如果是记录，按 [删除记录](#删除记录) 执行软删除。
-3. 如果是字段数据，使用字段生命周期和经审批的 purge/tombstone 流程。
-4. 如果确实是对象定义，报告当前能力缺口，不把对象从候选版本中移除，也不伪造未发布的删除能力。
+1. 明确区分对象/字段定义与业务记录或字段数据。
+2. 删除未发布草稿定义时，先用 `get` 回读目标，再调用对应 `delete`；对象存在关系引用时必须先由用户明确处理关系，不能自动删除关系。
+3. 删除已发布对象时，创建包含其余完整定义的候选版本，在草稿中调用 `metadata.object.delete`，再执行 Changeset。任何历史记录或关系都会使校验失败。
+4. 删除已发布字段时同样走候选版本；只有不存在该字段 API key 的存量记录时才允许直接移除。
+5. 字段仍有存量值时，使用字段生命周期和经审批的 purge/tombstone 流程，禁止直接移除。
 
 ## 演进已发布元数据
 
@@ -152,7 +151,7 @@ python3 scripts/semattice_api.py \
 7. 只有状态满足发布前置条件时，调用 `metadata.changeset.publish`。
 8. 调用 `metadata.changeset.get-status` 和 `metadata.version.get-current` 验证激活结果。
 
-字段清除必须使用 `metadata.changeset.purge`，同时提供真实审批和有界批次。禁止把字段直接从候选版本中消失当作删除方案。
+字段仍有存量值时必须使用 `metadata.changeset.purge`，同时提供真实审批和有界批次。只有校验确认字段从未在任何记录中存值时，才允许通过候选版本直接移除。
 
 ## 查询记录
 

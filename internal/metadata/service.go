@@ -60,7 +60,19 @@ func (service *Service) CreateVersion(ctx context.Context, request capability.Re
 	return result, nil
 }
 
+func (service *Service) CreateObject(ctx context.Context, request capability.Request, input ObjectUpsertInput) (ObjectDefinition, *capability.StableError) {
+	return service.writeObject(ctx, request, input, "create")
+}
+
+func (service *Service) UpdateObject(ctx context.Context, request capability.Request, input ObjectUpsertInput) (ObjectDefinition, *capability.StableError) {
+	return service.writeObject(ctx, request, input, "update")
+}
+
 func (service *Service) UpsertObject(ctx context.Context, request capability.Request, input ObjectUpsertInput) (ObjectDefinition, *capability.StableError) {
+	return service.writeObject(ctx, request, input, "upsert")
+}
+
+func (service *Service) writeObject(ctx context.Context, request capability.Request, input ObjectUpsertInput, mode string) (ObjectDefinition, *capability.StableError) {
 	versionID, stableErr := parseMetadataID(input.MetadataVersionID, "metadata_version_id")
 	if stableErr != nil {
 		return ObjectDefinition{}, stableErr
@@ -68,6 +80,9 @@ func (service *Service) UpsertObject(ctx context.Context, request capability.Req
 	objectID, stableErr := optionalMetadataID(input.ObjectID, "object_id")
 	if stableErr != nil {
 		return ObjectDefinition{}, stableErr
+	}
+	if objectID == uuid.Nil && mode == "update" {
+		return ObjectDefinition{}, validationError("object_id is required for update")
 	}
 	if objectID == uuid.Nil {
 		var err error
@@ -89,10 +104,26 @@ func (service *Service) UpsertObject(ctx context.Context, request capability.Req
 	}
 	var result ObjectDefinition
 	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
-		_, err := tx.Exec(ctx,
-			"insert into object_definition(tenant_bucket,tenant_id,metadata_version_id,object_id,api_name,label,description,semantic) values ($1,$2,$3,$4,$5,$6,$7,$8) "+
-				"on conflict (tenant_bucket,tenant_id,metadata_version_id,object_id) do update set api_name=excluded.api_name,label=excluded.label,description=excluded.description,semantic=excluded.semantic,updated_at=clock_timestamp()",
-			tenantContext.Bucket, tenantContext.TenantID, versionID, objectID, input.APIName, input.Label, input.Description, semantic)
+		var err error
+		switch mode {
+		case "create":
+			_, err = tx.Exec(ctx,
+				"insert into object_definition(tenant_bucket,tenant_id,metadata_version_id,object_id,api_name,label,description,semantic) values ($1,$2,$3,$4,$5,$6,$7,$8)",
+				tenantContext.Bucket, tenantContext.TenantID, versionID, objectID, input.APIName, input.Label, input.Description, semantic)
+		case "update":
+			var tag pgconn.CommandTag
+			tag, err = tx.Exec(ctx,
+				"update object_definition set api_name=$3,label=$4,description=$5,semantic=$6,updated_at=clock_timestamp() where metadata_version_id=$1 and object_id=$2",
+				versionID, objectID, input.APIName, input.Label, input.Description, semantic)
+			if err == nil && tag.RowsAffected() == 0 {
+				return pgx.ErrNoRows
+			}
+		default:
+			_, err = tx.Exec(ctx,
+				"insert into object_definition(tenant_bucket,tenant_id,metadata_version_id,object_id,api_name,label,description,semantic) values ($1,$2,$3,$4,$5,$6,$7,$8) "+
+					"on conflict (tenant_bucket,tenant_id,metadata_version_id,object_id) do update set api_name=excluded.api_name,label=excluded.label,description=excluded.description,semantic=excluded.semantic,updated_at=clock_timestamp()",
+				tenantContext.Bucket, tenantContext.TenantID, versionID, objectID, input.APIName, input.Label, input.Description, semantic)
+		}
 		if err != nil {
 			return err
 		}
@@ -104,7 +135,103 @@ func (service *Service) UpsertObject(ctx context.Context, request capability.Req
 	return result, nil
 }
 
+func (service *Service) GetObject(ctx context.Context, request capability.Request, input ObjectGetInput) (ObjectDefinition, *capability.StableError) {
+	versionID, stableErr := parseMetadataID(input.MetadataVersionID, "metadata_version_id")
+	if stableErr != nil {
+		return ObjectDefinition{}, stableErr
+	}
+	objectID, stableErr := parseMetadataID(input.ObjectID, "object_id")
+	if stableErr != nil {
+		return ObjectDefinition{}, stableErr
+	}
+	tenantContext, stableErr := service.tenantContext(ctx, request)
+	if stableErr != nil {
+		return ObjectDefinition{}, stableErr
+	}
+	var result ObjectDefinition
+	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
+		return scanObject(tx.QueryRow(ctx, "select "+objectColumns+" from object_definition where metadata_version_id=$1 and object_id=$2", versionID, objectID), &result)
+	})
+	if err != nil {
+		return ObjectDefinition{}, mapDatabaseError(err)
+	}
+	return result, nil
+}
+
+func (service *Service) ListObjects(ctx context.Context, request capability.Request, input ObjectListInput) ([]ObjectDefinition, *capability.StableError) {
+	versionID, stableErr := parseMetadataID(input.MetadataVersionID, "metadata_version_id")
+	if stableErr != nil {
+		return nil, stableErr
+	}
+	tenantContext, stableErr := service.tenantContext(ctx, request)
+	if stableErr != nil {
+		return nil, stableErr
+	}
+	var result []ObjectDefinition
+	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
+		var version Version
+		if err := scanVersion(tx.QueryRow(ctx, "select "+versionColumns+" from metadata_version where metadata_version_id=$1", versionID), &version); err != nil {
+			return err
+		}
+		var err error
+		result, err = loadObjectDefinitionsTx(ctx, tx, versionID)
+		return err
+	})
+	if err != nil {
+		return nil, mapDatabaseError(err)
+	}
+	return result, nil
+}
+
+func (service *Service) DeleteObject(ctx context.Context, request capability.Request, input ObjectGetInput) (ObjectDeleteResult, *capability.StableError) {
+	versionID, stableErr := parseMetadataID(input.MetadataVersionID, "metadata_version_id")
+	if stableErr != nil {
+		return ObjectDeleteResult{}, stableErr
+	}
+	objectID, stableErr := parseMetadataID(input.ObjectID, "object_id")
+	if stableErr != nil {
+		return ObjectDeleteResult{}, stableErr
+	}
+	tenantContext, stableErr := service.tenantContext(ctx, request)
+	if stableErr != nil {
+		return ObjectDeleteResult{}, stableErr
+	}
+	result := ObjectDeleteResult{Deleted: true}
+	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
+		if err := scanObject(tx.QueryRow(ctx, "select "+objectColumns+" from object_definition where metadata_version_id=$1 and object_id=$2", versionID, objectID), &result.Object); err != nil {
+			return err
+		}
+		if err := tx.QueryRow(ctx, "select count(*) from field_definition where metadata_version_id=$1 and object_id=$2", versionID, objectID).Scan(&result.DeletedFieldCount); err != nil {
+			return err
+		}
+		tag, err := tx.Exec(ctx, "delete from object_definition where metadata_version_id=$1 and object_id=$2", versionID, objectID)
+		if err != nil {
+			return err
+		}
+		if tag.RowsAffected() == 0 {
+			return pgx.ErrNoRows
+		}
+		return nil
+	})
+	if err != nil {
+		return ObjectDeleteResult{}, mapDatabaseError(err)
+	}
+	return result, nil
+}
+
+func (service *Service) CreateField(ctx context.Context, request capability.Request, input FieldUpsertInput) (FieldDefinition, *capability.StableError) {
+	return service.writeField(ctx, request, input, "create")
+}
+
+func (service *Service) UpdateField(ctx context.Context, request capability.Request, input FieldUpsertInput) (FieldDefinition, *capability.StableError) {
+	return service.writeField(ctx, request, input, "update")
+}
+
 func (service *Service) UpsertField(ctx context.Context, request capability.Request, input FieldUpsertInput) (FieldDefinition, *capability.StableError) {
+	return service.writeField(ctx, request, input, "upsert")
+}
+
+func (service *Service) writeField(ctx context.Context, request capability.Request, input FieldUpsertInput, mode string) (FieldDefinition, *capability.StableError) {
 	versionID, stableErr := parseMetadataID(input.MetadataVersionID, "metadata_version_id")
 	if stableErr != nil {
 		return FieldDefinition{}, stableErr
@@ -116,6 +243,9 @@ func (service *Service) UpsertField(ctx context.Context, request capability.Requ
 	fieldID, stableErr := optionalMetadataID(input.FieldID, "field_id")
 	if stableErr != nil {
 		return FieldDefinition{}, stableErr
+	}
+	if fieldID == uuid.Nil && mode == "update" {
+		return FieldDefinition{}, validationError("field_id is required for update")
 	}
 	if fieldID == uuid.Nil {
 		var err error
@@ -194,6 +324,12 @@ func (service *Service) UpsertField(ctx context.Context, request capability.Requ
 		).Scan(&existing); err != nil {
 			return err
 		}
+		if mode == "create" && existing {
+			return errDefinitionAlreadyExists
+		}
+		if mode == "update" && !existing {
+			return pgx.ErrNoRows
+		}
 		if !existing && lifecycleState != "tombstone" {
 			var count int
 			if err := tx.QueryRow(ctx,
@@ -230,11 +366,24 @@ func (service *Service) UpsertField(ctx context.Context, request capability.Requ
 				return errIndexedFieldQuota
 			}
 		}
-		_, err = tx.Exec(ctx,
-			"insert into field_definition(tenant_bucket,tenant_id,metadata_version_id,field_id,object_id,api_name,label,description,data_type,required,indexed,unique_value,lifecycle_state,index_state,default_semantics,predecessor_field_id,default_value,constraints,semantic) "+
-				"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) "+
-				"on conflict (tenant_bucket,tenant_id,metadata_version_id,field_id) do update set object_id=excluded.object_id,api_name=excluded.api_name,label=excluded.label,description=excluded.description,data_type=excluded.data_type,required=excluded.required,indexed=excluded.indexed,unique_value=excluded.unique_value,lifecycle_state=excluded.lifecycle_state,index_state=excluded.index_state,default_semantics=excluded.default_semantics,predecessor_field_id=excluded.predecessor_field_id,default_value=excluded.default_value,constraints=excluded.constraints,semantic=excluded.semantic,updated_at=clock_timestamp()",
-			tenantContext.Bucket, tenantContext.TenantID, versionID, fieldID, objectID, input.APIName, input.Label, input.Description, input.DataType, input.Required, input.Indexed, input.UniqueValue, lifecycleState, indexState, defaultSemantics, nullableUUID(predecessorID), nullableJSON(defaultValue), constraints, semantic)
+		arguments := []any{tenantContext.Bucket, tenantContext.TenantID, versionID, fieldID, objectID, input.APIName, input.Label, input.Description, input.DataType, input.Required, input.Indexed, input.UniqueValue, lifecycleState, indexState, defaultSemantics, nullableUUID(predecessorID), nullableJSON(defaultValue), constraints, semantic}
+		switch mode {
+		case "create":
+			_, err = tx.Exec(ctx,
+				"insert into field_definition(tenant_bucket,tenant_id,metadata_version_id,field_id,object_id,api_name,label,description,data_type,required,indexed,unique_value,lifecycle_state,index_state,default_semantics,predecessor_field_id,default_value,constraints,semantic) values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)",
+				arguments...)
+		case "update":
+			updateArguments := arguments[2:]
+			_, err = tx.Exec(ctx,
+				"update field_definition set object_id=$3,api_name=$4,label=$5,description=$6,data_type=$7,required=$8,indexed=$9,unique_value=$10,lifecycle_state=$11,index_state=$12,default_semantics=$13,predecessor_field_id=$14,default_value=$15,constraints=$16,semantic=$17,updated_at=clock_timestamp() where metadata_version_id=$1 and field_id=$2",
+				updateArguments...)
+		default:
+			_, err = tx.Exec(ctx,
+				"insert into field_definition(tenant_bucket,tenant_id,metadata_version_id,field_id,object_id,api_name,label,description,data_type,required,indexed,unique_value,lifecycle_state,index_state,default_semantics,predecessor_field_id,default_value,constraints,semantic) "+
+					"values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19) "+
+					"on conflict (tenant_bucket,tenant_id,metadata_version_id,field_id) do update set object_id=excluded.object_id,api_name=excluded.api_name,label=excluded.label,description=excluded.description,data_type=excluded.data_type,required=excluded.required,indexed=excluded.indexed,unique_value=excluded.unique_value,lifecycle_state=excluded.lifecycle_state,index_state=excluded.index_state,default_semantics=excluded.default_semantics,predecessor_field_id=excluded.predecessor_field_id,default_value=excluded.default_value,constraints=excluded.constraints,semantic=excluded.semantic,updated_at=clock_timestamp()",
+				arguments...)
+		}
 		if err != nil {
 			return err
 		}
@@ -242,6 +391,107 @@ func (service *Service) UpsertField(ctx context.Context, request capability.Requ
 	})
 	if err != nil {
 		return FieldDefinition{}, mapDatabaseError(err)
+	}
+	return result, nil
+}
+
+func (service *Service) GetField(ctx context.Context, request capability.Request, input FieldGetInput) (FieldDefinition, *capability.StableError) {
+	versionID, stableErr := parseMetadataID(input.MetadataVersionID, "metadata_version_id")
+	if stableErr != nil {
+		return FieldDefinition{}, stableErr
+	}
+	fieldID, stableErr := parseMetadataID(input.FieldID, "field_id")
+	if stableErr != nil {
+		return FieldDefinition{}, stableErr
+	}
+	tenantContext, stableErr := service.tenantContext(ctx, request)
+	if stableErr != nil {
+		return FieldDefinition{}, stableErr
+	}
+	var result FieldDefinition
+	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
+		return scanField(tx.QueryRow(ctx, "select "+fieldColumns+" from field_definition where metadata_version_id=$1 and field_id=$2", versionID, fieldID), &result)
+	})
+	if err != nil {
+		return FieldDefinition{}, mapDatabaseError(err)
+	}
+	return result, nil
+}
+
+func (service *Service) ListFields(ctx context.Context, request capability.Request, input FieldListInput) ([]FieldDefinition, *capability.StableError) {
+	versionID, stableErr := parseMetadataID(input.MetadataVersionID, "metadata_version_id")
+	if stableErr != nil {
+		return nil, stableErr
+	}
+	objectID, stableErr := optionalMetadataID(input.ObjectID, "object_id")
+	if stableErr != nil {
+		return nil, stableErr
+	}
+	tenantContext, stableErr := service.tenantContext(ctx, request)
+	if stableErr != nil {
+		return nil, stableErr
+	}
+	var result []FieldDefinition
+	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
+		var version Version
+		if err := scanVersion(tx.QueryRow(ctx, "select "+versionColumns+" from metadata_version where metadata_version_id=$1", versionID), &version); err != nil {
+			return err
+		}
+		if objectID == uuid.Nil {
+			var err error
+			result, err = loadFieldDefinitionsTx(ctx, tx, versionID)
+			return err
+		}
+		rows, err := tx.Query(ctx, "select "+fieldColumns+" from field_definition where metadata_version_id=$1 and object_id=$2 order by api_name,field_id", versionID, objectID)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		result = []FieldDefinition{}
+		for rows.Next() {
+			var field FieldDefinition
+			if err := scanField(rows, &field); err != nil {
+				return err
+			}
+			result = append(result, field)
+		}
+		return rows.Err()
+	})
+	if err != nil {
+		return nil, mapDatabaseError(err)
+	}
+	return result, nil
+}
+
+func (service *Service) DeleteField(ctx context.Context, request capability.Request, input FieldGetInput) (FieldDeleteResult, *capability.StableError) {
+	versionID, stableErr := parseMetadataID(input.MetadataVersionID, "metadata_version_id")
+	if stableErr != nil {
+		return FieldDeleteResult{}, stableErr
+	}
+	fieldID, stableErr := parseMetadataID(input.FieldID, "field_id")
+	if stableErr != nil {
+		return FieldDeleteResult{}, stableErr
+	}
+	tenantContext, stableErr := service.tenantContext(ctx, request)
+	if stableErr != nil {
+		return FieldDeleteResult{}, stableErr
+	}
+	result := FieldDeleteResult{Deleted: true}
+	err := database.WithTenant(ctx, service.pool, tenantContext, func(tx pgx.Tx) error {
+		if err := scanField(tx.QueryRow(ctx, "select "+fieldColumns+" from field_definition where metadata_version_id=$1 and field_id=$2", versionID, fieldID), &result.Field); err != nil {
+			return err
+		}
+		tag, err := tx.Exec(ctx, "delete from field_definition where metadata_version_id=$1 and field_id=$2", versionID, fieldID)
+		if err != nil {
+			return err
+		}
+		if tag.RowsAffected() == 0 {
+			return pgx.ErrNoRows
+		}
+		return nil
+	})
+	if err != nil {
+		return FieldDeleteResult{}, mapDatabaseError(err)
 	}
 	return result, nil
 }
@@ -572,6 +822,7 @@ var errFieldQuota = errors.New("object dynamic field quota exceeded")
 var errIndexedFieldQuota = errors.New("object indexed field quota exceeded")
 var errChangesetRequired = errors.New("subsequent metadata publication requires metadata.changeset.publish")
 var errFieldNameReserved = errors.New("field api_name is reserved by a tombstone")
+var errDefinitionAlreadyExists = errors.New("metadata definition already exists")
 
 func mapDatabaseError(err error) *capability.StableError {
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -579,6 +830,9 @@ func mapDatabaseError(err error) *capability.StableError {
 	}
 	if errors.Is(err, errPublishedVersion) || errors.Is(err, errEmptyMetadata) || errors.Is(err, errNoCurrentMetadata) || errors.Is(err, errFieldQuota) || errors.Is(err, errIndexedFieldQuota) || errors.Is(err, errChangesetRequired) || errors.Is(err, errFieldNameReserved) {
 		return preconditionError(err.Error())
+	}
+	if errors.Is(err, errDefinitionAlreadyExists) {
+		return &capability.StableError{Code: capability.CodeConflict, Message: err.Error()}
 	}
 	var postgresError *pgconn.PgError
 	if errors.As(err, &postgresError) {

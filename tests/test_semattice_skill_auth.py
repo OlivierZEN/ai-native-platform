@@ -200,7 +200,7 @@ class SematticeAuthenticationTests(unittest.TestCase):
             if len(columns) == 8 and columns[1].startswith("`") and columns[2] in {"v1", "v2"}:
                 capability_count += 1
                 catalog_scopes.add(columns[4].strip("`"))
-        self.assertEqual(capability_count, 57)
+        self.assertEqual(capability_count, 67)
         self.assertEqual(
             catalog_scopes,
             set(DEFAULT_CAPABILITY_SCOPES) | {"identity.principal.sync"},

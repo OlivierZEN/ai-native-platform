@@ -1,6 +1,6 @@
 # CloudCC Semattice（语义格）
 
-当前版本：[`1.6.0`](VERSION)
+当前版本：[`1.7.0`](VERSION)
 
 `cloudcc-semattice` 是帮助 AI 理解、设计并通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它先说明产品定位、业务模块和资源模型，再在用户授权后执行租户、元数据、记录、用量、授权、组织和共享等受控操作。
 
@@ -31,7 +31,7 @@
 
 ```bash
 git clone \
-  --branch v1.6.0 \
+  --branch v1.7.0 \
   --depth 1 \
   https://github.com/CloudCCAI/cloudcc-semattice.git \
   ~/.codex/skills/cloudcc-semattice
@@ -76,7 +76,7 @@ Skill 会复用当前登录，通过 `metadata.version.get-current` 自动发现
 ```bash
 cd ~/.codex/skills/cloudcc-semattice
 git fetch --tags
-git checkout v1.6.0
+git checkout v1.7.0
 ```
 
 `1.0.0` 将技能 ID 和调用名统一为 `cloudcc-semattice`。从 `0.x` 升级时，请安装到新目录并将调用名改为 `$cloudcc-semattice`；确认新技能可用后再移除旧目录。
@@ -96,6 +96,10 @@ git checkout v1.6.0
 `1.4.2` 增加 Windows 人工登录支持：refresh token 保存到当前用户的 Windows Credential Manager，短期会话缓存使用用户的 LocalAppData；Windows 上由 Skill 直接通过 Python 入口运行登录，不依赖 WSL。
 
 `1.5.0` 增加 `metadata.version.get-current` 工作流：全新登录后可从令牌绑定租户自动发现当前已发布元数据版本，并直接列出对象及其字段，不再要求调用方预先知道 `metadata_version_id`；同时将能力目录更新为 56 项，并区分人类 CLI 默认 scope 与服务身份专用 scope。
+
+`1.6.0` 增加 `metadata.changeset.approve` 的开发期手工确认流程，并保持其他高风险能力的可信审批门禁不变。
+
+`1.7.0` 增加对象与字段的显式 create/get/list/update/delete 能力；草稿删除仍由版本不可变约束保护，已发布定义只有在无关系、无记录或无字段存量值时才能通过 Changeset 删除。
 
 ## 目录结构
 

@@ -73,6 +73,21 @@ type ObjectUpsertInput struct {
 	Semantic          json.RawMessage `json:"semantic,omitempty"`
 }
 
+type ObjectGetInput struct {
+	MetadataVersionID string `json:"metadata_version_id"`
+	ObjectID          string `json:"object_id"`
+}
+
+type ObjectListInput struct {
+	MetadataVersionID string `json:"metadata_version_id"`
+}
+
+type ObjectDeleteResult struct {
+	Object            ObjectDefinition `json:"object"`
+	DeletedFieldCount int64            `json:"deleted_field_count"`
+	Deleted           bool             `json:"deleted"`
+}
+
 type FieldUpsertInput struct {
 	MetadataVersionID  string          `json:"metadata_version_id"`
 	FieldID            string          `json:"field_id,omitempty"`
@@ -91,6 +106,21 @@ type FieldUpsertInput struct {
 	DefaultValue       json.RawMessage `json:"default_value,omitempty"`
 	Constraints        json.RawMessage `json:"constraints,omitempty"`
 	Semantic           json.RawMessage `json:"semantic,omitempty"`
+}
+
+type FieldGetInput struct {
+	MetadataVersionID string `json:"metadata_version_id"`
+	FieldID           string `json:"field_id"`
+}
+
+type FieldListInput struct {
+	MetadataVersionID string `json:"metadata_version_id"`
+	ObjectID          string `json:"object_id,omitempty"`
+}
+
+type FieldDeleteResult struct {
+	Field   FieldDefinition `json:"field"`
+	Deleted bool            `json:"deleted"`
 }
 
 type RelationUpsertInput struct {

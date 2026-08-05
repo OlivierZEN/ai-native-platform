@@ -5,7 +5,7 @@
 - [使用说明](#使用说明)
 - [系统能力（1）](#系统能力1)
 - [租户能力（5）](#租户能力5)
-- [元数据能力（17）](#元数据能力17)
+- [元数据能力（27）](#元数据能力27)
 - [用量能力（3）](#用量能力3)
 - [记录能力（5）](#记录能力5)
 - [身份投影能力（4）](#身份投影能力4)
@@ -18,7 +18,7 @@
 
 ## 使用说明
 
-当前主程序在数据库模式下注册 56 项公开 Capability API。本目录来自注册表定义和输入 Schema，用于选择能力和准备输入；调用前仍应通过 `system.capability.list` 核对线上版本。
+当前主程序在数据库模式下注册 67 项公开 Capability API。本目录来自注册表定义和输入 Schema，用于选择能力和准备输入；调用前仍应通过 `system.capability.list` 核对线上版本。
 
 表格中的输入只列能力 `input` 对象。每次 HTTP 请求还必须包含顶层 `request_id`，写操作通常应包含顶层 `idempotency_key`。`高/异步/审批` 表示能力契约要求审批确认。开发阶段的 `metadata.version.publish` 和 `metadata.changeset.approve` 允许显式手工确认；其他输入含 `approval_id` 的能力仍要求该标识存在于可信令牌的 `approvals` 声明中。
 
@@ -40,12 +40,22 @@
 
 `tenant.provision` 虽然领域服务存在，但主程序显式不把它注册为公开能力；租户开通只能走内部 HMAC 接口，因此不计入本目录。
 
-## 元数据能力（17）
+## 元数据能力（27）
 
 | 能力 ID | 版本 | 用途 | scope | 风险/执行 | `input` |
 |---|---:|---|---|---|---|
 | `metadata.version.create` | v1 | 创建当前租户的下一草稿元数据版本 | `metadata.version.write` | 中/同步 | `{}` |
+| `metadata.object.create` | v1 | 在草稿版本创建对象定义；可选指定 `object_id` | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`api_name`、`label`；可选 `object_id`、`description`、`semantic` |
+| `metadata.object.get` | v1 | 按稳定 ID 获取一个对象定义 | `metadata.read` | 低/同步 | 必填 `metadata_version_id`、`object_id` |
+| `metadata.object.list` | v1 | 列出一个版本中的全部对象定义 | `metadata.read` | 低/同步 | 必填 `metadata_version_id` |
+| `metadata.object.update` | v1 | 完整替换草稿对象的可变属性 | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`object_id`、`api_name`、`label`；可选 `description`、`semantic` |
+| `metadata.object.delete` | v1 | 从草稿删除对象及其字段；存在关系引用时拒绝 | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`object_id` |
 | `metadata.object.upsert` | v1 | 在草稿版本创建或更新对象定义 | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`api_name`、`label`；可选 `object_id`、`description`、`semantic` |
+| `metadata.field.create` | v1 | 在草稿对象中创建字段定义；可选指定 `field_id` | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`object_id`、`api_name`、`label`、`data_type`；其他字段属性可选 |
+| `metadata.field.get` | v1 | 按稳定 ID 获取一个字段定义 | `metadata.read` | 低/同步 | 必填 `metadata_version_id`、`field_id` |
+| `metadata.field.list` | v1 | 列出版本中的字段，可按对象过滤 | `metadata.read` | 低/同步 | 必填 `metadata_version_id`；可选 `object_id` |
+| `metadata.field.update` | v1 | 完整替换草稿字段的可变属性 | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`field_id`、`object_id`、`api_name`、`label`、`data_type`；其他字段属性可选 |
+| `metadata.field.delete` | v1 | 从草稿删除字段定义 | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`field_id` |
 | `metadata.field.upsert` | v1 | 在草稿版本创建或更新字段定义 | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`object_id`、`api_name`、`label`、`data_type`；其他字段控制属性均可选 |
 | `metadata.relation.upsert` | v1 | 在草稿版本创建或更新对象关系 | `metadata.definition.write` | 中/同步 | 必填 `metadata_version_id`、`api_name`、`source_object_id`、`target_object_id`、`relation_type`、`delete_behavior`；可选 `relation_id`、`description`、`semantic` |
 | `metadata.version.publish` | v1 | 使用显式手动确认发布首个不可变元数据快照 | `metadata.publish` | 高/异步/审批 | 必填 `metadata_version_id`、非空手动 `approval_id`；发布整版定义并持久审计 |
@@ -144,9 +154,9 @@
 |---|---:|
 | 系统 | 1 |
 | 租户 | 5 |
-| 元数据 | 17 |
+| 元数据 | 27 |
 | 用量 | 3 |
 | 记录 | 5 |
 | 身份投影 | 4 |
 | 授权、组织和共享 | 21 |
-| 合计 | 57 |
+| 合计 | 67 |

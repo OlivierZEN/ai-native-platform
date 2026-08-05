@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FEAT-013 - 元数据核心模型</title><style>:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f7fb}*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-size:18px;line-height:1.68}main{width:100%;min-width:0;max-width:980px;margin:auto;padding:40px 24px 72px;background:#fff}h1,h2,h3{line-height:1.28;color:#101828;scroll-margin-top:20px}h1{font-size:clamp(2rem,5vw,3rem)}h2{margin-top:2.2rem;border-bottom:1px solid #dbe2ea;padding-bottom:.35rem}h3{margin-top:1.6rem}.summary,nav{padding:18px 20px;border-radius:12px;background:#eaf2ff;border-left:5px solid #2563eb}nav{margin:20px 0;background:#f8fafc;border-left-color:#64748b}nav ul{columns:2}a{color:#1d4ed8}code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}code{overflow-wrap:anywhere;word-break:break-word;background:#eef2f7;padding:.1em .3em;border-radius:4px}pre{overflow:auto;padding:16px;border-radius:10px;color:#f8fafc;background:#111827}pre code{background:transparent;padding:0}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{border:1px solid #d8dee8;padding:9px 11px;text-align:left;vertical-align:top}th{background:#f1f5f9}.summary,nav,p,li{max-width:100%;overflow-wrap:anywhere;word-break:break-word}li{margin:.42rem 0}@media(max-width:640px){body{font-size:17px}main{padding:24px 18px 52px}nav ul{columns:1}}</style></head><body><main><header><p>Semattice Feature Spec</p><div class="summary"><strong>阅读摘要：</strong>定义 Semattice 元数据版本、对象、字段与关系的当前核心模型；本次已补充对象和字段显式 CRUD 能力。</div></header><nav aria-label="目录"><strong>目录</strong><ul><li><a href="#目标">目标</a></li>
+<li><a href="#核心模型">核心模型</a></li>
+<li><a href="#不变量">不变量</a></li>
+<li><a href="#原子能力">原子能力</a></li>
+<li><a href="#验收标准">验收标准</a></li>
+<li><a href="#完成证据">完成证据</a></li>
+<li><a href="#非目标">非目标</a></li></ul></nav><h1 id="feat-013-元数据核心模型">FEAT-013 - 元数据核心模型</h1>
+<h2 id="目标">目标</h2>
+<p>实现租户级元数据版本、对象、字段、关系和不可变发布快照。元数据是 API/MCP/CLI 与 Agent 的平台协议，不依赖任何前端页面。所有定义在 draft 中变更，发布时确定性编译并以 digest 固化。</p>
+<h2 id="核心模型">核心模型</h2>
+<ul>
+<li><code>metadata_version</code>：UUIDv7、tenant、sequence、status(<code>draft|published|retired</code>)、snapshot、SHA-256 digest、created/published actor/time。</li>
+<li><code>object_definition</code>：UUIDv7、tenant/version、稳定 <code>api_name</code>、label/description、semantic JSON。</li>
+<li><code>field_definition</code>：UUIDv7、tenant/version/object、<code>api_name</code>、data type、required/indexed、default/constraints/semantic JSON。</li>
+<li><code>relation_definition</code>：UUIDv7、tenant/version、source/target object、<code>lookup|master_detail|many_to_many</code>、delete behavior、semantic JSON。</li>
+<li>所有 FK 携带 tenant/version 复合键，数据库拒绝跨租户或跨版本引用。</li>
+</ul>
+<h2 id="不变量">不变量</h2>
+<ul>
+<li>API name 使用小写字母开头的稳定 snake_case，在同一父范围唯一；保留平台前缀。</li>
+<li>字段类型首批支持 <code>text|number|boolean|date|datetime|uuid|json</code>，发布前验证 required/default、索引适配和关系完整性。</li>
+<li>published/retired 版本及其定义不可修改或删除；新变更必须创建新 draft。</li>
+<li>UUIDv7 在应用边界生成；数据库仍使用原生 <code>uuid</code>。</li>
+<li>编译按 API name、稳定 ID 排序，规范化 JSON；相同逻辑输入产生相同 snapshot bytes 和 SHA-256 digest。</li>
+<li>发布在单个 TenantContext 数据库事务中完成验证、快照、状态切换和审计；失败不产生半发布版本。</li>
+</ul>
+<h2 id="原子能力">原子能力</h2>
+<ul>
+<li><code>metadata.version.create</code></li>
+<li><code>metadata.object.upsert</code></li>
+<li><code>metadata.field.upsert</code></li>
+<li><code>metadata.object.create/get/list/update/delete</code></li>
+<li><code>metadata.field.create/get/list/update/delete</code></li>
+<li><code>metadata.relation.upsert</code></li>
+<li><code>metadata.version.publish</code></li>
+<li><code>metadata.version.get</code></li>
+</ul>
+<p>每项由同一 Capability Definition/Invoker 投影为功能 API、MCP Tool 和非交互 CLI。写能力要求元数据管理 scope；publish 为高风险能力，需要显式批准上下文和幂等 operation。</p>
+<h2 id="验收标准">验收标准</h2>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> migration 建立模型、复合约束、FORCE RLS 和 published 不可变触发器。</li>
+<li><input checked="" disabled="" type="checkbox"> 对象/字段/关系的合法创建、upsert 和引用测试通过。</li>
+<li><input checked="" disabled="" type="checkbox"> 跨租户、跨版本、重复 API name、非法类型和已发布修改全部拒绝。</li>
+<li><input checked="" disabled="" type="checkbox"> 输入顺序不同但逻辑相同得到相同 snapshot 和 digest。</li>
+<li><input checked="" disabled="" type="checkbox"> 发布失败原子回滚，成功后版本与定义不可变。</li>
+<li><input checked="" disabled="" type="checkbox"> 六个原子能力的 API/MCP/CLI 成功与稳定错误 parity 通过。</li>
+</ul>
+<h2 id="完成证据">完成证据</h2>
+<ul>
+<li>migration 2 创建 <code>metadata_version/object_definition/field_definition/relation_definition</code>，所有 FK 携带 tenant/version，四表 FORCE RLS，runtime 非 owner；数据库触发器拒绝 published/retired 版本及定义的后续修改。</li>
+<li>应用边界生成并验证 UUIDv7。测试复用同一组稳定定义 ID，在两个 draft 中以相反顺序写入，编译得到完全相同的 snapshot bytes 和 SHA-256 digest。</li>
+<li>对象、字段、lookup 关系、类型、API name、source/target 引用均有正向用例；跨租户、跨版本、重复 API name、非 UUIDv7 和已发布修改均返回稳定错误。</li>
+<li>publish 要求 JWT principal 中存在与输入匹配的独立 approval ID，在一个 TenantContext 事务内锁定 draft、编译、写 snapshot/digest、发布并更新租户当前版本；无 approval 和空版本不发布。</li>
+<li>六项定义进入同一 Registry；authenticated API、agent CLI、authenticated MCP 的 <code>metadata.version.get</code> 返回等价 Bundle，通用投影覆盖其余原子能力。</li>
+<li>从空 PostgreSQL 16 容器执行全部 migration 和测试通过；真实数据库全量 race、vet、module verification 和差异检查通过。</li>
+<li>独立 checker 首轮发现单 pool 预路由问题后，main 和测试均改为 control router + runtime data pool：只有 <code>ai_native_control</code> 可跨租户解析 route，所有元数据 CRUD/publish 仍由 <code>ai_native_runtime</code> 在事务级 TenantContext 和 FORCE RLS 下执行。</li>
+<li>第三轮独立 checker 确认 fresh migrations、双角色 main 接线、确定性快照、不可变发布和六项能力 API/MCP/CLI parity 全部 <code>PASS</code>。</li>
+</ul>
+<h2 id="非目标">非目标</h2>
+<p>Changeset 审批/回滚、包依赖、公式、权限、记录运行时和自动化分别由 TASK-014 及后续任务实现；本任务不提前扩展。</p>
+</main></body></html>

@@ -21,12 +21,82 @@ func CapabilityDefinitions(service *Service) []capability.Definition {
 			}
 			return service.CreateVersion(ctx, request)
 		}),
+		definition("metadata.object.create", "Create an object definition in a draft metadata version.", "medium", "metadata.definition.write", objectCreateSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input ObjectUpsertInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.CreateObject(ctx, request, input)
+		}),
+		definition("metadata.object.get", "Get one object definition from a metadata version by stable ID.", "low", "metadata.read", objectReferenceSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input ObjectGetInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.GetObject(ctx, request, input)
+		}),
+		definition("metadata.object.list", "List object definitions from a metadata version.", "low", "metadata.read", versionSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input ObjectListInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.ListObjects(ctx, request, input)
+		}),
+		definition("metadata.object.update", "Replace the mutable properties of an object definition in a draft metadata version.", "medium", "metadata.definition.write", objectUpdateSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input ObjectUpsertInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.UpdateObject(ctx, request, input)
+		}),
+		definition("metadata.object.delete", "Delete an object definition and its fields from a draft metadata version when no relation references it.", "medium", "metadata.definition.write", objectReferenceSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input ObjectGetInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.DeleteObject(ctx, request, input)
+		}),
 		definition("metadata.object.upsert", "Create or update an object definition in a draft metadata version.", "medium", "metadata.definition.write", objectSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
 			var input ObjectUpsertInput
 			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
 				return nil, stableErr
 			}
 			return service.UpsertObject(ctx, request, input)
+		}),
+		definition("metadata.field.create", "Create a field definition in a draft metadata version.", "medium", "metadata.definition.write", fieldCreateSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input FieldUpsertInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.CreateField(ctx, request, input)
+		}),
+		definition("metadata.field.get", "Get one field definition from a metadata version by stable ID.", "low", "metadata.read", fieldReferenceSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input FieldGetInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.GetField(ctx, request, input)
+		}),
+		definition("metadata.field.list", "List field definitions from a metadata version, optionally filtered by object ID.", "low", "metadata.read", fieldListSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input FieldListInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.ListFields(ctx, request, input)
+		}),
+		definition("metadata.field.update", "Replace the mutable properties of a field definition in a draft metadata version.", "medium", "metadata.definition.write", fieldUpdateSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input FieldUpsertInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.UpdateField(ctx, request, input)
+		}),
+		definition("metadata.field.delete", "Delete a field definition from a draft metadata version.", "medium", "metadata.definition.write", fieldReferenceSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+			var input FieldGetInput
+			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
+				return nil, stableErr
+			}
+			return service.DeleteField(ctx, request, input)
 		}),
 		definition("metadata.field.upsert", "Create or update a field definition in a draft metadata version.", "medium", "metadata.definition.write", fieldSchema(), synchronous(), func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
 			var input FieldUpsertInput
@@ -237,14 +307,56 @@ func changesetPurgeSchema() json.RawMessage {
 }
 
 func objectSchema() json.RawMessage {
-	return schema([]string{"metadata_version_id", "api_name", "label"}, map[string]any{
+	return objectMutationSchema([]string{"metadata_version_id", "api_name", "label"})
+}
+
+func objectCreateSchema() json.RawMessage {
+	return objectMutationSchema([]string{"metadata_version_id", "api_name", "label"})
+}
+
+func objectUpdateSchema() json.RawMessage {
+	return objectMutationSchema([]string{"metadata_version_id", "object_id", "api_name", "label"})
+}
+
+func objectReferenceSchema() json.RawMessage {
+	return schema([]string{"metadata_version_id", "object_id"}, map[string]any{
+		"metadata_version_id": uuidProperty(), "object_id": uuidProperty(),
+	})
+}
+
+func objectMutationSchema(required []string) json.RawMessage {
+	return schema(required, map[string]any{
 		"metadata_version_id": uuidProperty(), "object_id": uuidProperty(), "api_name": apiNameProperty(),
 		"label": stringProperty(), "description": map[string]any{"type": "string"}, "semantic": map[string]any{"type": "object"},
 	})
 }
 
 func fieldSchema() json.RawMessage {
-	return schema([]string{"metadata_version_id", "object_id", "api_name", "label", "data_type"}, map[string]any{
+	return fieldMutationSchema([]string{"metadata_version_id", "object_id", "api_name", "label", "data_type"})
+}
+
+func fieldCreateSchema() json.RawMessage {
+	return fieldMutationSchema([]string{"metadata_version_id", "object_id", "api_name", "label", "data_type"})
+}
+
+func fieldUpdateSchema() json.RawMessage {
+	return fieldMutationSchema([]string{"metadata_version_id", "field_id", "object_id", "api_name", "label", "data_type"})
+}
+
+func fieldReferenceSchema() json.RawMessage {
+	return schema([]string{"metadata_version_id", "field_id"}, map[string]any{
+		"metadata_version_id": uuidProperty(), "field_id": uuidProperty(),
+	})
+}
+
+func fieldListSchema() json.RawMessage {
+	return schema([]string{"metadata_version_id"}, map[string]any{
+		"metadata_version_id": uuidProperty(), "object_id": uuidProperty(),
+	})
+}
+
+func fieldMutationSchema(required []string) json.RawMessage {
+	return schema(required, map[string]any{
 		"metadata_version_id": uuidProperty(), "field_id": uuidProperty(), "object_id": uuidProperty(), "api_name": apiNameProperty(),
 		"label": stringProperty(), "description": map[string]any{"type": "string"},
 		"data_type": map[string]any{"type": "string", "enum": []string{"text", "number", "boolean", "date", "datetime", "uuid", "json"}},

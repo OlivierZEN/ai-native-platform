@@ -88,8 +88,13 @@ func (service *Service) validateChangesetTx(ctx context.Context, tx pgx.Tx, requ
 			return err
 		}
 	}
-	if err := validateObjectIdentityEvolution(baseObjects, candidateObjects); err != nil {
+	removedObjects, err := validateObjectIdentityEvolution(baseObjects, candidateObjects)
+	if err != nil {
 		return err
+	}
+	removedObjectIDs := make(map[string]struct{}, len(removedObjects))
+	for _, object := range removedObjects {
+		removedObjectIDs[object.ObjectID] = struct{}{}
 	}
 	candidateRelations, err := loadRelationDefinitionsTx(ctx, tx, candidateID)
 	if err != nil {
@@ -120,15 +125,21 @@ func (service *Service) validateChangesetTx(ctx context.Context, tx pgx.Tx, requ
 	if err := validateFieldQuotas(candidateFields, policy); err != nil {
 		return err
 	}
+	if err := validateDefinitionRemovalsTx(ctx, tx, removedObjects, removedObjectIDs, baseFields, candidateFields); err != nil {
+		return err
+	}
 
 	recordCounts, simulations, err := simulateObjectsTx(ctx, tx, candidateObjects, candidateFields)
 	if err != nil {
 		return err
 	}
-	changes, requiresBackfill, risk, buildingFields, err := planFieldEvolution(baseFields, candidateFields, recordCounts)
+	changes, requiresBackfill, risk, buildingFields, err := planFieldEvolution(baseFields, candidateFields, recordCounts, removedObjectIDs)
 	if err != nil {
 		return err
 	}
+	objectChanges, objectRisk := planObjectEvolution(baseObjects, candidateObjects, removedObjects, recordCounts)
+	changes = append(changes, objectChanges...)
+	risk = mergeMetadataRisk(risk, objectRisk)
 	for _, fieldID := range buildingFields {
 		if _, err := tx.Exec(ctx,
 			"update field_definition set index_state='building',updated_at=clock_timestamp() where metadata_version_id=$1 and field_id=$2",
@@ -527,21 +538,23 @@ func loadRelationDefinitionsTx(ctx context.Context, tx pgx.Tx, versionID uuid.UU
 	return result, rows.Err()
 }
 
-func validateObjectIdentityEvolution(base, candidate []ObjectDefinition) error {
+func validateObjectIdentityEvolution(base, candidate []ObjectDefinition) ([]ObjectDefinition, error) {
 	candidateByID := make(map[string]ObjectDefinition, len(candidate))
 	for _, object := range candidate {
 		candidateByID[object.ObjectID] = object
 	}
+	removed := []ObjectDefinition{}
 	for _, previous := range base {
 		next, exists := candidateByID[previous.ObjectID]
 		if !exists {
-			return fmt.Errorf("%w: object %s cannot disappear from a candidate version", errUnsafeFieldEvolution, previous.APIName)
+			removed = append(removed, previous)
+			continue
 		}
 		if previous.APIName != next.APIName {
-			return fmt.Errorf("%w: object api_name is immutable for %s", errUnsafeFieldEvolution, previous.ObjectID)
+			return nil, fmt.Errorf("%w: object api_name is immutable for %s", errUnsafeFieldEvolution, previous.ObjectID)
 		}
 	}
-	return nil
+	return removed, nil
 }
 
 func validateRelationIdentityEvolution(base, candidate []RelationDefinition) error {
@@ -613,7 +626,73 @@ func simulateObjectsTx(ctx context.Context, tx pgx.Tx, objects []ObjectDefinitio
 	return counts, result, nil
 }
 
-func planFieldEvolution(base, candidate []FieldDefinition, recordCounts map[string]int64) ([]ChangesetChange, bool, string, []string, error) {
+func validateDefinitionRemovalsTx(ctx context.Context, tx pgx.Tx, removedObjects []ObjectDefinition, removedObjectIDs map[string]struct{}, baseFields, candidateFields []FieldDefinition) error {
+	for _, object := range removedObjects {
+		var count int64
+		if err := tx.QueryRow(ctx, "select count(*) from object_record where object_id=$1", object.ObjectID).Scan(&count); err != nil {
+			return err
+		}
+		if count != 0 {
+			return fmt.Errorf("%w: object %s still has %d records", errDefinitionRemovalBlocked, object.APIName, count)
+		}
+	}
+	candidateByID := make(map[string]struct{}, len(candidateFields))
+	for _, field := range candidateFields {
+		candidateByID[field.FieldID] = struct{}{}
+	}
+	for _, field := range baseFields {
+		if _, exists := candidateByID[field.FieldID]; exists {
+			continue
+		}
+		if _, objectRemoved := removedObjectIDs[field.ObjectID]; objectRemoved {
+			continue
+		}
+		var count int64
+		if err := tx.QueryRow(ctx, "select count(*) from object_record where object_id=$1 and data ? $2", field.ObjectID, field.APIName).Scan(&count); err != nil {
+			return err
+		}
+		if count != 0 {
+			return fmt.Errorf("%w: field %s still has values in %d records", errDefinitionRemovalBlocked, field.APIName, count)
+		}
+	}
+	return nil
+}
+
+func planObjectEvolution(base, candidate, removed []ObjectDefinition, recordCounts map[string]int64) ([]ChangesetChange, string) {
+	baseByID := make(map[string]ObjectDefinition, len(base))
+	for _, object := range base {
+		baseByID[object.ObjectID] = object
+	}
+	changes := make([]ChangesetChange, 0)
+	risk := "low"
+	for _, object := range candidate {
+		previous, exists := baseByID[object.ObjectID]
+		if !exists {
+			changes = append(changes, ChangesetChange{ObjectID: object.ObjectID, APIName: object.APIName, Kind: "object_added", EligibleRecords: recordCounts[object.ObjectID], CoreSupported: true})
+			risk = mergeMetadataRisk(risk, "medium")
+			continue
+		}
+		if previous.Label != object.Label || previous.Description != object.Description || !bytes.Equal(previous.Semantic, object.Semantic) {
+			changes = append(changes, ChangesetChange{ObjectID: object.ObjectID, APIName: object.APIName, Kind: "object_updated", EligibleRecords: recordCounts[object.ObjectID], CoreSupported: true})
+			risk = mergeMetadataRisk(risk, "medium")
+		}
+	}
+	for _, object := range removed {
+		changes = append(changes, ChangesetChange{ObjectID: object.ObjectID, APIName: object.APIName, Kind: "object_removed", EligibleRecords: 0, CoreSupported: true})
+		risk = "high"
+	}
+	return changes, risk
+}
+
+func mergeMetadataRisk(left, right string) string {
+	rank := map[string]int{"low": 0, "medium": 1, "high": 2}
+	if rank[right] > rank[left] {
+		return right
+	}
+	return left
+}
+
+func planFieldEvolution(base, candidate []FieldDefinition, recordCounts map[string]int64, removedObjectIDs map[string]struct{}) ([]ChangesetChange, bool, string, []string, error) {
 	baseByID := make(map[string]FieldDefinition, len(base))
 	candidateByID := make(map[string]FieldDefinition, len(candidate))
 	for _, field := range base {
@@ -622,14 +701,18 @@ func planFieldEvolution(base, candidate []FieldDefinition, recordCounts map[stri
 	for _, field := range candidate {
 		candidateByID[field.FieldID] = field
 	}
+	changes := []ChangesetChange{}
+	risk := "low"
 	for _, previous := range base {
 		if _, exists := candidateByID[previous.FieldID]; !exists {
-			return nil, false, "", nil, fmt.Errorf("%w: field %s must transition through lifecycle states before removal", errUnsafeFieldEvolution, previous.APIName)
+			if _, objectRemoved := removedObjectIDs[previous.ObjectID]; objectRemoved {
+				continue
+			}
+			changes = append(changes, ChangesetChange{ObjectID: previous.ObjectID, FieldID: previous.FieldID, APIName: previous.APIName, Kind: "field_removed", EligibleRecords: 0, CoreSupported: true})
+			risk = "high"
 		}
 	}
-	changes := []ChangesetChange{}
 	requiresBackfill := false
-	risk := "low"
 	building := []string{}
 	for _, next := range candidate {
 		previous, exists := baseByID[next.FieldID]
@@ -818,6 +901,7 @@ var (
 	errChangesetRequiresPurge        = errors.New("changeset contains destructive field evolution and requires purge capability")
 	errChangesetNotDestructive       = errors.New("changeset does not contain destructive field evolution")
 	errUnsafeFieldEvolution          = errors.New("unsafe metadata evolution")
+	errDefinitionRemovalBlocked      = errors.New("metadata definition removal is blocked")
 )
 
 func mapChangesetError(err error) *capability.StableError {
@@ -829,6 +913,7 @@ func mapChangesetError(err error) *capability.StableError {
 		errChangesetBackfillRequired, errChangesetTransition, errChangesetRollbackUnavailable, errChangesetDestructiveRollback,
 		errChangesetBaseChanged, errChangesetConcurrent, errChangesetExecutionUnavailable, errChangesetRequiresPurge,
 		errChangesetNotDestructive, errUnsafeFieldEvolution, errEmptyMetadata, errFieldQuota, errIndexedFieldQuota,
+		errDefinitionRemovalBlocked,
 	} {
 		if errors.Is(err, expected) {
 			return preconditionError(err.Error())

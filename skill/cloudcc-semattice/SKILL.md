@@ -27,7 +27,7 @@ description: 理解、设计和通过统一 HTTPS Capability API 操作 CloudCC 
 5. 进入实施前，明确本地、预发布或生产环境。目标环境不清晰时，不执行写操作。
 6. 涉及人工登录或令牌续期时，读取 [登录与短期 OACT](references/authentication.md)；涉及认证边界、请求格式、错误处理或生产操作时，读取 [API 调用契约](references/api-contract.md)。
 7. 首次连接或怀疑接口变化时，通过 `system.capability.list` 获取线上能力、scope、风险、执行模式及输入 Schema；技能内目录用于规划，线上返回用于调用前最终校验。
-8. 根据任务读取 [API 能力目录](references/api-catalog.md) 中对应分类。目录覆盖当前主程序注册的全部 56 项公开 Capability API。
+8. 根据任务读取 [API 能力目录](references/api-catalog.md) 中对应分类。目录覆盖当前主程序注册的全部 67 项公开 Capability API。
 9. 执行组合操作时，读取 [常用操作流程](references/capability-workflows.md)，并按依赖顺序每次调用一个原子能力。
 10. 构造最小请求正文。只提交 `request_id`、可选 `idempotency_key` 和 `input`；不要提交 `tenant_id`、`actor` 或 `scopes`，这些身份信息必须由短期 Bearer 令牌绑定。
 11. 写操作前先用脚本 `--dry-run` 展示 URL 和正文。只有用户已经授权该操作且环境明确时才实际调用。
@@ -97,6 +97,6 @@ python3 scripts/semattice_api.py \
 ## 事实边界
 
 - 以当前主程序注册表、Capability Schema 和运行时代码为当前事实；历史 Spec 和演示控制台数据不作为可调用能力依据。
-- `tenant.provision` 没有注册为公开 Capability API，不计入 56 项公开能力。
+- `tenant.provision` 没有注册为公开 Capability API，不计入 67 项公开能力。
 - 管理控制台 `/console/api/*` 返回只读模拟治理数据，不可用于验证真实业务状态。
 - `/mcp` 不属于本技能的调用方式，也不需要配置任何 MCP 依赖。

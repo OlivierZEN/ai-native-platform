@@ -136,6 +136,7 @@ Changeset 至少保存：`changeset_id`、tenant、base/candidate metadata versi
 - approved/backfilling/ready 候选存在时，新 create/update 会投影候选字段、唯一值、typed index 和 relation edge；普通读取仍只暴露当前 active 元数据视图。
 - coverage 同时核对记录版本、required、typed index、unique、reference 和 purge key，只有 100% 覆盖且无失败时才能进入 `ready`；publish 在切换指针前持有 tenant route 排他锁并重新验证 coverage/base pointer。
 - API name/data type 不能在原 `field_id` 上修改；技术改名或改类型通过新字段加 `predecessor_field_id` 显式复制/转换。删除必须沿单向 lifecycle 进入 purging/tombstone，物理删除 JSON key 和全部派生状态，墓碑名称不可复用，之后只允许前向修复。
+- FEAT-054 增加无数据定义的受控删除例外：对象没有任何记录且没有关系、字段在任何记录中都不存在对应 API key 时，可从候选版本直接移除；Changeset 将其标记为高风险。存在数据的字段仍必须沿 lifecycle 进入 purging/tombstone，本例外不得绕过 purge。
 - service tier 配额在 Changeset validate 时以 `policy_version` 冻结；standard/8 GiB 使用 500 字段与 20 active index 上限，dedicated-16g 使用 500/40。记录写入执行 256 KiB 总尺寸、64 KiB 单 JSON 字段、8 层和 1,000 数组元素硬限制，并在 API/MCP/CLI 返回一致稳定错误。
 - `TASK-017` 的通用异步调度、死信和跨能力 worker 平台以及 `TASK-019` 的 8/16 GiB 最终容量认证仍不属于本任务；本任务已提供其可重复调用的有界批次能力与状态证据。
 
