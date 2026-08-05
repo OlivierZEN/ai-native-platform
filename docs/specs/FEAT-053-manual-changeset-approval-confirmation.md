@@ -2,12 +2,12 @@
 kind: feature-spec
 feature_id: FEAT-053
 title: Development manual confirmation for metadata Changesets
-status: implemented_pending_production_verification
+status: verified
 owner_role: backend-agent
 task_ids: none
 related_decisions: ADR-003
 related_issues: none
-updated_at: 2026-08-05T00:00:00+08:00
+updated_at: 2026-08-05T10:11:00+08:00
 updated_by: codex
 ---
 
@@ -63,5 +63,7 @@ updated_by: codex
 
 ## 实现进展
 
-- 代码、测试和公开契约已修改。
-- 生产发布与真实 Changeset 验证待执行。
+- 提交 `5f5bdcea97d2` 已发布为 `/opt/semattice/releases/20260805T020849Z-web-oidc-5f5bdcea97d2`；Semattice、Nginx 和 PostgreSQL 均为 active，Semattice `NRestarts=0`、发布后 warning 日志为 0。
+- 线上能力发现已返回新的显式手工 Changeset 审批描述，审计标识为 `audit:req-3228301b-cdfe-488a-860c-1235afe75bb4`。
+- Changeset `019fcd45-5e1f-77fb-86b2-792f7f4b2d6b` 使用手工确认 `manual-commerce-changeset-20260805-019fcd45` 审批成功，审批审计标识为 `audit:req-69a6464e-a1a3-4d04-ad68-95a352da869a`。
+- 同一 Changeset 随后发布为 `active`，发布审计标识为 `audit:req-04f7dcf4-0c58-44bc-8920-1661bec27855`。当前版本回读为 `019fcd43-8fe1-7e0d-bd71-f0757aa91af1`、sequence 3、snapshot digest `8fc42d39c0eab1d2fe44cb4af9f324964cc60fa1a4607d85b56600ea3f0ae030`，包含 28 个对象、391 个字段和 70 个关系。
