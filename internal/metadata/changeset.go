@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/OlivierZEN/ai-native-platform/internal/capability"
 	"github.com/OlivierZEN/ai-native-platform/internal/database"
@@ -225,8 +226,9 @@ func (service *Service) ApproveChangeset(ctx context.Context, request capability
 	if stableErr != nil {
 		return Changeset{}, stableErr
 	}
-	if input.ApprovalID == "" || request.Principal == nil || !contains(request.Principal.Approvals, input.ApprovalID) {
-		return Changeset{}, preconditionError("a verified independent approval is required")
+	approvalID := strings.TrimSpace(input.ApprovalID)
+	if approvalID == "" {
+		return Changeset{}, preconditionError("a manual approval id is required")
 	}
 	tenant, stableErr := service.tenantContext(ctx, request)
 	if stableErr != nil {
@@ -235,11 +237,11 @@ func (service *Service) ApproveChangeset(ctx context.Context, request capability
 	var result Changeset
 	err := database.WithTenant(ctx, service.pool, tenant, func(tx pgx.Tx) error {
 		var state string
-		var approvalID string
-		if err := tx.QueryRow(ctx, "select state,coalesce(approval_id,'') from metadata_changeset where changeset_id=$1 for update", changesetID).Scan(&state, &approvalID); err != nil {
+		var storedApprovalID string
+		if err := tx.QueryRow(ctx, "select state,coalesce(approval_id,'') from metadata_changeset where changeset_id=$1 for update", changesetID).Scan(&state, &storedApprovalID); err != nil {
 			return err
 		}
-		if (state == "approved" || state == "backfilling" || state == "ready" || state == "active") && approvalID == input.ApprovalID {
+		if (state == "approved" || state == "backfilling" || state == "ready" || state == "active") && storedApprovalID == approvalID {
 			return scanChangeset(tx.QueryRow(ctx, "select "+changesetColumns+" from metadata_changeset where changeset_id=$1", changesetID), &result)
 		}
 		if state != "validated" {
@@ -247,11 +249,13 @@ func (service *Service) ApproveChangeset(ctx context.Context, request capability
 		}
 		if _, err := tx.Exec(ctx,
 			"update metadata_changeset set state='approved',approval_id=$2,approved_by=$3,approved_at=clock_timestamp(),updated_at=clock_timestamp() where changeset_id=$1",
-			changesetID, input.ApprovalID, request.Actor.ID,
+			changesetID, approvalID, request.Actor.ID,
 		); err != nil {
 			return err
 		}
-		if err := insertMetadataAudit(ctx, tx, request, tenant, changesetID.String(), "approved", map[string]any{"approval_id": input.ApprovalID}); err != nil {
+		if err := insertMetadataAudit(ctx, tx, request, tenant, changesetID.String(), "approved", map[string]any{
+			"approval_id": approvalID, "approval_mode": "manual",
+		}); err != nil {
 			return err
 		}
 		return scanChangeset(tx.QueryRow(ctx, "select "+changesetColumns+" from metadata_changeset where changeset_id=$1", changesetID), &result)

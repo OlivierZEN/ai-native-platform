@@ -1,6 +1,6 @@
 # CloudCC Semattice（语义格）
 
-当前版本：[`1.5.0`](VERSION)
+当前版本：[`1.6.0`](VERSION)
 
 `cloudcc-semattice` 是帮助 AI 理解、设计并通过统一 HTTPS Capability API 安全操作 CloudCC Semattice（语义格）的 Codex 技能。它先说明产品定位、业务模块和资源模型，再在用户授权后执行租户、元数据、记录、用量、授权、组织和共享等受控操作。
 
@@ -31,7 +31,7 @@
 
 ```bash
 git clone \
-  --branch v1.5.0 \
+  --branch v1.6.0 \
   --depth 1 \
   https://github.com/CloudCCAI/cloudcc-semattice.git \
   ~/.codex/skills/cloudcc-semattice
@@ -76,7 +76,7 @@ Skill 会复用当前登录，通过 `metadata.version.get-current` 自动发现
 ```bash
 cd ~/.codex/skills/cloudcc-semattice
 git fetch --tags
-git checkout v1.5.0
+git checkout v1.6.0
 ```
 
 `1.0.0` 将技能 ID 和调用名统一为 `cloudcc-semattice`。从 `0.x` 升级时，请安装到新目录并将调用名改为 `$cloudcc-semattice`；确认新技能可用后再移除旧目录。

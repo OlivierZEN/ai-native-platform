@@ -146,7 +146,7 @@ python3 scripts/semattice_api.py \
 1. 创建候选草稿并完成对象、字段和关系修改。
 2. 调用 `metadata.changeset.validate`，保存 `changeset_id`、风险和执行计划。
 3. 调用 `metadata.changeset.simulate`，向用户展示记录数、预计索引行和破坏性影响。
-4. 需要审批时，通过外部治理流程取得真实审批标识，再调用 `metadata.changeset.approve`。
+4. 开发阶段在用户核对模拟结果并明确授权后，生成稳定、非空的手工确认标识并调用 `metadata.changeset.approve`；保存服务端返回的审计标识。该例外不适用于 purge、rollback 或其他高风险能力。
 5. 如果 `requires_backfill=true`，重复调用 `metadata.changeset.backfill`，每次使用有界 `batch_size`，直到没有剩余记录。
 6. 调用 `metadata.changeset.validate-coverage`。
 7. 只有状态满足发布前置条件时，调用 `metadata.changeset.publish`。
@@ -233,7 +233,7 @@ python3 scripts/semattice_api.py \
 - 可复用受让者集合：先创建 `authorization.group.create`，再用 `authorization.group.set-membership` 管理成员。
 - 按数据组织批量共享：创建 `record.sharing-rule.upsert`，然后重复 `record.sharing-rule.refresh` 直到投影完成；失败时使用 `record.sharing-rule.retry`。
 
-除 `metadata.version.publish` 的首版本手动确认外，每个要求 `approval_id` 的高风险调用都必须携带可信令牌中已验证的真实审批标识；调用后保存 `audit_id` 和资源 ID。
+除 `metadata.version.publish` 首版本发布和 `metadata.changeset.approve` 的开发期手工确认外，每个要求 `approval_id` 的高风险调用都必须携带可信令牌中已验证的真实审批标识；调用后保存 `audit_id` 和资源 ID。
 
 ## 查看租户和用量
 

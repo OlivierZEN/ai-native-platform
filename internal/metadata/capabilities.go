@@ -84,7 +84,7 @@ func CapabilityDefinitions(service *Service) []capability.Definition {
 			}
 			return service.GetChangeset(ctx, request, input)
 		}),
-		definition("metadata.changeset.approve", "Attach a verified independent approval to a validated metadata changeset.", "high", "metadata.changeset.approve", changesetApproveSchema(), capability.ExecutionPolicy{Mode: capability.ExecutionAsynchronous, ApprovalRequired: true}, func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
+		definition("metadata.changeset.approve", "Approve a validated metadata changeset with an explicit manual approval ID.", "high", "metadata.changeset.approve", changesetApproveSchema(), capability.ExecutionPolicy{Mode: capability.ExecutionAsynchronous, ApprovalRequired: true}, func(ctx context.Context, request capability.Request) (any, *capability.StableError) {
 			var input ChangesetApproveInput
 			if stableErr := decodeInput(request.Input, &input); stableErr != nil {
 				return nil, stableErr

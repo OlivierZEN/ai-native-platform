@@ -20,7 +20,7 @@
 
 当前主程序在数据库模式下注册 56 项公开 Capability API。本目录来自注册表定义和输入 Schema，用于选择能力和准备输入；调用前仍应通过 `system.capability.list` 核对线上版本。
 
-表格中的输入只列能力 `input` 对象。每次 HTTP 请求还必须包含顶层 `request_id`，写操作通常应包含顶层 `idempotency_key`。`高/异步/审批` 表示能力契约要求审批确认。`metadata.version.publish` 是唯一的手动确认例外；其他输入含 `approval_id` 的能力仍要求该标识存在于可信令牌的 `approvals` 声明中。
+表格中的输入只列能力 `input` 对象。每次 HTTP 请求还必须包含顶层 `request_id`，写操作通常应包含顶层 `idempotency_key`。`高/异步/审批` 表示能力契约要求审批确认。开发阶段的 `metadata.version.publish` 和 `metadata.changeset.approve` 允许显式手工确认；其他输入含 `approval_id` 的能力仍要求该标识存在于可信令牌的 `approvals` 声明中。
 
 ## 系统能力（1）
 
@@ -54,7 +54,7 @@
 | `metadata.changeset.validate` | v1 | 校验候选版本、冻结配额快照并生成演进计划 | `metadata.changeset.write` | 中/同步 | 必填 `candidate_metadata_version_id` |
 | `metadata.changeset.simulate` | v1 | 查看冻结的影响模拟和执行计划 | `metadata.changeset.read` | 低/同步 | 必填 `changeset_id` |
 | `metadata.changeset.get-status` | v1 | 查看变更集状态、覆盖率、错误、审批和激活状态 | `metadata.changeset.read` | 低/同步 | 必填 `changeset_id` |
-| `metadata.changeset.approve` | v1 | 将已验证的独立审批附加到已校验变更集 | `metadata.changeset.approve` | 高/异步/审批 | 必填 `changeset_id`、`approval_id` |
+| `metadata.changeset.approve` | v1 | 使用显式手工确认审批已校验变更集 | `metadata.changeset.approve` | 高/异步/审批 | 必填 `changeset_id`、非空手工 `approval_id`；持久审计确认模式 |
 | `metadata.changeset.publish` | v1 | 在演进工作完成后原子激活已审批变更集 | `metadata.changeset.publish` | 高/异步/审批 | 必填 `changeset_id` |
 | `metadata.changeset.backfill` | v1 | 分批执行非破坏性的记录和派生状态回填 | `metadata.changeset.execute` | 中/同步 | 必填 `changeset_id`；可选 `batch_size`，1 至 1000 |
 | `metadata.changeset.validate-coverage` | v1 | 冻结租户写入并验证记录、索引、唯一性和引用覆盖率 | `metadata.changeset.execute` | 中/同步 | 必填 `changeset_id` |

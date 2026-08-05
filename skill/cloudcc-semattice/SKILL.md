@@ -88,8 +88,8 @@ python3 scripts/semattice_api.py \
 - 为完成用户请求可以执行必要的能力发现和只读操作。
 - 只有用户明确要求修改且环境无歧义时，才执行创建或更新。
 - 删除、清除、发布、回滚、租户生命周期、权限、角色、组织合并和共享操作属于高影响操作。调用前展示准确能力 ID、资源目标和主要输入，并取得明确授权；用户在当前请求中已明确授权完全相同操作时无需重复确认。
-- `metadata.version.publish` 是唯一例外：首次直接发布时，用户可明确提供非空的手动 `approval_id`；调用前必须回读并展示整个草稿版本，因为该能力发布的是整版对象、字段和关系。服务端会持久审计该标识，但不要求它存在于令牌 `approvals` 声明中。
-- 其他能力要求 `approval_id` 时，只能使用令牌 `approvals` 声明中已经验证的真实审批标识。禁止生成、猜测或替换审批标识。
+- 开发阶段的元数据发布采用手工确认：`metadata.version.publish` 首次直接发布和 `metadata.changeset.approve` 均接受用户明确提供的非空手动 `approval_id`。调用前必须回读并展示整个草稿版本或 Changeset 模拟结果；服务端会持久审计该标识和 `approval_mode=manual`，但不要求它存在于令牌 `approvals` 声明中。
+- 除上述两个元数据能力外，其他能力要求 `approval_id` 时，只能使用令牌 `approvals` 声明中已经验证的真实审批标识。禁止生成、猜测或替换审批标识。
 - `tenant.decommission` 会创建 `pending_approval` 操作，不代表租户已经完成退役。
 - 收到 `UNAUTHORIZED` 时报告所需 scope，禁止自行扩大令牌权限或切换身份、公司、租户和环境。
 - 禁止尝试通过登录或 Capability请求创建租户；Keycloak Organization必须已经映射到现有 Semattice tenant。

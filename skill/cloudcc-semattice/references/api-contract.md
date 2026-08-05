@@ -99,7 +99,7 @@ HTTP 与稳定错误码映射：
 
 - `low`：只读或低影响操作，通常同步执行。
 - `medium`：创建或更新操作，必须由用户授权且环境明确。
-- `high`：契约标记为异步并要求审批。`metadata.version.publish` 的首版本直接发布采用手动确认，要求用户明确提供非空 `approval_id` 并由服务端持久审计，不要求该值存在于可信令牌声明中。其他输入包含 `approval_id` 的高风险能力仍要求该值存在于可信令牌的 `approvals` 声明中。
+- `high`：契约标记为异步并要求审批。开发阶段的 `metadata.version.publish` 首版本直接发布和 `metadata.changeset.approve` 采用手动确认，要求用户明确提供非空 `approval_id`，并由服务端持久审计 `approval_id` 与 `approval_mode=manual`；这两个能力不要求该值存在于可信令牌声明中。其他输入包含 `approval_id` 的高风险能力仍要求该值存在于可信令牌的 `approvals` 声明中。
 
 不要根据“HTTP 返回成功”推断长任务已经完成。检查结果中的业务状态，例如 `pending_approval`、变更集 `state`、共享规则 `projection_state` 或操作 `completed`。
 

@@ -221,10 +221,27 @@ func TestChangesetLifecyclePublicationRollbackAndAdapterParity(t *testing.T) {
 	}
 	assertChangesetAdapterParity(t, invoker, principal, changeset.ChangesetID)
 
-	approved := invokeMetadata(t, invoker, principal, "metadata.changeset.approve", map[string]any{
-		"changeset_id": changeset.ChangesetID, "approval_id": "approval-metadata-1",
+	manualPrincipal := principal
+	manualPrincipal.Approvals = nil
+	blankApproval := invokeMetadata(t, invoker, manualPrincipal, "metadata.changeset.approve", map[string]any{
+		"changeset_id": changeset.ChangesetID, "approval_id": "   ",
+	})
+	assertMetadataError(t, blankApproval, capability.CodeFailedPrecondition)
+	const manualChangesetApprovalID = "manual-changeset-confirmation"
+	approved := invokeMetadata(t, invoker, manualPrincipal, "metadata.changeset.approve", map[string]any{
+		"changeset_id": changeset.ChangesetID, "approval_id": manualChangesetApprovalID,
 	})
 	requireMetadataSuccess(t, approved)
+	var auditedApprovalID, approvalMode string
+	if err := control.QueryRow(context.Background(),
+		"select event_data->>'approval_id',event_data->>'approval_mode' from audit_event where capability_id='metadata.changeset.approve' and operation_id=$1 and status='approved'",
+		changeset.ChangesetID,
+	).Scan(&auditedApprovalID, &approvalMode); err != nil {
+		t.Fatalf("read changeset approval audit: %v", err)
+	}
+	if auditedApprovalID != manualChangesetApprovalID || approvalMode != "manual" {
+		t.Fatalf("changeset approval audit approval=%q mode=%q", auditedApprovalID, approvalMode)
+	}
 	active := invokeMetadata(t, invoker, principal, "metadata.changeset.publish", map[string]any{"changeset_id": changeset.ChangesetID})
 	requireMetadataSuccess(t, active)
 	if err := json.Unmarshal(active.Result, &changeset); err != nil || changeset.State != "active" {
