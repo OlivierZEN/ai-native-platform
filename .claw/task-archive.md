@@ -1,8 +1,8 @@
 ---
 kind: task-archive
 version: 3
-updated_at: 2026-08-04T07:20:13Z
-updated_by: root after archiving TASK-060
+updated_at: 2026-08-05T06:27:00Z
+updated_by: codex after archiving TASK-062
 archive_status: active
 ---
 
@@ -11,6 +11,13 @@ archive_status: active
 `task-archive.md` 保存从 `task-board.md` 中移出的已完成或已取消任务卡。
 
 ## Archived Tasks
+
+### TASK-062 - Exchange commerce Keycloak tokens for Semattice OACT
+
+- status: `done`
+- owner_role: `integration-agent`
+- spec_path: `docs/specs/FEAT-055-commerce-keycloak-token-exchange.md`
+- handoff: Release `20260805T061911Z-web-oidc-66ab21f50d5f` is active. Human commerce clients are server-allowlisted, the responsible commerce service binding passed raw-token rejection, OACT exchange and real product query smoke, and rollback artifacts are recorded in FEAT-055 and devops.md.
 
 ### TASK-060 - Add current metadata discovery and publish Skill v1.5.0
 

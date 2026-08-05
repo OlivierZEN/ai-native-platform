@@ -1,13 +1,21 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-04T07:20:00Z
-updated_by: ai after authorization delegation hardening verification
-last_run_at: 2026-08-04T07:20:00Z
+updated_at: 2026-08-05T06:27:00Z
+updated_by: codex after commerce token exchange verification
+last_run_at: 2026-08-05T06:27:00Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-05 TASK-062 商城 Keycloak Token 换票生产验证
+
+- `go test ./...`、配置/身份/换票/主入口定向 race、`go vet ./...`、Keycloak 脚本语法、状态 validator 和 `git diff --check` 通过。
+- `storefront-web`、`admin-web` 与 `commerce-service` 均精确配置一个 `semattice-api-audience` mapper；人类 Client 使用 Organization claim，服务 Client 只依赖服务器固定 company/owner 绑定。
+- 真实 `commerce-service` Client Credentials token 的 `azp` 与 audience 检查通过；原始 Keycloak token 直调 `runtime.record.query` 返回 401，经 `/v1/auth/token` 换得 `principal_type=SERVICE`、固定 client/company/owner 的 OACT。
+- SERVICE OACT 调用 `runtime.record.query` 返回 HTTP 200 / `succeeded` / 1 条商品，审计标识 `audit:req-commerce-service-product-smoke`。
+- 生产 release `/opt/semattice/releases/20260805T061911Z-web-oidc-66ab21f50d5f` 的 SHA-256 为 `6e3f47af5f57e2c1b8f18cac5903e2bfc56b26567f1e866e7d89d2a2246b4e18`；四项服务 active、Semattice `NRestarts=0`、warning 日志为空。
 
 ## 2026-08-04 TASK-059 精确委托与正式撤销能力验证
 

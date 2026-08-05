@@ -2,13 +2,13 @@
 kind: feature-spec
 feature_id: FEAT-055
 title: Commerce Keycloak token exchange
-status: in_implementation
+status: verified
 owner_role: integration-agent
 task_ids: TASK-062
 related_decisions: ADR-014
 related_issues: none
-updated_at: 2026-08-05T06:05:00Z
-updated_by: codex
+updated_at: 2026-08-05T06:27:00Z
+updated_by: codex after production verification
 ---
 
 # FEAT-055 - 商城 Keycloak Token 换取 Semattice OACT
@@ -67,3 +67,20 @@ OACT，也不直接访问 Semattice。
 - Keycloak mapper 变更前导出三个 client；回滚时恢复导出，不删除 client、用户、组织或
   session。
 - 本功能没有数据库 migration，不修改业务记录或元数据。
+
+## 实现与生产证据
+
+- 实现提交 `66ab21f50d5f` 已发布为
+  `/opt/semattice/releases/20260805T061911Z-web-oidc-66ab21f50d5f`，二进制 SHA-256
+  为 `6e3f47af5f57e2c1b8f18cac5903e2bfc56b26567f1e866e7d89d2a2246b4e18`。
+- 发布前环境备份为
+  `/etc/semattice/semattice.env.backup.20260805T061845Z-commerce-token-exchange`；
+  `storefront-web`、`admin-web`、`commerce-service` Client 导出保存在
+  `/opt/keycloak/backups/20260805T061845Z-commerce-token-exchange`。三个 Client 均精确
+  存在一个 `semattice-api-audience` mapper。
+- 真实 `commerce-service` Client Credentials token 包含 `azp=commerce-service` 与
+  `semattice-api` audience；直接调用 Capability 返回 401，经 `/v1/auth/token` 换得固定
+  company/owner 的 SERVICE OACT 后，`runtime.record.query` 成功回读一个商品，审计标识
+  为 `audit:req-commerce-service-product-smoke`。
+- Semattice、Keycloak、Nginx、PostgreSQL 均 active，Semattice `NRestarts=0`、发布后
+  warning 日志为空。全量 Go、定向 race、vet、状态校验与脚本语法均通过。

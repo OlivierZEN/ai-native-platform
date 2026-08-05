@@ -1,12 +1,20 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-04T07:20:13Z
-updated_by: root after TASK-060 production release
+updated_at: 2026-08-05T06:27:00Z
+updated_by: codex after TASK-062 production release
 verification_status: passed
 ---
 
 # 项目部署运维手册
+
+## 2026-08-05 TASK-062 商城 Token 换票生产发布
+
+- 源码提交 `66ab21f50d5f` 已发布为 `/opt/semattice/releases/20260805T061911Z-web-oidc-66ab21f50d5f`；二进制 SHA-256 为 `6e3f47af5f57e2c1b8f18cac5903e2bfc56b26567f1e866e7d89d2a2246b4e18`，上一不可变 release 保留。
+- 环境备份为 `/etc/semattice/semattice.env.backup.20260805T061845Z-commerce-token-exchange`；Keycloak Client 备份目录为 `/opt/keycloak/backups/20260805T061845Z-commerce-token-exchange`。回滚时恢复环境备份与三个 Client 导出、切回上一 release 后重启 Semattice。
+- `AI_NATIVE_KEYCLOAK_CLIENT_IDS=semattice-cli,storefront-web,admin-web` 是人类换票 allowlist；`AI_NATIVE_KEYCLOAK_SERVICE_BINDINGS` 固定 `commerce-service` 的 company 和人类负责人。不得把绑定改成请求参数或输出负责人 UUID。
+- 三个 commerce Client 均有唯一 `semattice-api-audience` mapper。真实 service token 直调 Capability 为 401；换取 SERVICE OACT 后商品查询成功，审计标识 `audit:req-commerce-service-product-smoke`。
+- Semattice、Keycloak、Nginx、PostgreSQL 均 active；Semattice `NRestarts=0`，发布后 warning 日志为空。
 
 ## 2026-08-05 Changeset 开发期手工确认生产发布
 
@@ -70,7 +78,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 当前部署制品 SHA-256：`ed58228e1f3f893b387eb5b6a0892a39fe6d5c672423a49134eb57d70fba9c3c`。
+- 当前部署制品 SHA-256：`6e3f47af5f57e2c1b8f18cac5903e2bfc56b26567f1e866e7d89d2a2246b4e18`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动

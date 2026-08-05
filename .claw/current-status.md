@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-05T06:17:00Z
-updated_by: codex after implementing commerce token exchange
-phase: commerce-keycloak-token-exchange-release
-active_task: "TASK-062"
-next_action: "提交并发布 Semattice 多 Client 换票，备份并配置 Keycloak audience mapper，随后执行 commerce-service 真实 SERVICE OACT 与记录回读 smoke。"
+updated_at: 2026-08-05T06:27:00Z
+updated_by: codex after commerce token exchange production verification
+phase: authorization-delegation-hardening-release
+active_task: "TASK-059"
+next_action: "恢复 TASK-059：发布精确委托与正式撤销修复，清理误授权后继续 DEV Autopilot 在线负向验收。"
 read_next:
   goals: true
   decisions: true
@@ -19,7 +19,7 @@ read_next:
 
 ## 快照
 
-- TASK-062 / FEAT-055 已完成本地实现：`/v1/auth/token` 从固定单一 `semattice-cli` 扩展为服务器端人类 Client allowlist，并支持固定 `client_id=company_id@owner_principal_id` 的负责制 SERVICE OACT；原始 Keycloak token 仍只允许进入换票端点。全量 Go、定向 race、vet 与配置/脚本检查通过，待生产不可变 release、Keycloak audience mapper 和真实 commerce-service smoke。
+- TASK-062 / FEAT-055 已完成并发布：`/v1/auth/token` 以服务器端 allowlist 接受 `semattice-cli`、`storefront-web`、`admin-web`，并支持固定 company/owner 的 `commerce-service` SERVICE OACT。release `20260805T061911Z-web-oidc-66ab21f50d5f` active；真实 service token 直调 Capability 为 401、换票为 200、商品查询成功（`audit:req-commerce-service-product-smoke`），四项服务 active、`NRestarts=0`、warning 日志为空。
 
 - TASK-059 线上负向验收发现产品总监原有 `object/*:read` 通配访问被旧精确委托判断接受，导致随机对象权限错误写入；已停止继续验收。本地修复要求对象/字段再授权精确匹配，活动元数据 bootstrap 仍受策略管理员与当前版本约束；新增独立审批的 `authorization.permission-set.revoke` 以正式清理错误授权。PostgreSQL 全仓、race、定向 Go 与 19 项 Skill 认证测试通过，待发布清理。
 
