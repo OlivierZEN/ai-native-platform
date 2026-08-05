@@ -21,7 +21,11 @@ if [[ "${EUID}" -ne 0 ]]; then
   printf '%s\n' 'Run this theme deployment as root.' >&2
   exit 1
 fi
-if [[ ! -f "${theme_source}/login/theme.properties" || ! -f "${theme_source}/login/resources/css/agentcici-mode2.css" ]]; then
+theme_stylesheet=""
+if [[ -d "${theme_source}/login/resources/css" ]]; then
+  theme_stylesheet="$(find "${theme_source}/login/resources/css" -maxdepth 1 -type f -name 'agentcici-*.css' -print -quit)"
+fi
+if [[ ! -f "${theme_source}/login/theme.properties" || -z "${theme_stylesheet}" ]]; then
   printf '%s\n' 'Theme source is incomplete.' >&2
   exit 1
 fi
