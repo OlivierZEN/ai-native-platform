@@ -1,8 +1,8 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-05T06:27:00Z
-updated_by: codex after commerce token exchange production verification
+updated_at: 2026-08-05T10:32:48Z
+updated_by: codex after Keycloak username policy production repair
 phase: authorization-delegation-hardening-release
 active_task: "TASK-059"
 next_action: "恢复 TASK-059：发布精确委托与正式撤销修复，清理误授权后继续 DEV Autopilot 在线负向验收。"
@@ -18,6 +18,8 @@ read_next:
 # 项目当前状态
 
 ## 快照
+
+- TASK-063 已完成并在线修复：登录主题部署脚本此前用不完整 realm 更新将 `registrationEmailAsUsername` 回退为 `true`，导致历史 `@identity.invalid` 邮箱覆盖手机号 username。受管脚本现显式固定手机号/邮箱双登录策略并在重启前回读断言；新版本主题部署已上线。realm 当前为 `registrationEmailAsUsername=false`、`loginWithEmailAllowed=true`、`duplicateEmailsAllowed=false`、`editUsernameAllowed=false`；用户 `18611892001` 的 Keycloak username 已恢复并完成 API/精确搜索回读。
 
 - TASK-059、TASK-061、TASK-062 已完成：研发交付对象为 6 个 / 60 个字段，字段权限统一为 `read/write`；创建时 owner 派发、事件审计、任务快照恢复和未计量历史基线容错均已上线。当前 release `/opt/semattice/releases/20260804T143600Z-metering-a701428`，二进制 SHA-256 `bb79c61ceae93aa587f7c67a1dc3b27799e7c894f8b90ff5485bc51173c1ff29`，服务 active、`NRestarts=0`、edge health 正常。
 - 正式任务 `019fcc18-756f-7782-a9e7-bf34e9c94670` 已由后羿 SERVICE 完成“领取→设计→驳回→重提→批准→进度/工时→阻塞/解除→交付物→验收申请”，并由大乔 SERVICE 最终批准为 `已完成 / 100%`。哪吒 suspended 和产品经理冒充开发者负例均通过。

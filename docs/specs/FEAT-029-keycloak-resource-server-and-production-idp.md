@@ -4,11 +4,11 @@ feature_id: FEAT-029
 title: Keycloak production IdP and Semattice resource-server integration
 status: approved
 owner_role: integration-agent
-task_ids: TASK-029
+task_ids: TASK-029, TASK-063
 related_decisions: ADR-009, ADR-014
 related_issues: none
-updated_at: 2026-07-24T08:35:00Z
-updated_by: ai under explicit production authorization
+updated_at: 2026-08-05T10:32:48Z
+updated_by: codex after Keycloak username policy production repair
 ---
 
 # FEAT-029 - Keycloak 生产 IdP 与数据平台认证接入
@@ -69,3 +69,9 @@ AgentCiCi BFF 的 browser redirect URI 必须精确列出 HTTPS callback；`sema
 - Nginx、Keycloak、PostgreSQL 的健康检查、重启、日志和数据库连接成功；Semattice `:8080` 与现有 HTTPS 路由保持健康。
 - 生产变更前备份 Nginx 配置、创建时间戳 release/backup；Nginx 只在 `nginx -t` 成功后 reload。Keycloak 失败可 stop/disable unit 并删除新增 vhost，现有 Semattice 不受影响。
 - 应用接入按先双验签观察、再官方 OACT、最后禁用旧路径的顺序灰度；每步均记录有效与拒绝 case 的证据。
+
+## 2026-08-05 用户名策略修复
+
+- 主题部署脚本曾以不完整的 Realm 更新覆盖 `registrationEmailAsUsername`，使手机号 username 被历史 `@identity.invalid` 邮箱语义回写。
+- TASK-063 将主题发布和 Realm 配置脚本收敛为显式策略：`registrationEmailAsUsername=false`、`loginWithEmailAllowed=true`、`duplicateEmailsAllowed=false`、`editUsernameAllowed=false`，并在主题脚本重启前回读断言。
+- 新版本主题部署已在生产完成；realm 策略与目标手机号 username 均经 Keycloak Admin API 回读验证。

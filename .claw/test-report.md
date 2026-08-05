@@ -1,13 +1,20 @@
 ---
 kind: test-report
 version: 3
-updated_at: 2026-08-05T06:27:00Z
-updated_by: codex after commerce token exchange verification
-last_run_at: 2026-08-05T06:27:00Z
+updated_at: 2026-08-05T10:32:48Z
+updated_by: codex after Keycloak username policy production repair
+last_run_at: 2026-08-05T10:32:48Z
 last_run_status: passed
 ---
 
 # 测试报告
+
+## 2026-08-05 TASK-063 Keycloak 用户名策略回退修复
+
+- `bash -n deploy/keycloak/apply-agentcici-login-theme.sh`、`bash -n deploy/keycloak/configure-agentcici-realm.sh`、正反 realm-policy `jq` 断言与 `git diff --check` 通过。
+- 新生产主题部署脚本保留当前线上主题资源并完成 Keycloak ready 检查；期间的连接拒绝与 503 仅发生于预期重启窗口，最终 ready 成功。
+- 线上回读 realm：`registrationEmailAsUsername=false`、`loginWithEmailAllowed=true`、`duplicateEmailsAllowed=false`、`editUsernameAllowed=false`。
+- Keycloak Admin API 恢复用户 `18611892001` username 后，用户 API 与精确 username 搜索均返回 `18611892001`；未修改凭据、邮箱、MFA、角色或外部身份绑定。
 
 ## 2026-08-05 悟空可信 SERVICE Client ID 协调生产验收
 

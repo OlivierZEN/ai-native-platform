@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-05T06:27:00Z
-updated_by: codex after commerce token exchange production verification
+updated_at: 2026-08-05T10:32:48Z
+updated_by: codex after Keycloak username policy production repair
 board_status: active
 ---
 
@@ -30,7 +30,7 @@ board_status: active
 
 ### TASK-063 - Prevent Keycloak theme deployment from resetting username login policy
 
-- status: `in_progress`
+- status: `done`
 - priority: `critical`
 - owner_role: `integration-agent`
 - claimed_by: `root`
@@ -46,6 +46,11 @@ board_status: active
 
 - Theme deployment and realm bootstrap explicitly preserve username-or-email authentication policy.
 - A production theme rollout no longer reverts `registrationEmailAsUsername` or historical user username values.
+
+#### Completion Evidence
+
+- New production theme deployment completed its Keycloak ready check and now asserts the identity policy before restart.
+- The realm and the repaired `18611892001` username were read back through the Keycloak Admin API after deployment.
 
 ### TASK-062 - Tolerate missing historical metering baselines
 
