@@ -8,6 +8,12 @@ verification_status: passed
 
 # 项目部署运维手册
 
+## 2026-08-05 可信 SERVICE Client ID 改名协调发布
+
+- 源码为合并提交 `aeabbc9cbbbc`，发布为 `/opt/semattice/releases/20260805T085549Z-web-oidc-aeabbc9cbbbc`；不含数据库迁移，上一不可变 release 保留为回滚点。
+- SERVICE 的 `client_id` 只可来自已验签 AgentCiCi OACT。同步遇到同一 principal/同一 type/同一 owner 的可信 Client ID 改名时，先检查替换 ID 未被另一 projection 占用，再原位更新 client ID 和同步元数据；不得接受调用方提供的任意 client ID。
+- 发布脚本已验证 Semattice health、Nginx 配置、控制台鉴权、下载二进制 SHA-256。悟空新 Client ID 随后完成 OACT 同步和只读 CLI 任务读取；旧 Client ID 被 Keycloak 拒绝。
+
 ## 2026-08-04 TASK-062 计量基线容错生产发布
 
 - 源提交 `a70142857f7d` 已推送，release `/opt/semattice/releases/20260804T143600Z-metering-a701428` 原子切换；二进制 SHA-256 为 `bb79c61ceae93aa587f7c67a1dc3b27799e7c894f8b90ff5485bc51173c1ff29`，上一 release 保留。

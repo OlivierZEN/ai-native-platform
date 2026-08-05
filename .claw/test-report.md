@@ -9,6 +9,13 @@ last_run_status: passed
 
 # 测试报告
 
+## 2026-08-05 悟空可信 SERVICE Client ID 协调生产验收
+
+- 新增 `TestServicePrincipalSyncReconcilesTrustedClientIDRename`，使用 PostgreSQL 16 验证：同一 active SERVICE principal 仅在已验签可信 OACT 的 Client ID 改名时原位更新；类型、负责人或替换 Client ID 已占用仍失败关闭。
+- 定向测试 `GOTOOLCHAIN=go1.26.5 go test ./internal/principal -run TestServicePrincipalSyncReconcilesTrustedClientIDRename -count=1 -v` 与 `go test ./internal/principal -count=1` 均通过。
+- 全仓 `./scripts/test-postgres.sh run` 未作为本次通过证据：`internal/record` 存在两项并行基线失败（运行中合并状态与 actor ID 缺失），不属于本改动且未被掩盖。
+- 发布 `20260805T085549Z-web-oidc-aeabbc9cbbbc` 后，悟空自己的新 Client ID 经 Keycloak/OACT 完成 `identity.principal.sync=succeeded`；同一 principal 保持 `service / active` 并更新为 `dev-autopilot-developer-wukong`，旧 ID 无法认证。
+
 ## 2026-08-04 TASK-059 / 061 / 062 生产闭环验收
 
 - `go test ./...`、`go test -race ./...`、`go vet ./...`、`go mod verify` 与 `git diff --check` 通过；缺失历史计量基线的负字节更新新增 PostgreSQL 回归。
