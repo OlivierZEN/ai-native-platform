@@ -132,10 +132,34 @@ func (service *Service) Sync(ctx context.Context, request capability.Request, in
 			}
 		case err != nil:
 			return err
-		case currentType != principalType || currentOwner != trusted.OwnerPrincipalID || currentClient != trusted.ClientID:
+		case currentType != principalType || currentOwner != trusted.OwnerPrincipalID:
 			return conflict("verified principal claims conflict with the existing projection")
 		case currentStatus != "active":
 			return precondition("principal projection is not active and cannot self-reactivate")
+		case currentClient != trusted.ClientID:
+			// A SERVICE Client ID is Keycloak/AgentCiCi-authoritative, not caller
+			// input.  It may legitimately change while the immutable principal ID,
+			// physical type and human owner remain the same.  Reconcile that one
+			// trusted claim in place so existing Semattice roles, memberships and
+			// delivery records continue to belong to the same SERVICE identity.
+			var conflictingPrincipal string
+			err = tx.QueryRow(ctx, `select principal_id from principal_projection
+				where tenant_bucket=$1 and tenant_id=$2 and client_id=$3 and principal_id<>$4`,
+				tenant.Bucket, tenant.TenantID, trusted.ClientID, trusted.PrincipalID).Scan(&conflictingPrincipal)
+			if err == nil {
+				return conflict("verified client ID is already bound to another principal projection")
+			}
+			if !errors.Is(err, pgx.ErrNoRows) {
+				return err
+			}
+			_, err = tx.Exec(ctx, `update principal_projection set
+				client_id=$4,display_name=coalesce(nullif($5,''),display_name),public_id=coalesce(nullif($6,''),public_id),
+				identity_version=identity_version+1,last_synced_at=clock_timestamp(),updated_at=clock_timestamp()
+				where tenant_bucket=$1 and tenant_id=$2 and principal_id=$3`,
+				tenant.Bucket, tenant.TenantID, trusted.PrincipalID, trusted.ClientID, displayName, publicID)
+			if err != nil {
+				return err
+			}
 		default:
 			_, err = tx.Exec(ctx, `update principal_projection set
 				display_name=coalesce(nullif($4,''),display_name),public_id=coalesce(nullif($5,''),public_id),
@@ -150,7 +174,11 @@ func (service *Service) Sync(ctx context.Context, request capability.Request, in
 			tenant.Bucket, tenant.TenantID, trusted.PrincipalID), &result); err != nil {
 			return err
 		}
-		return insertAudit(ctx, tx, request, tenant, map[string]any{"principal_type": principalType, "status": result.Status})
+		return insertAudit(ctx, tx, request, tenant, map[string]any{
+			"principal_type":    principalType,
+			"status":            result.Status,
+			"client_id_changed": currentClient != trusted.ClientID,
+		})
 	})
 	if err != nil {
 		return Projection{}, mapError(err)
