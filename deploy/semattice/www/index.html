@@ -149,7 +149,7 @@
               <span class="domain-index">01</span>
               <span class="domain-name"><strong>租户与产品生命周期</strong><small>Tenant &amp; Product Lifecycle</small></span>
               <span class="domain-flow">开户 → 配额 → 暂停 / 恢复 → 注销</span>
-              <span class="domain-count">06</span>
+              <span class="domain-count">17</span>
               <span class="domain-risk"><i class="risk-low">L</i><i class="risk-medium">M</i><i class="risk-high">H</i></span>
               <span class="domain-open" aria-hidden="true"></span>
             </summary>
@@ -175,7 +175,18 @@
             <div class="domain-body">
               <div class="capability-item"><code>metadata.version.create</code><span>创建租户的下一元数据草稿版本</span><code>metadata.version.write</code><b class="risk-medium">M</b></div>
               <div class="capability-item"><code>metadata.version.get</code><span>读取有序对象、字段与关系定义</span><code>metadata.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.version.get-current</code><span>读取当前已发布元数据快照</span><code>metadata.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.object.create</code><span>在草稿版本创建对象定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.object.get</code><span>按稳定 ID 读取对象定义</span><code>metadata.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.object.list</code><span>列出版本中的对象定义</span><code>metadata.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.object.update</code><span>更新草稿对象定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.object.delete</code><span>删除草稿对象及其字段</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
               <div class="capability-item"><code>metadata.object.upsert</code><span>在草稿版本创建或更新对象定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.field.create</code><span>在草稿对象创建字段定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.field.get</code><span>按稳定 ID 读取字段定义</span><code>metadata.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.field.list</code><span>列出版本或对象的字段定义</span><code>metadata.read</code><b class="risk-low">L</b></div>
+              <div class="capability-item"><code>metadata.field.update</code><span>更新草稿字段定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
+              <div class="capability-item"><code>metadata.field.delete</code><span>删除草稿字段定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
               <div class="capability-item"><code>metadata.field.upsert</code><span>在草稿版本创建或更新字段定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
               <div class="capability-item"><code>metadata.relation.upsert</code><span>在草稿版本创建或更新关系定义</span><code>metadata.definition.write</code><b class="risk-medium">M</b></div>
               <div class="capability-item"><code>metadata.version.publish</code><span>独立审批后发布不可变确定性快照</span><code>metadata.publish</code><b class="risk-high">H</b></div>

@@ -15,7 +15,8 @@ Keycloak Organization exchange is mandatory for `semattice serve`. The protected
 AI_NATIVE_KEYCLOAK_ISSUER=https://sso.agentcici.com/realms/agentcici
 AI_NATIVE_KEYCLOAK_AUDIENCE=semattice-api
 AI_NATIVE_KEYCLOAK_JWKS_URL=https://sso.agentcici.com/realms/agentcici/protocol/openid-connect/certs
-AI_NATIVE_KEYCLOAK_CLIENT_ID=semattice-cli
+AI_NATIVE_KEYCLOAK_CLIENT_IDS=semattice-cli,storefront-web,admin-web
+AI_NATIVE_KEYCLOAK_SERVICE_BINDINGS=commerce-service=orgxxxxxxxxxxxxxxxxx@11111111-1111-4111-8111-111111111111
 AI_NATIVE_OACT_ALLOWED_SCOPES=system.capability.read,tenant.status.read,tenant.lifecycle.write,tenant.entitlement.write,tenant.decommission,metadata.version.write,metadata.definition.write,metadata.publish,metadata.read,metadata.changeset.write,metadata.changeset.read,metadata.changeset.approve,metadata.changeset.publish,metadata.changeset.execute,metadata.changeset.purge,metadata.changeset.rollback,usage.read,usage.platform.read,runtime.record.create,runtime.record.read,runtime.record.update,runtime.record.delete,authorization.manage,record.share.manage,organization.manage,authorization.read
 AI_NATIVE_OACT_TTL=10m
 AI_NATIVE_IDENTITY_ISSUER=https://semattice.agentcici.com
@@ -28,7 +29,7 @@ AI_NATIVE_CONSOLE_OIDC_CLIENT_SECRET_FILE=/etc/semattice/secrets/semattice-web-c
 AI_NATIVE_CONSOLE_OIDC_REDIRECT_URI=https://semattice.agentcici.com/auth/oidc/callback
 ```
 
-The `semattice-cli` access token must include audience `semattice-api` and the Keycloak Organization Membership claim. Semattice accepts exactly one Organization alias, maps it to an existing active `tenant_registry.company_id`, and signs a short-lived OACT with the identity key. A missing, partial, or invalid access-context configuration makes `serve` fail closed.
+Human access tokens from `semattice-cli`, `storefront-web`, and `admin-web` must include audience `semattice-api` and exactly one Keycloak Organization Membership claim. Semattice maps the alias to an existing active `tenant_registry.company_id` and signs a short-lived HUMAN OACT. A controlled service client may be bound server-side as `client_id=company_id@owner_principal_id`; it receives a SERVICE OACT and cannot select tenant or owner through the request body. A missing, partial, or invalid access-context configuration makes `serve` fail closed.
 
 `AI_NATIVE_CONSOLE_SESSION_HMAC_KEY` is separate from the identity signing key. It signs only the short-lived, HttpOnly Semattice management-console cookie after an OACT has been verified; never reuse an existing HMAC key for it.
 

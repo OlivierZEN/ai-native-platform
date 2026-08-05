@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T15:12:00Z
-updated_by: root after completing DEV Autopilot production E2E
+updated_at: 2026-08-05T06:27:00Z
+updated_by: codex after commerce token exchange production verification
 board_status: active
 ---
 

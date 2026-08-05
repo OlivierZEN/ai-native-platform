@@ -1,11 +1,11 @@
 ---
 kind: current-status
 version: 3
-updated_at: 2026-08-04T15:12:00Z
-updated_by: root after DEV Autopilot production E2E completion
-phase: dev-autopilot-delivery-loop-complete
-active_task: "none"
-next_action: "保持生产监控；后续新增研发任务直接复用已发布身份、授权、事件与评审能力。"
+updated_at: 2026-08-05T06:27:00Z
+updated_by: codex after commerce token exchange production verification
+phase: authorization-delegation-hardening-release
+active_task: "TASK-059"
+next_action: "恢复 TASK-059：发布精确委托与正式撤销修复，清理误授权后继续 DEV Autopilot 在线负向验收。"
 read_next:
   goals: true
   decisions: true
@@ -22,6 +22,7 @@ read_next:
 - TASK-059、TASK-061、TASK-062 已完成：研发交付对象为 6 个 / 60 个字段，字段权限统一为 `read/write`；创建时 owner 派发、事件审计、任务快照恢复和未计量历史基线容错均已上线。当前 release `/opt/semattice/releases/20260804T143600Z-metering-a701428`，二进制 SHA-256 `bb79c61ceae93aa587f7c67a1dc3b27799e7c894f8b90ff5485bc51173c1ff29`，服务 active、`NRestarts=0`、edge health 正常。
 - 正式任务 `019fcc18-756f-7782-a9e7-bf34e9c94670` 已由后羿 SERVICE 完成“领取→设计→驳回→重提→批准→进度/工时→阻塞/解除→交付物→验收申请”，并由大乔 SERVICE 最终批准为 `已完成 / 100%`。哪吒 suspended 和产品经理冒充开发者负例均通过。
 - 目标租户当前计量基线已按 41 条 active 记录重算，物化计数为 41 条 / 18,272 字节；更新导致负增量时当前用量以零为下界，真实增量仍保留在计量账本。
+- TASK-062 / FEAT-055 已完成并发布：`/v1/auth/token` 以服务器端 allowlist 接受 `semattice-cli`、`storefront-web`、`admin-web`，并支持固定 company/owner 的 `commerce-service` SERVICE OACT。release `20260805T061911Z-web-oidc-66ab21f50d5f` active；真实 service token 直调 Capability 为 401、换票为 200、商品查询成功（`audit:req-commerce-service-product-smoke`），四项服务 active、`NRestarts=0`、warning 日志为空。
 
 - TASK-059 线上负向验收发现产品总监原有 `object/*:read` 通配访问被旧精确委托判断接受，导致随机对象权限错误写入；已停止继续验收。本地修复要求对象/字段再授权精确匹配，活动元数据 bootstrap 仍受策略管理员与当前版本约束；新增独立审批的 `authorization.permission-set.revoke` 以正式清理错误授权。PostgreSQL 全仓、race、定向 Go 与 19 项 Skill 认证测试通过，待发布清理。
 

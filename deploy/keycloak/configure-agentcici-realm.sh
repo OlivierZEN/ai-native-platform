@@ -139,11 +139,18 @@ create_client semattice-api '{
   "serviceAccountsEnabled":false
 }'
 
-# Semattice verifies Keycloak access tokens as a resource server before issuing
-# its own short-lived OACT. Keep this mapper idempotent so repeat runs reconcile
-# the public CLI without creating duplicate audience claims.
-if ! kcadm get "clients/${semattice_cli_id}/protocol-mappers/models" -r agentcici |
-  grep -Eq '"name"[[:space:]]*:[[:space:]]*"semattice-api-audience"'; then
+ensure_semattice_audience() {
+  local client_id="$1"
+  local internal_id
+  internal_id="$(kcadm get clients -r agentcici -q "clientId=${client_id}" --fields id | sed -n 's/.*"id" : "\([^"]*\)".*/\1/p' | head -n 1)"
+  if [[ -z "${internal_id}" ]]; then
+    printf 'Unable to resolve %s client.\n' "${client_id}" >&2
+    exit 1
+  fi
+  if kcadm get "clients/${internal_id}/protocol-mappers/models" -r agentcici |
+    grep -Eq '"name"[[:space:]]*:[[:space:]]*"semattice-api-audience"'; then
+    return
+  fi
   printf '%s' '{
     "name":"semattice-api-audience",
     "protocol":"openid-connect",
@@ -155,8 +162,18 @@ if ! kcadm get "clients/${semattice_cli_id}/protocol-mappers/models" -r agentcic
       "id.token.claim":"false",
       "lightweight.claim":"false"
     }
-  }' | kcadm create "clients/${semattice_cli_id}/protocol-mappers/models" -r agentcici -f - >/dev/null
-fi
+  }' | kcadm create "clients/${internal_id}/protocol-mappers/models" -r agentcici -f - >/dev/null
+}
+
+# Semattice verifies Keycloak access tokens before issuing its own short-lived
+# OACT. Human web clients and the controlled commerce service all need the
+# resource-server audience; unrelated clients are left unchanged.
+ensure_semattice_audience semattice-cli
+for semattice_caller in storefront-web admin-web commerce-service; do
+  if client_exists "${semattice_caller}"; then
+    ensure_semattice_audience "${semattice_caller}"
+  fi
+done
 
 create_client official-access-context '{
   "clientId":"official-access-context",

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FEAT-053 - Changeset 开发期手工确认</title>
+  <style>
+    :root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #172033; background: #f5f7fb; }
+    body { margin: 0; font-size: 18px; line-height: 1.65; }
+    main { max-width: 920px; margin: 0 auto; padding: 40px 24px 64px; }
+    h1, h2 { line-height: 1.25; color: #101828; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); }
+    h2 { margin-top: 2rem; font-size: 1.45rem; }
+    .summary, .risk { padding: 18px 20px; border-radius: 12px; background: #eaf2ff; border-left: 5px solid #2563eb; }
+    .risk { background: #fff4e5; border-left-color: #d97706; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    pre { overflow-x: auto; padding: 16px; border-radius: 10px; color: #f8fafc; background: #111827; }
+    li { margin: 0.45rem 0; }
+    @media (max-width: 600px) { body { font-size: 17px; } main { padding: 24px 18px 48px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <p>Semattice Feature Spec · FEAT-053</p>
+    <h1>Changeset 开发期手工确认</h1>
+    <div class="summary"><strong>当前状态：</strong>已完成生产发布和真实 Changeset 验证；商城元数据 sequence 3 已激活。</div>
+  </header>
+  <section>
+    <h2>目标</h2>
+    <p>在审批申请服务尚未实现的开发阶段，允许 <code>metadata.changeset.approve</code> 使用明确、非空的手工 <code>approval_id</code>，并保持 Scope、租户隔离、状态机、幂等和审计要求。</p>
+  </section>
+  <section>
+    <h2>接口行为</h2>
+    <pre><code>{
+  "changeset_id": "&lt;uuid&gt;",
+  "approval_id": "&lt;non-empty-manual-confirmation-id&gt;"
+}</code></pre>
+    <ul>
+      <li>空白确认 ID 返回 <code>FAILED_PRECONDITION</code>。</li>
+      <li>非空 ID 不要求存在于 OACT 的 <code>approvals</code> 声明。</li>
+      <li>审批审计写入 <code>approval_id</code> 和 <code>approval_mode=manual</code>。</li>
+    </ul>
+  </section>
+  <section>
+    <h2>不变边界</h2>
+    <p><code>purge</code>、<code>rollback</code>、授权、共享和组织合并仍要求可信审批；本次不实现审批中心，也不新增数据库迁移或历史兼容逻辑。</p>
+  </section>
+  <section>
+    <h2>验收</h2>
+    <ul>
+      <li>无 approvals claim 的主体可审批 validated Changeset。</li>
+      <li>空白确认在线上以 <code>FAILED_PRECONDITION</code> 失败，Changeset 保持 active。</li>
+      <li>生产构建、原子发布、能力发现、真实审批和发布回读通过。</li>
+    </ul>
+    <p>生产 release：<code>20260805T020849Z-web-oidc-5f5bdcea97d2</code>。商城 Changeset 已发布为活动版本，回读结果为 28 个对象、391 个字段和 70 个关系。</p>
+  </section>
+  <aside class="risk"><strong>风险：</strong>手工确认弱于独立第二人审批，仅适用于当前开发阶段；调用前必须展示并核对完整候选模型或模拟结果。</aside>
+</main>
+</body>
+</html>

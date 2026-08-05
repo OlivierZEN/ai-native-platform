@@ -39,6 +39,8 @@ updated_by: ai maker after independent checker PASS
 - `metadata.version.create`
 - `metadata.object.upsert`
 - `metadata.field.upsert`
+- `metadata.object.create/get/list/update/delete`
+- `metadata.field.create/get/list/update/delete`
 - `metadata.relation.upsert`
 - `metadata.version.publish`
 - `metadata.version.get`

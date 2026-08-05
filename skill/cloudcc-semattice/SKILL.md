@@ -27,7 +27,7 @@ description: 理解、设计和通过统一 HTTPS Capability API 操作 CloudCC 
 5. 进入实施前，明确本地、预发布或生产环境。目标环境不清晰时，不执行写操作。
 6. 涉及人工登录或令牌续期时，读取 [登录与短期 OACT](references/authentication.md)；涉及认证边界、请求格式、错误处理或生产操作时，读取 [API 调用契约](references/api-contract.md)。
 7. 首次连接或怀疑接口变化时，通过 `system.capability.list` 获取线上能力、scope、风险、执行模式及输入 Schema；技能内目录用于规划，线上返回用于调用前最终校验。
-8. 根据任务读取 [API 能力目录](references/api-catalog.md) 中对应分类。目录覆盖当前主程序注册的全部 56 项公开 Capability API。
+8. 根据任务读取 [API 能力目录](references/api-catalog.md) 中对应分类。目录覆盖当前主程序注册的全部 67 项公开 Capability API。
 9. 执行组合操作时，读取 [常用操作流程](references/capability-workflows.md)，并按依赖顺序每次调用一个原子能力。
 10. 构造最小请求正文。只提交 `request_id`、可选 `idempotency_key` 和 `input`；不要提交 `tenant_id`、`actor` 或 `scopes`，这些身份信息必须由短期 Bearer 令牌绑定。
 11. 写操作前先用脚本 `--dry-run` 展示 URL 和正文。只有用户已经授权该操作且环境明确时才实际调用。
@@ -88,8 +88,8 @@ python3 scripts/semattice_api.py \
 - 为完成用户请求可以执行必要的能力发现和只读操作。
 - 只有用户明确要求修改且环境无歧义时，才执行创建或更新。
 - 删除、清除、发布、回滚、租户生命周期、权限、角色、组织合并和共享操作属于高影响操作。调用前展示准确能力 ID、资源目标和主要输入，并取得明确授权；用户在当前请求中已明确授权完全相同操作时无需重复确认。
-- `metadata.version.publish` 是唯一例外：首次直接发布时，用户可明确提供非空的手动 `approval_id`；调用前必须回读并展示整个草稿版本，因为该能力发布的是整版对象、字段和关系。服务端会持久审计该标识，但不要求它存在于令牌 `approvals` 声明中。
-- 其他能力要求 `approval_id` 时，只能使用令牌 `approvals` 声明中已经验证的真实审批标识。禁止生成、猜测或替换审批标识。
+- 开发阶段的元数据发布采用手工确认：`metadata.version.publish` 首次直接发布和 `metadata.changeset.approve` 均接受用户明确提供的非空手动 `approval_id`。调用前必须回读并展示整个草稿版本或 Changeset 模拟结果；服务端会持久审计该标识和 `approval_mode=manual`，但不要求它存在于令牌 `approvals` 声明中。
+- 除上述两个元数据能力外，其他能力要求 `approval_id` 时，只能使用令牌 `approvals` 声明中已经验证的真实审批标识。禁止生成、猜测或替换审批标识。
 - `tenant.decommission` 会创建 `pending_approval` 操作，不代表租户已经完成退役。
 - 收到 `UNAUTHORIZED` 时报告所需 scope，禁止自行扩大令牌权限或切换身份、公司、租户和环境。
 - 禁止尝试通过登录或 Capability请求创建租户；Keycloak Organization必须已经映射到现有 Semattice tenant。
@@ -97,6 +97,6 @@ python3 scripts/semattice_api.py \
 ## 事实边界
 
 - 以当前主程序注册表、Capability Schema 和运行时代码为当前事实；历史 Spec 和演示控制台数据不作为可调用能力依据。
-- `tenant.provision` 没有注册为公开 Capability API，不计入 56 项公开能力。
+- `tenant.provision` 没有注册为公开 Capability API，不计入 67 项公开能力。
 - 管理控制台 `/console/api/*` 返回只读模拟治理数据，不可用于验证真实业务状态。
 - `/mcp` 不属于本技能的调用方式，也不需要配置任何 MCP 依赖。

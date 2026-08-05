@@ -128,19 +128,22 @@ func TestLoadRejectsInvalidValuesWithoutLeakingSecrets(t *testing.T) {
 
 func TestLoadAccessContextRequiresCompleteValidConfiguration(t *testing.T) {
 	valid := map[string]string{
-		"AI_NATIVE_IDENTITY_ISSUER":     "https://semattice.example.test",
-		"AI_NATIVE_IDENTITY_AUDIENCE":   "semattice-api",
-		"AI_NATIVE_IDENTITY_ALGORITHM":  "HS256",
-		"AI_NATIVE_IDENTITY_HMAC_KEY":   "semattice-signing-key-material-that-is-long-enough",
-		"AI_NATIVE_KEYCLOAK_ISSUER":     "https://sso.example.test/realms/example",
-		"AI_NATIVE_KEYCLOAK_AUDIENCE":   "semattice-api",
-		"AI_NATIVE_KEYCLOAK_JWKS_URL":   "https://sso.example.test/realms/example/protocol/openid-connect/certs",
-		"AI_NATIVE_KEYCLOAK_CLIENT_ID":  "semattice-cli",
-		"AI_NATIVE_OACT_ALLOWED_SCOPES": "system.capability.read,record.read",
-		"AI_NATIVE_OACT_TTL":            "15m",
+		"AI_NATIVE_IDENTITY_ISSUER":           "https://semattice.example.test",
+		"AI_NATIVE_IDENTITY_AUDIENCE":         "semattice-api",
+		"AI_NATIVE_IDENTITY_ALGORITHM":        "HS256",
+		"AI_NATIVE_IDENTITY_HMAC_KEY":         "semattice-signing-key-material-that-is-long-enough",
+		"AI_NATIVE_KEYCLOAK_ISSUER":           "https://sso.example.test/realms/example",
+		"AI_NATIVE_KEYCLOAK_AUDIENCE":         "semattice-api",
+		"AI_NATIVE_KEYCLOAK_JWKS_URL":         "https://sso.example.test/realms/example/protocol/openid-connect/certs",
+		"AI_NATIVE_KEYCLOAK_CLIENT_IDS":       "semattice-cli,storefront-web,admin-web",
+		"AI_NATIVE_KEYCLOAK_SERVICE_BINDINGS": "commerce-service=org2sva14i4udjmi2t4s@9daab753-75c8-4e3d-a22b-7472cb7da579",
+		"AI_NATIVE_OACT_ALLOWED_SCOPES":       "system.capability.read,record.read",
+		"AI_NATIVE_OACT_TTL":                  "15m",
 	}
 	cfg, err := Load(func(key string) string { return valid[key] })
-	if err != nil || !cfg.AccessContext.Enabled() || len(cfg.AccessContext.AllowedScopes) != 2 || cfg.AccessContext.TokenTTL != 15*time.Minute {
+	if err != nil || !cfg.AccessContext.Enabled() || len(cfg.AccessContext.KeycloakClientIDs) != 3 ||
+		len(cfg.AccessContext.KeycloakServiceBindings) != 1 || len(cfg.AccessContext.AllowedScopes) != 2 ||
+		cfg.AccessContext.TokenTTL != 15*time.Minute {
 		t.Fatalf("valid access context config rejected: cfg=%#v err=%v", cfg.AccessContext, err)
 	}
 	invalid := []map[string]string{
@@ -149,15 +152,23 @@ func TestLoadAccessContextRequiresCompleteValidConfiguration(t *testing.T) {
 			"AI_NATIVE_IDENTITY_ISSUER": valid["AI_NATIVE_IDENTITY_ISSUER"], "AI_NATIVE_IDENTITY_AUDIENCE": valid["AI_NATIVE_IDENTITY_AUDIENCE"],
 			"AI_NATIVE_IDENTITY_ALGORITHM": valid["AI_NATIVE_IDENTITY_ALGORITHM"], "AI_NATIVE_IDENTITY_HMAC_KEY": valid["AI_NATIVE_IDENTITY_HMAC_KEY"],
 			"AI_NATIVE_KEYCLOAK_ISSUER": valid["AI_NATIVE_KEYCLOAK_ISSUER"], "AI_NATIVE_KEYCLOAK_AUDIENCE": valid["AI_NATIVE_KEYCLOAK_AUDIENCE"],
-			"AI_NATIVE_KEYCLOAK_JWKS_URL": "http://external.example.test/certs", "AI_NATIVE_KEYCLOAK_CLIENT_ID": valid["AI_NATIVE_KEYCLOAK_CLIENT_ID"],
+			"AI_NATIVE_KEYCLOAK_JWKS_URL": "http://external.example.test/certs", "AI_NATIVE_KEYCLOAK_CLIENT_IDS": valid["AI_NATIVE_KEYCLOAK_CLIENT_IDS"],
 			"AI_NATIVE_OACT_ALLOWED_SCOPES": valid["AI_NATIVE_OACT_ALLOWED_SCOPES"],
 		},
 		{
 			"AI_NATIVE_IDENTITY_ISSUER": valid["AI_NATIVE_IDENTITY_ISSUER"], "AI_NATIVE_IDENTITY_AUDIENCE": valid["AI_NATIVE_IDENTITY_AUDIENCE"],
 			"AI_NATIVE_IDENTITY_ALGORITHM": valid["AI_NATIVE_IDENTITY_ALGORITHM"], "AI_NATIVE_IDENTITY_HMAC_KEY": valid["AI_NATIVE_IDENTITY_HMAC_KEY"],
 			"AI_NATIVE_KEYCLOAK_ISSUER": valid["AI_NATIVE_KEYCLOAK_ISSUER"], "AI_NATIVE_KEYCLOAK_AUDIENCE": valid["AI_NATIVE_KEYCLOAK_AUDIENCE"],
-			"AI_NATIVE_KEYCLOAK_JWKS_URL": valid["AI_NATIVE_KEYCLOAK_JWKS_URL"], "AI_NATIVE_KEYCLOAK_CLIENT_ID": valid["AI_NATIVE_KEYCLOAK_CLIENT_ID"],
+			"AI_NATIVE_KEYCLOAK_JWKS_URL": valid["AI_NATIVE_KEYCLOAK_JWKS_URL"], "AI_NATIVE_KEYCLOAK_CLIENT_IDS": valid["AI_NATIVE_KEYCLOAK_CLIENT_IDS"],
 			"AI_NATIVE_OACT_ALLOWED_SCOPES": "record.read,record.read",
+		},
+		{
+			"AI_NATIVE_IDENTITY_ISSUER": valid["AI_NATIVE_IDENTITY_ISSUER"], "AI_NATIVE_IDENTITY_AUDIENCE": valid["AI_NATIVE_IDENTITY_AUDIENCE"],
+			"AI_NATIVE_IDENTITY_ALGORITHM": valid["AI_NATIVE_IDENTITY_ALGORITHM"], "AI_NATIVE_IDENTITY_HMAC_KEY": valid["AI_NATIVE_IDENTITY_HMAC_KEY"],
+			"AI_NATIVE_KEYCLOAK_ISSUER": valid["AI_NATIVE_KEYCLOAK_ISSUER"], "AI_NATIVE_KEYCLOAK_AUDIENCE": valid["AI_NATIVE_KEYCLOAK_AUDIENCE"],
+			"AI_NATIVE_KEYCLOAK_JWKS_URL": valid["AI_NATIVE_KEYCLOAK_JWKS_URL"], "AI_NATIVE_KEYCLOAK_CLIENT_IDS": "semattice-cli",
+			"AI_NATIVE_KEYCLOAK_SERVICE_BINDINGS": "commerce-service=bad-company@not-a-uuid",
+			"AI_NATIVE_OACT_ALLOWED_SCOPES":       valid["AI_NATIVE_OACT_ALLOWED_SCOPES"],
 		},
 	}
 	for _, values := range invalid {

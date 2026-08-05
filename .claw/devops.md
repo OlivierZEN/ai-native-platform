@@ -1,8 +1,8 @@
 ---
 kind: devops
 version: 3
-updated_at: 2026-08-04T15:12:00Z
-updated_by: root after metering baseline production release
+updated_at: 2026-08-05T06:27:00Z
+updated_by: codex after TASK-062 production release
 verification_status: passed
 ---
 
@@ -13,6 +13,21 @@ verification_status: passed
 - 源提交 `a70142857f7d` 已推送，release `/opt/semattice/releases/20260804T143600Z-metering-a701428` 原子切换；二进制 SHA-256 为 `bb79c61ceae93aa587f7c67a1dc3b27799e7c894f8b90ff5485bc51173c1ff29`，上一 release 保留。
 - `semattice` active、`NRestarts=0`，公网 `https://semattice.agentcici.com/healthz` 正常。临时 OSS 制品已删除。
 - 目标租户当前用量物化桶已在租户上下文中重算为 41 条 active 记录 / 18,272 逻辑字节；操作先清零现有桶再按对象和 UUID 分桶原子 upsert，active 与 metered 计数一致。
+## 2026-08-05 TASK-062 商城 Token 换票生产发布
+
+- 源码提交 `66ab21f50d5f` 已发布为 `/opt/semattice/releases/20260805T061911Z-web-oidc-66ab21f50d5f`；二进制 SHA-256 为 `6e3f47af5f57e2c1b8f18cac5903e2bfc56b26567f1e866e7d89d2a2246b4e18`，上一不可变 release 保留。
+- 环境备份为 `/etc/semattice/semattice.env.backup.20260805T061845Z-commerce-token-exchange`；Keycloak Client 备份目录为 `/opt/keycloak/backups/20260805T061845Z-commerce-token-exchange`。回滚时恢复环境备份与三个 Client 导出、切回上一 release 后重启 Semattice。
+- `AI_NATIVE_KEYCLOAK_CLIENT_IDS=semattice-cli,storefront-web,admin-web` 是人类换票 allowlist；`AI_NATIVE_KEYCLOAK_SERVICE_BINDINGS` 固定 `commerce-service` 的 company 和人类负责人。不得把绑定改成请求参数或输出负责人 UUID。
+- 三个 commerce Client 均有唯一 `semattice-api-audience` mapper。真实 service token 直调 Capability 为 401；换取 SERVICE OACT 后商品查询成功，审计标识 `audit:req-commerce-service-product-smoke`。
+- Semattice、Keycloak、Nginx、PostgreSQL 均 active；Semattice `NRestarts=0`，发布后 warning 日志为空。
+
+## 2026-08-05 Changeset 开发期手工确认生产发布
+
+- 源码提交 `5f5bdcea97d2` 已发布为 `/opt/semattice/releases/20260805T020849Z-web-oidc-5f5bdcea97d2`；上一 release `/opt/semattice/releases/20260804T143600Z-metering-a701428` 保留为原子回滚点。本次没有数据库迁移。
+- `metadata.changeset.approve` 现在接受明确、非空的手工 `approval_id`，并在审批事务中审计 `approval_mode=manual`；`metadata.changeset.purge`、`metadata.changeset.rollback`、授权、共享和组织合并的可信审批门禁保持不变。
+- 线上能力发现审计标识为 `audit:req-3228301b-cdfe-488a-860c-1235afe75bb4`。商城 Changeset `019fcd45-5e1f-77fb-86b2-792f7f4b2d6b` 的审批、发布审计标识分别为 `audit:req-69a6464e-a1a3-4d04-ad68-95a352da869a`、`audit:req-04f7dcf4-0c58-44bc-8920-1661bec27855`。
+- 空白手工确认线上负例返回 `FAILED_PRECONDITION / a manual approval id is required`，审计标识为 `audit:req-2ebc4f1c-346d-417c-adcc-32830eab6de4`；负例后 Changeset 仍为 `active`。
+- 发布后 Semattice、Nginx、PostgreSQL 均 active，Semattice `NRestarts=0`、warning 日志为 0。当前商城元数据版本为 `019fcd43-8fe1-7e0d-bd71-f0757aa91af1`，sequence 3，包含 28 个对象、391 个字段和 70 个关系。
 
 ## 2026-08-04 TASK-060 当前元数据发现生产发布
 
@@ -68,7 +83,7 @@ CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GOTOOLCHAIN=go1.26.5 \
   go build -trimpath -ldflags='-s -w' -o semattice ./cmd/ai-native-platform
 ```
 
-- 当前部署制品 SHA-256：`ed58228e1f3f893b387eb5b6a0892a39fe6d5c672423a49134eb57d70fba9c3c`。
+- 当前部署制品 SHA-256：`6e3f47af5f57e2c1b8f18cac5903e2bfc56b26567f1e866e7d89d2a2246b4e18`。
 - 公网下载：`https://semattice.agentcici.com/downloads/semattice-linux-amd64`；同目录提供 `.sha256`。
 
 ## 启动

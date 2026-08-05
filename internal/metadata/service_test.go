@@ -221,10 +221,27 @@ func TestChangesetLifecyclePublicationRollbackAndAdapterParity(t *testing.T) {
 	}
 	assertChangesetAdapterParity(t, invoker, principal, changeset.ChangesetID)
 
-	approved := invokeMetadata(t, invoker, principal, "metadata.changeset.approve", map[string]any{
-		"changeset_id": changeset.ChangesetID, "approval_id": "approval-metadata-1",
+	manualPrincipal := principal
+	manualPrincipal.Approvals = nil
+	blankApproval := invokeMetadata(t, invoker, manualPrincipal, "metadata.changeset.approve", map[string]any{
+		"changeset_id": changeset.ChangesetID, "approval_id": "   ",
+	})
+	assertMetadataError(t, blankApproval, capability.CodeFailedPrecondition)
+	const manualChangesetApprovalID = "manual-changeset-confirmation"
+	approved := invokeMetadata(t, invoker, manualPrincipal, "metadata.changeset.approve", map[string]any{
+		"changeset_id": changeset.ChangesetID, "approval_id": manualChangesetApprovalID,
 	})
 	requireMetadataSuccess(t, approved)
+	var auditedApprovalID, approvalMode string
+	if err := control.QueryRow(context.Background(),
+		"select event_data->>'approval_id',event_data->>'approval_mode' from audit_event where capability_id='metadata.changeset.approve' and operation_id=$1 and status='approved'",
+		changeset.ChangesetID,
+	).Scan(&auditedApprovalID, &approvalMode); err != nil {
+		t.Fatalf("read changeset approval audit: %v", err)
+	}
+	if auditedApprovalID != manualChangesetApprovalID || approvalMode != "manual" {
+		t.Fatalf("changeset approval audit approval=%q mode=%q", auditedApprovalID, approvalMode)
+	}
 	active := invokeMetadata(t, invoker, principal, "metadata.changeset.publish", map[string]any{"changeset_id": changeset.ChangesetID})
 	requireMetadataSuccess(t, active)
 	if err := json.Unmarshal(active.Result, &changeset); err != nil || changeset.State != "active" {
@@ -255,6 +272,171 @@ func TestChangesetLifecyclePublicationRollbackAndAdapterParity(t *testing.T) {
 	).Scan(&unsecured); err != nil || unsecured != 0 {
 		t.Fatalf("unsecured changeset execution tables=%d err=%v", unsecured, err)
 	}
+}
+
+func TestObjectAndFieldExplicitCRUD(t *testing.T) {
+	control, runtime := metadataTestPools(t)
+	service := NewService(runtime, control)
+	invoker := capability.NewInvoker(capability.NewRegistry(CapabilityDefinitions(service)), 4)
+	principal := metadataPrincipal("11111111-1111-4111-8111-111111111111", "orgaaaaaaaaaaaaaaaaa")
+	version := createVersion(t, invoker, principal)
+	objectID, fieldID := mustV7(t), mustV7(t)
+
+	createdObject := invokeMetadata(t, invoker, principal, "metadata.object.create", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "object_id": objectID.String(),
+		"api_name": "asset", "label": "Asset",
+	})
+	requireMetadataSuccess(t, createdObject)
+	assertMetadataError(t, invokeMetadata(t, invoker, principal, "metadata.object.create", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "object_id": objectID.String(),
+		"api_name": "asset", "label": "Duplicate",
+	}), capability.CodeConflict)
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, principal, "metadata.object.get", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "object_id": objectID.String(),
+	}))
+	listedObjects := invokeMetadata(t, invoker, principal, "metadata.object.list", map[string]any{
+		"metadata_version_id": version.MetadataVersionID,
+	})
+	requireMetadataSuccess(t, listedObjects)
+	var objects []ObjectDefinition
+	if err := json.Unmarshal(listedObjects.Result, &objects); err != nil || len(objects) != 1 {
+		t.Fatalf("listed objects=%#v err=%v", objects, err)
+	}
+	updatedObject := invokeMetadata(t, invoker, principal, "metadata.object.update", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "object_id": objectID.String(),
+		"api_name": "asset", "label": "Managed Asset", "description": "updated",
+	})
+	requireMetadataSuccess(t, updatedObject)
+	var object ObjectDefinition
+	if err := json.Unmarshal(updatedObject.Result, &object); err != nil || object.Label != "Managed Asset" {
+		t.Fatalf("updated object=%#v err=%v", object, err)
+	}
+
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, principal, "metadata.field.create", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "field_id": fieldID.String(), "object_id": objectID.String(),
+		"api_name": "name", "label": "Name", "data_type": "text",
+	}))
+	assertMetadataError(t, invokeMetadata(t, invoker, principal, "metadata.field.create", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "field_id": fieldID.String(), "object_id": objectID.String(),
+		"api_name": "name", "label": "Duplicate", "data_type": "text",
+	}), capability.CodeConflict)
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, principal, "metadata.field.get", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "field_id": fieldID.String(),
+	}))
+	listedFields := invokeMetadata(t, invoker, principal, "metadata.field.list", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "object_id": objectID.String(),
+	})
+	requireMetadataSuccess(t, listedFields)
+	var fields []FieldDefinition
+	if err := json.Unmarshal(listedFields.Result, &fields); err != nil || len(fields) != 1 {
+		t.Fatalf("listed fields=%#v err=%v", fields, err)
+	}
+	updatedField := invokeMetadata(t, invoker, principal, "metadata.field.update", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "field_id": fieldID.String(), "object_id": objectID.String(),
+		"api_name": "name", "label": "Asset Name", "description": "updated", "data_type": "text",
+	})
+	requireMetadataSuccess(t, updatedField)
+	var field FieldDefinition
+	if err := json.Unmarshal(updatedField.Result, &field); err != nil || field.Label != "Asset Name" {
+		t.Fatalf("updated field=%#v err=%v", field, err)
+	}
+
+	deletedField := invokeMetadata(t, invoker, principal, "metadata.field.delete", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "field_id": fieldID.String(),
+	})
+	requireMetadataSuccess(t, deletedField)
+	assertMetadataError(t, invokeMetadata(t, invoker, principal, "metadata.field.get", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "field_id": fieldID.String(),
+	}), capability.CodeResourceNotFound)
+
+	cascadeFieldID := mustV7(t)
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, principal, "metadata.field.create", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "field_id": cascadeFieldID.String(), "object_id": objectID.String(),
+		"api_name": "code", "label": "Code", "data_type": "text",
+	}))
+	deletedObject := invokeMetadata(t, invoker, principal, "metadata.object.delete", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "object_id": objectID.String(),
+	})
+	requireMetadataSuccess(t, deletedObject)
+	var deletion ObjectDeleteResult
+	if err := json.Unmarshal(deletedObject.Result, &deletion); err != nil || !deletion.Deleted || deletion.DeletedFieldCount != 1 {
+		t.Fatalf("deleted object=%#v err=%v", deletion, err)
+	}
+	assertMetadataError(t, invokeMetadata(t, invoker, principal, "metadata.field.get", map[string]any{
+		"metadata_version_id": version.MetadataVersionID, "field_id": cascadeFieldID.String(),
+	}), capability.CodeResourceNotFound)
+}
+
+func TestChangesetAllowsEmptyDefinitionRemovalAndBlocksObjectsWithRecords(t *testing.T) {
+	control, runtime := metadataTestPools(t)
+	service := NewService(runtime, control)
+	invoker := capability.NewInvoker(capability.NewRegistry(CapabilityDefinitions(service)), 4)
+	principal := metadataPrincipal("11111111-1111-4111-8111-111111111111", "orgaaaaaaaaaaaaaaaaa")
+	principal.Actor.Scopes = append(principal.Actor.Scopes,
+		"metadata.changeset.write", "metadata.changeset.read", "metadata.changeset.approve", "metadata.changeset.publish",
+	)
+	keepObjectID, removeObjectID, recordedObjectID := mustV7(t), mustV7(t), mustV7(t)
+	keepFieldID, removeFieldID, recordedFieldID := mustV7(t), mustV7(t), mustV7(t)
+	base := createVersion(t, invoker, principal)
+	upsertObject(t, invoker, principal, base.MetadataVersionID, keepObjectID, "keep", "Keep")
+	upsertObject(t, invoker, principal, base.MetadataVersionID, removeObjectID, "remove_me", "Remove Me")
+	upsertObject(t, invoker, principal, base.MetadataVersionID, recordedObjectID, "recorded", "Recorded")
+	upsertField(t, invoker, principal, base.MetadataVersionID, keepFieldID, keepObjectID, "name")
+	upsertField(t, invoker, principal, base.MetadataVersionID, removeFieldID, keepObjectID, "unused")
+	upsertField(t, invoker, principal, base.MetadataVersionID, recordedFieldID, recordedObjectID, "name")
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, principal, "metadata.version.publish", map[string]any{
+		"metadata_version_id": base.MetadataVersionID, "approval_id": "manual-base",
+	}))
+
+	candidate := createVersion(t, invoker, principal)
+	upsertObject(t, invoker, principal, candidate.MetadataVersionID, keepObjectID, "keep", "Keep")
+	upsertObject(t, invoker, principal, candidate.MetadataVersionID, recordedObjectID, "recorded", "Recorded")
+	upsertField(t, invoker, principal, candidate.MetadataVersionID, keepFieldID, keepObjectID, "name")
+	upsertField(t, invoker, principal, candidate.MetadataVersionID, recordedFieldID, recordedObjectID, "name")
+	validated := invokeMetadata(t, invoker, principal, "metadata.changeset.validate", map[string]any{
+		"candidate_metadata_version_id": candidate.MetadataVersionID,
+	})
+	requireMetadataSuccess(t, validated)
+	var changeset Changeset
+	if err := json.Unmarshal(validated.Result, &changeset); err != nil {
+		t.Fatal(err)
+	}
+	var plan ChangesetPlan
+	if err := json.Unmarshal(changeset.Plan, &plan); err != nil {
+		t.Fatal(err)
+	}
+	kinds := map[string]bool{}
+	for _, change := range plan.Changes {
+		kinds[change.Kind] = true
+	}
+	if !kinds["object_removed"] || !kinds["field_removed"] || changeset.RiskLevel != "high" || changeset.RequiresBackfill {
+		t.Fatalf("unexpected removal changeset=%#v plan=%#v", changeset, plan)
+	}
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, principal, "metadata.changeset.approve", map[string]any{
+		"changeset_id": changeset.ChangesetID, "approval_id": "manual-remove-empty-definitions",
+	}))
+	requireMetadataSuccess(t, invokeMetadata(t, invoker, principal, "metadata.changeset.publish", map[string]any{
+		"changeset_id": changeset.ChangesetID,
+	}))
+
+	tenant := database.TenantContext{TenantID: uuid.MustParse(principal.TenantID), Bucket: 7, ActorID: principal.Actor.ID}
+	recordID := mustV7(t)
+	if err := database.WithTenant(context.Background(), runtime, tenant, func(tx pgx.Tx) error {
+		_, err := tx.Exec(context.Background(),
+			"insert into object_record(tenant_bucket,tenant_id,metadata_version_id,object_id,record_id,lifecycle_state,data,revision,created_by,updated_by) values ($1,$2,$3,$4,$5,'active',$6,1,$7,$7)",
+			tenant.Bucket, tenant.TenantID, candidate.MetadataVersionID, recordedObjectID, recordID, json.RawMessage(`{"name":"exists"}`), principal.Actor.ID,
+		)
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+	blockedCandidate := createVersion(t, invoker, principal)
+	upsertObject(t, invoker, principal, blockedCandidate.MetadataVersionID, keepObjectID, "keep", "Keep")
+	upsertField(t, invoker, principal, blockedCandidate.MetadataVersionID, keepFieldID, keepObjectID, "name")
+	blocked := invokeMetadata(t, invoker, principal, "metadata.changeset.validate", map[string]any{
+		"candidate_metadata_version_id": blockedCandidate.MetadataVersionID,
+	})
+	assertMetadataError(t, blocked, capability.CodeFailedPrecondition)
 }
 
 func TestChangesetBlocksIndexedActivationUntilBackfillIsReady(t *testing.T) {

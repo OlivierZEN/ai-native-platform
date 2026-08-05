@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FEAT-054 - 元数据对象与字段 CRUD</title><style>:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f7fb}*{box-sizing:border-box}html,body{overflow-x:hidden}body{margin:0;font-size:18px;line-height:1.68}main{width:100%;min-width:0;max-width:980px;margin:auto;padding:40px 24px 72px;background:#fff}h1,h2,h3{line-height:1.28;color:#101828;scroll-margin-top:20px}h1{font-size:clamp(2rem,5vw,3rem)}h2{margin-top:2.2rem;border-bottom:1px solid #dbe2ea;padding-bottom:.35rem}h3{margin-top:1.6rem}.summary,nav{padding:18px 20px;border-radius:12px;background:#eaf2ff;border-left:5px solid #2563eb}nav{margin:20px 0;background:#f8fafc;border-left-color:#64748b}nav ul{columns:2}a{color:#1d4ed8}code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}code{overflow-wrap:anywhere;word-break:break-word;background:#eef2f7;padding:.1em .3em;border-radius:4px}pre{overflow:auto;padding:16px;border-radius:10px;color:#f8fafc;background:#111827}pre code{background:transparent;padding:0}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto}th,td{border:1px solid #d8dee8;padding:9px 11px;text-align:left;vertical-align:top}th{background:#f1f5f9}.summary,nav,p,li{max-width:100%;overflow-wrap:anywhere;word-break:break-word}li{margin:.42rem 0}@media(max-width:640px){body{font-size:17px}main{padding:24px 18px 52px}nav ul{columns:1}}</style></head><body><main><header><p>Semattice Feature Spec</p><div class="summary"><strong>阅读摘要：</strong>对象与字段 create/get/list/update/delete 已发布并完成生产验证；当前为 27 个对象、389 个字段、70 个关系，“大书包”已安全删除。</div></header><nav aria-label="目录"><strong>目录</strong><ul><li><a href="#背景与目标">背景与目标</a></li>
+<li><a href="#接口范围">接口范围</a></li>
+<li><a href="#删除规则">删除规则</a></li>
+<li><a href="#兼容与非目标">兼容与非目标</a></li>
+<li><a href="#验收标准">验收标准</a></li>
+<li><a href="#当前实现与验证">当前实现与验证</a></li>
+<li><a href="#风险与回滚">风险与回滚</a></li></ul></nav><h1 id="feat-054-元数据对象与字段-crud">FEAT-054 - 元数据对象与字段 CRUD</h1>
+<h2 id="背景与目标">背景与目标</h2>
+<p>Semattice 原有对象和字段公开能力只有 <code>upsert</code>，单条读取依赖整版元数据回读，也没有草稿删除能力。商城后台需要明确的增、删、改、查契约，并需要删除误建且没有业务数据的 <code>large_backpack</code> 对象。</p>
+<p>本功能为对象和字段各增加 create、get、list、update、delete Capability，同时保留既有 <code>upsert</code>。已发布版本继续不可变，删除已发布定义必须通过候选草稿和 Changeset。</p>
+<h2 id="接口范围">接口范围</h2>
+<h3 id="对象">对象</h3>
+<ul>
+<li><code>metadata.object.create</code></li>
+<li><code>metadata.object.get</code></li>
+<li><code>metadata.object.list</code></li>
+<li><code>metadata.object.update</code></li>
+<li><code>metadata.object.delete</code></li>
+</ul>
+<h3 id="字段">字段</h3>
+<ul>
+<li><code>metadata.field.create</code></li>
+<li><code>metadata.field.get</code></li>
+<li><code>metadata.field.list</code></li>
+<li><code>metadata.field.update</code></li>
+<li><code>metadata.field.delete</code></li>
+</ul>
+<p>所有能力继续使用统一 <code>POST /v1/capabilities/{capability-id}/invoke</code> 入口。读取使用 <code>metadata.read</code>，写入使用 <code>metadata.definition.write</code>。<code>update</code> 是完整替换，不是合并补丁；调用方必须携带稳定资源 ID 和完整定义。</p>
+<h2 id="删除规则">删除规则</h2>
+<ul>
+<li>delete 只直接修改 <code>draft</code> 元数据版本；数据库触发器继续拒绝修改已发布或历史版本。</li>
+<li>删除草稿对象会级联删除同版本字段；同版本关系仍引用对象时返回冲突，不自动删除关系。</li>
+<li>已发布对象可从候选版本移除，但 Changeset 校验要求该对象不存在任何历史业务记录，且既有关系不能从候选版本静默消失。</li>
+<li>已发布字段只有在所有记录中都不存在该字段 API key 时才能从候选版本直接移除。</li>
+<li>字段仍有存量值时，继续使用弃用、purge 和 tombstone 生命周期，不能用新 delete 绕过数据清理审批。</li>
+<li>对象或字段移除在 Changeset 计划中分别记录为 <code>object_removed</code> 和 <code>field_removed</code>，风险等级为 <code>high</code>；发布仍需显式手工确认。</li>
+</ul>
+<h2 id="兼容与非目标">兼容与非目标</h2>
+<ul>
+<li>保留 <code>metadata.object.upsert</code> 与 <code>metadata.field.upsert</code>，本功能不要求现有调用方立即迁移。</li>
+<li>不增加关系 CRUD、元数据版本删除或数据库物理清除历史快照。</li>
+<li>不允许直接改数据库、跳过租户隔离、Changeset、审批、幂等或审计。</li>
+</ul>
+<h2 id="验收标准">验收标准</h2>
+<ul>
+<li>对象和字段 create/get/list/update/delete 均由线上 Capability 发现返回正确 Schema、scope 和风险等级。</li>
+<li>重复 create 返回 <code>CONFLICT</code>，不存在的 get/update/delete 返回 <code>RESOURCE_NOT_FOUND</code>。</li>
+<li>对象 delete 返回被删除对象和级联字段数量；关系引用会阻止删除。</li>
+<li>空对象和无存量值字段可通过 Changeset 移除并发布。</li>
+<li>存在任何记录的对象、存在任何存量值的字段均被 Changeset 校验拒绝。</li>
+<li>API、CLI 和 Capability 注册表保持同一契约；全量 PostgreSQL 16 元数据测试通过。</li>
+<li>生产回读不再包含 <code>large_backpack</code>，当前对象总数为 27。</li>
+</ul>
+<h2 id="当前实现与验证">当前实现与验证</h2>
+<ul>
+<li>Go 服务、Capability Schema、对象/字段服务和 Changeset 演进规则已由提交 <code>61d6ddc855c5</code> 实现并推送到 CodeUp <code>main</code>。</li>
+<li>PostgreSQL 16 集成测试和 race 已验证草稿 CRUD、重复创建、列表过滤、对象字段级联删除、空定义 Changeset 删除和存量记录阻断；Skill 契约 19 项测试和结构校验通过。全量套件唯一失败为既有 <code>internal/record</code> 组织合并用例，并已在未改动的 <code>4eba7c2</code> 基线上复现，不是本功能回归。</li>
+<li>生产 release <code>20260805T025517Z-web-oidc-61d6ddc855c5</code> 已上线；<code>system.capability.list</code> 回读 67 项公开能力，新增 10 项 CRUD 均可发现（审计 <code>audit:req-6179a4e5-5fda-48bd-816d-4bd25c7a4416</code>）。</li>
+<li><code>metadata.object.delete</code> 已从候选版本删除 <code>large_backpack</code> 及其 2 个字段（审计 <code>audit:req-19723876-50c7-4030-be22-3de9ded09e7f</code>）。Changeset <code>019fcfdf-6258-7c9d-8355-feace7ecf689</code> 的唯一计划项为无记录、无回填的 <code>object_removed</code>，使用手工确认 <code>manual-remove-large-backpack-20260805-019fcfdf</code> 激活（审批审计 <code>audit:req-505e5c95-963c-4f08-afa3-66a75dbc04f8</code>；发布审计 <code>audit:req-d297157d-441b-48eb-82c4-bc09c2dea20a</code>）。</li>
+<li>当前生产元数据版本为 <code>019fcfdb-cd67-7378-8361-468ae175bd0c</code>、序号 4，回读为 27 个对象、389 个字段、70 个关系，且不再包含 <code>large_backpack</code>。</li>
+<li>Skill <code>1.7.0</code> 已以提交 <code>aa52a3ebcc0e</code> 和标签 <code>v1.7.0</code> 发布到 GitHub，并同步到本机 Codex Skill 目录。</li>
+</ul>
+<h2 id="风险与回滚">风险与回滚</h2>
+<ul>
+<li>候选版本激活前可取消 Changeset；激活后若没有数据迁移，可将活动指针回滚到上一不可变版本。</li>
+<li>应用发布失败时将 <code>/opt/semattice/current</code> 切回前一 release 并重启；本功能没有数据库迁移。</li>
+<li>删除仍有数据或依赖的定义会失败关闭，不提供自动级联删除业务记录、关系、权限或共享配置的行为。</li>
+</ul>
+</main></body></html>
