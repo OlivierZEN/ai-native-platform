@@ -2,12 +2,12 @@
 kind: feature-spec
 feature_id: FEAT-054
 title: Metadata object and field CRUD
-status: implemented
+status: verified
 owner_role: backend-agent
 task_ids: none
 related_decisions: ADR-003
 related_issues: none
-updated_at: 2026-08-05T10:55:00+08:00
+updated_at: 2026-08-05T11:05:00+08:00
 updated_by: codex
 ---
 
@@ -66,9 +66,12 @@ Semattice 原有对象和字段公开能力只有 `upsert`，单条读取依赖�
 
 ## 当前实现与验证
 
-- Go 服务、Capability Schema、对象/字段服务和 Changeset 演进规则已经实现。
-- PostgreSQL 16 集成测试已验证草稿 CRUD、重复创建、列表过滤、对象字段级联删除、空定义 Changeset 删除和存量记录阻断。
-- 生产发布、线上能力发现以及 `large_backpack` 删除尚待完成；完成前本文状态保持 `implemented`，不得声称线上已生效。
+- Go 服务、Capability Schema、对象/字段服务和 Changeset 演进规则已由提交 `61d6ddc855c5` 实现并推送到 CodeUp `main`。
+- PostgreSQL 16 集成测试和 race 已验证草稿 CRUD、重复创建、列表过滤、对象字段级联删除、空定义 Changeset 删除和存量记录阻断；Skill 契约 19 项测试和结构校验通过。全量套件唯一失败为既有 `internal/record` 组织合并用例，并已在未改动的 `4eba7c2` 基线上复现，不是本功能回归。
+- 生产 release `20260805T025517Z-web-oidc-61d6ddc855c5` 已上线；`system.capability.list` 回读 67 项公开能力，新增 10 项 CRUD 均可发现（审计 `audit:req-6179a4e5-5fda-48bd-816d-4bd25c7a4416`）。
+- `metadata.object.delete` 已从候选版本删除 `large_backpack` 及其 2 个字段（审计 `audit:req-19723876-50c7-4030-be22-3de9ded09e7f`）。Changeset `019fcfdf-6258-7c9d-8355-feace7ecf689` 的唯一计划项为无记录、无回填的 `object_removed`，使用手工确认 `manual-remove-large-backpack-20260805-019fcfdf` 激活（审批审计 `audit:req-505e5c95-963c-4f08-afa3-66a75dbc04f8`；发布审计 `audit:req-d297157d-441b-48eb-82c4-bc09c2dea20a`）。
+- 当前生产元数据版本为 `019fcfdb-cd67-7378-8361-468ae175bd0c`、序号 4，回读为 27 个对象、389 个字段、70 个关系，且不再包含 `large_backpack`。
+- Skill `1.7.0` 已以提交 `aa52a3ebcc0e` 和标签 `v1.7.0` 发布到 GitHub，并同步到本机 Codex Skill 目录。
 
 ## 风险与回滚
 
