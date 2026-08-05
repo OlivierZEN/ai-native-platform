@@ -50,7 +50,7 @@
     <h2>验收</h2>
     <ul>
       <li>无 approvals claim 的主体可审批 validated Changeset。</li>
-      <li>空白确认仍失败，审计模式可回读。</li>
+      <li>空白确认在线上以 <code>FAILED_PRECONDITION</code> 失败，Changeset 保持 active。</li>
       <li>生产构建、原子发布、能力发现、真实审批和发布回读通过。</li>
     </ul>
     <p>生产 release：<code>20260805T020849Z-web-oidc-5f5bdcea97d2</code>。商城 Changeset 已发布为活动版本，回读结果为 28 个对象、391 个字段和 70 个关系。</p>

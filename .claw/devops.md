@@ -13,6 +13,7 @@ verification_status: passed
 - 源码提交 `5f5bdcea97d2` 已发布为 `/opt/semattice/releases/20260805T020849Z-web-oidc-5f5bdcea97d2`；上一 release `/opt/semattice/releases/20260804T143600Z-metering-a701428` 保留为原子回滚点。本次没有数据库迁移。
 - `metadata.changeset.approve` 现在接受明确、非空的手工 `approval_id`，并在审批事务中审计 `approval_mode=manual`；`metadata.changeset.purge`、`metadata.changeset.rollback`、授权、共享和组织合并的可信审批门禁保持不变。
 - 线上能力发现审计标识为 `audit:req-3228301b-cdfe-488a-860c-1235afe75bb4`。商城 Changeset `019fcd45-5e1f-77fb-86b2-792f7f4b2d6b` 的审批、发布审计标识分别为 `audit:req-69a6464e-a1a3-4d04-ad68-95a352da869a`、`audit:req-04f7dcf4-0c58-44bc-8920-1661bec27855`。
+- 空白手工确认线上负例返回 `FAILED_PRECONDITION / a manual approval id is required`，审计标识为 `audit:req-2ebc4f1c-346d-417c-adcc-32830eab6de4`；负例后 Changeset 仍为 `active`。
 - 发布后 Semattice、Nginx、PostgreSQL 均 active，Semattice `NRestarts=0`、warning 日志为 0。当前商城元数据版本为 `019fcd43-8fe1-7e0d-bd71-f0757aa91af1`，sequence 3，包含 28 个对象、391 个字段和 70 个关系。
 
 ## 2026-08-04 TASK-060 当前元数据发现生产发布

@@ -67,3 +67,4 @@ updated_by: codex
 - 线上能力发现已返回新的显式手工 Changeset 审批描述，审计标识为 `audit:req-3228301b-cdfe-488a-860c-1235afe75bb4`。
 - Changeset `019fcd45-5e1f-77fb-86b2-792f7f4b2d6b` 使用手工确认 `manual-commerce-changeset-20260805-019fcd45` 审批成功，审批审计标识为 `audit:req-69a6464e-a1a3-4d04-ad68-95a352da869a`。
 - 同一 Changeset 随后发布为 `active`，发布审计标识为 `audit:req-04f7dcf4-0c58-44bc-8920-1661bec27855`。当前版本回读为 `019fcd43-8fe1-7e0d-bd71-f0757aa91af1`、sequence 3、snapshot digest `8fc42d39c0eab1d2fe44cb4af9f324964cc60fa1a4607d85b56600ea3f0ae030`，包含 28 个对象、391 个字段和 70 个关系。
+- 线上空白手工确认负例返回 `FAILED_PRECONDITION / a manual approval id is required`，审计标识为 `audit:req-2ebc4f1c-346d-417c-adcc-32830eab6de4`；负例后回读 Changeset 仍为 `active`。
