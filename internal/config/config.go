@@ -5,10 +5,15 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
+
+var companyIDPattern = regexp.MustCompile("^org[a-z0-9]{17}$")
 
 type Config struct {
 	HTTPListen         string
@@ -54,12 +59,18 @@ type TrustedIssuer struct {
 }
 
 type AccessContext struct {
-	KeycloakIssuer   string
-	KeycloakAudience string
-	KeycloakJWKSURL  string
-	KeycloakClientID string
-	AllowedScopes    []string
-	TokenTTL         time.Duration
+	KeycloakIssuer          string
+	KeycloakAudience        string
+	KeycloakJWKSURL         string
+	KeycloakClientIDs       []string
+	KeycloakServiceBindings map[string]ServiceAccessBinding
+	AllowedScopes           []string
+	TokenTTL                time.Duration
+}
+
+type ServiceAccessBinding struct {
+	CompanyID        string
+	OwnerPrincipalID string
 }
 
 type ConsoleOIDC struct {
@@ -74,7 +85,7 @@ func (oidc ConsoleOIDC) Enabled() bool {
 
 func (access AccessContext) Enabled() bool {
 	return access.KeycloakIssuer != "" && access.KeycloakAudience != "" &&
-		access.KeycloakJWKSURL != "" && access.KeycloakClientID != "" &&
+		access.KeycloakJWKSURL != "" && (len(access.KeycloakClientIDs) > 0 || len(access.KeycloakServiceBindings) > 0) &&
 		len(access.AllowedScopes) > 0
 }
 
@@ -83,6 +94,14 @@ func LoadEnv() (Config, error) {
 }
 
 func Load(getenv func(string) string) (Config, error) {
+	clientIDs := getenv("AI_NATIVE_KEYCLOAK_CLIENT_IDS")
+	if strings.TrimSpace(clientIDs) == "" {
+		clientIDs = getenv("AI_NATIVE_KEYCLOAK_CLIENT_ID")
+	}
+	serviceBindings, serviceBindingsErr := parseServiceAccessBindings(getenv("AI_NATIVE_KEYCLOAK_SERVICE_BINDINGS"))
+	if serviceBindingsErr != nil {
+		return Config{}, serviceBindingsErr
+	}
 	cfg := Config{
 		HTTPListen: valueOr(getenv("AI_NATIVE_HTTP_LISTEN"), "127.0.0.1:8080"),
 		Database: Database{
@@ -113,12 +132,13 @@ func Load(getenv func(string) string) (Config, error) {
 			RedirectURI:      getenv("AI_NATIVE_CONSOLE_OIDC_REDIRECT_URI"),
 		},
 		AccessContext: AccessContext{
-			KeycloakIssuer:   strings.TrimRight(getenv("AI_NATIVE_KEYCLOAK_ISSUER"), "/"),
-			KeycloakAudience: getenv("AI_NATIVE_KEYCLOAK_AUDIENCE"),
-			KeycloakJWKSURL:  getenv("AI_NATIVE_KEYCLOAK_JWKS_URL"),
-			KeycloakClientID: getenv("AI_NATIVE_KEYCLOAK_CLIENT_ID"),
-			AllowedScopes:    parseScopes(getenv("AI_NATIVE_OACT_ALLOWED_SCOPES")),
-			TokenTTL:         10 * time.Minute,
+			KeycloakIssuer:          strings.TrimRight(getenv("AI_NATIVE_KEYCLOAK_ISSUER"), "/"),
+			KeycloakAudience:        getenv("AI_NATIVE_KEYCLOAK_AUDIENCE"),
+			KeycloakJWKSURL:         getenv("AI_NATIVE_KEYCLOAK_JWKS_URL"),
+			KeycloakClientIDs:       parseScopes(clientIDs),
+			KeycloakServiceBindings: serviceBindings,
+			AllowedScopes:           parseScopes(getenv("AI_NATIVE_OACT_ALLOWED_SCOPES")),
+			TokenTTL:                10 * time.Minute,
 		},
 	}
 	trustedIssuers, trustedIssuersErr := parseTrustedIssuers(getenv("AI_NATIVE_IDENTITY_TRUSTED_ISSUERS"))
@@ -213,6 +233,28 @@ func parseScopes(raw string) []string {
 	return strings.Fields(strings.ReplaceAll(raw, ",", " "))
 }
 
+func parseServiceAccessBindings(raw string) (map[string]ServiceAccessBinding, error) {
+	bindings := map[string]ServiceAccessBinding{}
+	if strings.TrimSpace(raw) == "" {
+		return bindings, nil
+	}
+	for _, entry := range strings.Split(raw, ",") {
+		clientID, target, found := strings.Cut(strings.TrimSpace(entry), "=")
+		companyID, ownerPrincipalID, targetFound := strings.Cut(strings.TrimSpace(target), "@")
+		clientID = strings.TrimSpace(clientID)
+		companyID = strings.TrimSpace(companyID)
+		ownerPrincipalID = strings.TrimSpace(ownerPrincipalID)
+		if !found || !targetFound || clientID == "" || companyID == "" || ownerPrincipalID == "" {
+			return nil, fmt.Errorf("invalid Keycloak service binding")
+		}
+		if _, exists := bindings[clientID]; exists {
+			return nil, fmt.Errorf("duplicate Keycloak service binding")
+		}
+		bindings[clientID] = ServiceAccessBinding{CompanyID: companyID, OwnerPrincipalID: ownerPrincipalID}
+	}
+	return bindings, nil
+}
+
 // parseTrustedIssuers accepts semicolon-separated source|issuer|audience|jwks_url entries.
 // A product configuration must list each official or third-party issuer explicitly;
 // token-provided iss/aud/JWKS values are never accepted.
@@ -253,7 +295,7 @@ func validateAccessContext(access AccessContext, identity Identity) error {
 	present := 0
 	for _, value := range []bool{
 		access.KeycloakIssuer != "", access.KeycloakAudience != "", access.KeycloakJWKSURL != "",
-		access.KeycloakClientID != "", len(access.AllowedScopes) > 0,
+		len(access.KeycloakClientIDs) > 0 || len(access.KeycloakServiceBindings) > 0, len(access.AllowedScopes) > 0,
 	} {
 		if value {
 			present++
@@ -275,6 +317,29 @@ func validateAccessContext(access AccessContext, identity Identity) error {
 		return fmt.Errorf("OACT TTL must be between 1m and 1h")
 	}
 	seen := map[string]struct{}{}
+	for _, clientID := range access.KeycloakClientIDs {
+		if !validScope(clientID) {
+			return fmt.Errorf("invalid Keycloak client ID")
+		}
+		if _, exists := seen[clientID]; exists {
+			return fmt.Errorf("duplicate Keycloak client ID")
+		}
+		seen[clientID] = struct{}{}
+	}
+	for clientID, binding := range access.KeycloakServiceBindings {
+		if !validScope(clientID) || !companyIDPattern.MatchString(binding.CompanyID) {
+			return fmt.Errorf("invalid Keycloak service binding")
+		}
+		ownerID, err := uuid.Parse(binding.OwnerPrincipalID)
+		if err != nil || ownerID == uuid.Nil {
+			return fmt.Errorf("invalid Keycloak service binding")
+		}
+		if _, exists := seen[clientID]; exists {
+			return fmt.Errorf("Keycloak client cannot be both human and service")
+		}
+		seen[clientID] = struct{}{}
+	}
+	seen = map[string]struct{}{}
 	for _, scope := range access.AllowedScopes {
 		if !validScope(scope) {
 			return fmt.Errorf("invalid OACT allowed scope")

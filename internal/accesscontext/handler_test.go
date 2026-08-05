@@ -56,8 +56,8 @@ func TestTokenExchangeIssuesSematticeOACTForMappedOrganization(t *testing.T) {
 		GlobalLifecycleStatus: "active", NativeStatus: "active",
 	}}
 	h := NewHandler(resolver, verifierStub{identity: identity.OIDCIdentity{
-		Subject: testSubjectID, Organizations: []string{testCompanyID},
-	}}, signer, []string{"system.capability.read", "record.read"}, 10*time.Minute)
+		Subject: testSubjectID, ClientID: "storefront-web", Organizations: []string{testCompanyID},
+	}}, signer, []string{"system.capability.read", "record.read"}, nil, 10*time.Minute)
 
 	request := httptest.NewRequest(http.MethodPost, "/v1/auth/token",
 		bytes.NewBufferString(`{"requested_scopes":["system.capability.read","system.capability.read"]}`))
@@ -99,6 +99,55 @@ func TestTokenExchangeIssuesSematticeOACTForMappedOrganization(t *testing.T) {
 	}
 }
 
+func TestTokenExchangeIssuesServiceOACTForServerBoundClient(t *testing.T) {
+	signer, err := identity.NewSigner(config.Identity{
+		Issuer: "https://semattice.example.test", Audience: "semattice-api",
+		Algorithm: "HS256", HMACKey: testOACTKey,
+	})
+	if err != nil {
+		t.Fatalf("NewSigner: %v", err)
+	}
+	const ownerID = "9daab753-75c8-4e3d-a22b-7472cb7da579"
+	h := NewHandler(resolverStub{found: true, status: tenant.TenantStatus{
+		TenantID: testTenantID, CompanyID: testCompanyID,
+		GlobalLifecycleStatus: "active", NativeStatus: "active",
+	}}, verifierStub{identity: identity.OIDCIdentity{
+		Subject: testSubjectID, ClientID: "commerce-service",
+	}}, signer, []string{"runtime.record.read"}, map[string]config.ServiceAccessBinding{
+		"commerce-service": {CompanyID: testCompanyID, OwnerPrincipalID: ownerID},
+	}, 10*time.Minute)
+
+	request := httptest.NewRequest(http.MethodPost, "/v1/auth/token",
+		bytes.NewBufferString(`{"requested_scopes":["runtime.record.read"]}`))
+	request.Header.Set("Authorization", "Bearer keycloak-service-token")
+	recorder := httptest.NewRecorder()
+	h.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status=%d body=%s", recorder.Code, recorder.Body.String())
+	}
+	var response struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := json.Unmarshal(recorder.Body.Bytes(), &response); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	oactVerifier, err := identity.NewVerifier(config.Identity{
+		Issuer: "https://semattice.example.test", Audience: "semattice-api",
+		Algorithm: "HS256", HMACKey: testOACTKey,
+	})
+	if err != nil {
+		t.Fatalf("NewVerifier: %v", err)
+	}
+	principal, err := oactVerifier.Verify(context.Background(), response.AccessToken)
+	if err != nil {
+		t.Fatalf("issued service OACT was rejected: %v", err)
+	}
+	if principal.PrincipalType != "SERVICE" || principal.ClientID != "commerce-service" ||
+		principal.OwnerPrincipalID != ownerID || principal.CompanyID != testCompanyID {
+		t.Fatalf("unexpected service principal: %#v", principal)
+	}
+}
+
 func TestTokenExchangeFailsClosedBeforeSigning(t *testing.T) {
 	signer, err := identity.NewSigner(config.Identity{
 		Issuer: "https://semattice.example.test", Audience: "semattice-api",
@@ -131,7 +180,7 @@ func TestTokenExchangeFailsClosedBeforeSigning(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			h := NewHandler(
 				resolverStub{status: test.status, found: test.found},
-				verifierStub{identity: test.identity}, signer, []string{"record.read"}, 10*time.Minute,
+				verifierStub{identity: test.identity}, signer, []string{"record.read"}, nil, 10*time.Minute,
 			)
 			request := httptest.NewRequest(http.MethodPost, "/v1/auth/token", bytes.NewBufferString(test.body))
 			if test.header != "" {

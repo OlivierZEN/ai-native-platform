@@ -1,8 +1,8 @@
 ---
 kind: task-board
 version: 3
-updated_at: 2026-08-04T07:20:13Z
-updated_by: root after archiving completed TASK-060
+updated_at: 2026-08-05T06:05:00Z
+updated_by: codex after starting commerce token exchange
 board_status: active
 ---
 
@@ -27,6 +27,30 @@ board_status: active
 - `unassigned`
 
 ## Active Tasks
+
+### TASK-062 - Exchange commerce Keycloak tokens for Semattice OACT
+
+- status: `in_progress`
+- priority: `critical`
+- owner_role: `integration-agent`
+- claimed_by: `codex`
+- spec_path: `docs/specs/FEAT-055-commerce-keycloak-token-exchange.md`
+- depends_on: `none`
+- blocked_by: `none`
+- related_issues: `none`
+- scope_files: `access-context verifier/config/handler/tests, Keycloak audience mappers, production release and commerce E2E`
+- branch: `main`
+- pr_url: `n/a`
+
+#### Done When
+
+- Storefront/admin user tokens exchange through `/v1/auth/token`; raw Keycloak tokens never reach Capability invoke.
+- Anonymous storefront SSR uses a fixed responsible `commerce-service` service binding.
+- Focused/full verification and production Semattice/Keycloak smoke pass with rollback artifacts retained.
+
+#### Next Action
+
+- Complete config/handler tests, publish an immutable Semattice release, reconcile Keycloak audience mappers and run commerce E2E.
 
 ### TASK-061 - Govern create-time record assignment
 

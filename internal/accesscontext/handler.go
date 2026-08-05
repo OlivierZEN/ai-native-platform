@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/OlivierZEN/ai-native-platform/internal/config"
 	"github.com/OlivierZEN/ai-native-platform/internal/identity"
 	"github.com/OlivierZEN/ai-native-platform/internal/tenant"
 )
@@ -22,6 +23,7 @@ type SubjectVerifier interface {
 
 type TokenSigner interface {
 	SignHuman(string, string, string, []string, time.Time, time.Duration) (string, time.Time, error)
+	SignService(string, string, string, string, string, []string, time.Time, time.Duration) (string, time.Time, error)
 }
 
 type handler struct {
@@ -29,6 +31,7 @@ type handler struct {
 	verifier SubjectVerifier
 	signer   TokenSigner
 	allowed  map[string]struct{}
+	services map[string]config.ServiceAccessBinding
 	ttl      time.Duration
 	now      func() time.Time
 }
@@ -37,14 +40,15 @@ type tokenRequest struct {
 	RequestedScopes []string `json:"requested_scopes"`
 }
 
-func NewHandler(resolver TenantResolver, verifier SubjectVerifier, signer TokenSigner, allowedScopes []string, ttl time.Duration) http.Handler {
+func NewHandler(resolver TenantResolver, verifier SubjectVerifier, signer TokenSigner, allowedScopes []string,
+	serviceBindings map[string]config.ServiceAccessBinding, ttl time.Duration) http.Handler {
 	allowed := make(map[string]struct{}, len(allowedScopes))
 	for _, scope := range allowedScopes {
 		allowed[scope] = struct{}{}
 	}
 	return &handler{
 		resolver: resolver, verifier: verifier, signer: signer,
-		allowed: allowed, ttl: ttl, now: time.Now,
+		allowed: allowed, services: serviceBindings, ttl: ttl, now: time.Now,
 	}
 }
 
@@ -65,7 +69,10 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		writeError(writer, http.StatusUnauthorized, "invalid_token")
 		return
 	}
-	if len(subject.Organizations) != 1 {
+	serviceBinding, serviceAccess := h.services[subject.ClientID]
+	if (!serviceAccess && len(subject.Organizations) != 1) ||
+		(serviceAccess && len(subject.Organizations) > 0 &&
+			(len(subject.Organizations) != 1 || subject.Organizations[0] != serviceBinding.CompanyID)) {
 		writeError(writer, http.StatusConflict, "organization_selection_required")
 		return
 	}
@@ -81,7 +88,10 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		writeError(writer, http.StatusForbidden, "invalid_scope")
 		return
 	}
-	companyID := subject.Organizations[0]
+	companyID := serviceBinding.CompanyID
+	if !serviceAccess {
+		companyID = subject.Organizations[0]
+	}
 	status, found, err := h.resolver.ResolveActiveCompany(request.Context(), companyID)
 	if err != nil {
 		writeError(writer, http.StatusServiceUnavailable, "service_unavailable")
@@ -96,9 +106,15 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	issuedAt := h.now().UTC()
-	token, expiresAt, err := h.signer.SignHuman(
-		subject.Subject, status.TenantID, status.CompanyID, scopes, issuedAt, h.ttl,
-	)
+	var token string
+	var expiresAt time.Time
+	if serviceAccess {
+		token, expiresAt, err = h.signer.SignService(subject.Subject, serviceBinding.OwnerPrincipalID,
+			subject.ClientID, status.TenantID, status.CompanyID, scopes, issuedAt, h.ttl)
+	} else {
+		token, expiresAt, err = h.signer.SignHuman(
+			subject.Subject, status.TenantID, status.CompanyID, scopes, issuedAt, h.ttl)
+	}
 	if err != nil {
 		writeError(writer, http.StatusServiceUnavailable, "service_unavailable")
 		return

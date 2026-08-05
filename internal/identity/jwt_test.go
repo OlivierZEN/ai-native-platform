@@ -157,7 +157,7 @@ func TestOIDCVerifierBindsAudienceClientAndOrganization(t *testing.T) {
 	issuerURL := "https://sso.example.test/realms/example"
 	verifier, err := NewOIDCVerifier(config.TrustedIssuer{
 		Source: "keycloak", Issuer: issuerURL, Audience: "semattice-api", JWKSURL: server.URL,
-	}, "semattice-cli")
+	}, "semattice-cli", "commerce-service")
 	if err != nil {
 		t.Fatalf("NewOIDCVerifier: %v", err)
 	}
@@ -184,7 +184,20 @@ func TestOIDCVerifierBindsAudienceClientAndOrganization(t *testing.T) {
 	if identity.Subject != claims.Subject || len(identity.Organizations) != 1 || identity.Organizations[0] != "org2sva14i4udjmi2t4s" {
 		t.Fatalf("identity=%#v", identity)
 	}
+	claims.AuthorizedParty = "commerce-service"
+	claims.Organization = nil
+	serviceToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	serviceToken.Header["kid"] = "keycloak-key"
+	rawServiceToken, err := serviceToken.SignedString(privateKey)
+	if err != nil {
+		t.Fatalf("service token SignedString: %v", err)
+	}
+	serviceIdentity, err := verifier.Verify(context.Background(), rawServiceToken)
+	if err != nil || serviceIdentity.ClientID != "commerce-service" || len(serviceIdentity.Organizations) != 0 {
+		t.Fatalf("service identity=%#v err=%v", serviceIdentity, err)
+	}
 	claims.AuthorizedParty = "semattice-cli"
+	claims.Organization = json.RawMessage(`{"org2sva14i4udjmi2t4s":{"id":"organization-uuid"}}`)
 	claims.Nonce = "expected-nonce"
 	claims.Audience = jwt.ClaimStrings{"semattice-cli"}
 	idToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)

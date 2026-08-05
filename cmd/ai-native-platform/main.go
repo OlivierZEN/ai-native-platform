@@ -139,11 +139,15 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 		if !cfg.AccessContext.Enabled() {
 			return writeStartupFailure(out, capability.CodeValidationFailed, "Keycloak access context configuration is required")
 		}
+		keycloakClientIDs := append([]string(nil), cfg.AccessContext.KeycloakClientIDs...)
+		for clientID := range cfg.AccessContext.KeycloakServiceBindings {
+			keycloakClientIDs = append(keycloakClientIDs, clientID)
+		}
 		oidcVerifier, accessErr := identity.NewOIDCVerifier(config.TrustedIssuer{
 			Source: "keycloak",
 			Issuer: cfg.AccessContext.KeycloakIssuer, Audience: cfg.AccessContext.KeycloakAudience,
 			JWKSURL: cfg.AccessContext.KeycloakJWKSURL,
-		}, cfg.AccessContext.KeycloakClientID)
+		}, keycloakClientIDs...)
 		if accessErr != nil {
 			return writeStartupFailure(out, capability.CodeValidationFailed, accessErr.Error())
 		}
@@ -152,7 +156,8 @@ func run(ctx context.Context, args []string, in io.Reader, out, diagnostics io.W
 			return writeStartupFailure(out, capability.CodeValidationFailed, accessErr.Error())
 		}
 		routes.Handle("/v1/auth/token", accesscontext.NewHandler(
-			tenantService, oidcVerifier, signer, cfg.AccessContext.AllowedScopes, cfg.AccessContext.TokenTTL,
+			tenantService, oidcVerifier, signer, cfg.AccessContext.AllowedScopes,
+			cfg.AccessContext.KeycloakServiceBindings, cfg.AccessContext.TokenTTL,
 		))
 		routes.Handle("/mcp", mcpserver.NewAuthenticatedStreamableHTTPHandler(invoker, verifier.VerifyWithExpiration))
 		if consoleReader == nil {
